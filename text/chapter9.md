@@ -220,7 +220,7 @@ A continuación, el código usa la función `for_` para iterar por los enteros e
   for_ (1 .. 100) \_ -> do
 ```
 
-En cada interación, el bloque de notación do comienza generando tres números aleatorios:
+En cada iteración, el bloque de notación do comienza generando tres números aleatorios distribuidos entre `0` y `1`. Estos números representan las coordenadas `x` e `y` y el radio de un círculo.
 
 ```haskell
     x <- random
@@ -228,9 +228,7 @@ En cada interación, el bloque de notación do comienza generando tres números 
     r <- random
 ```
 
-Estos números están aleatoriamente distribuidos entre `0` y `1`. Representan las coordenadas `x` e `y` y el radio respectivamente.
-
-Después, el código crea un `Arc` basándose en estos parámetros:
+A continuación, para cada círculo, el código crea un `Arc` basándose en estos parámetros y finalmente rellena y perfila el arco con los estilos actuales:
 
 ```haskell
     let path = arc ctx
@@ -240,11 +238,6 @@ Después, el código crea un `Arc` basándose en estos parámetros:
          , start : 0.0
          , end   : Math.pi * 2.0
          }
-```
-
-y finalmente rellena y traza el arco con los estilos actuales:
-
-```haskell
     fillPath ctx path
     strokePath ctx path
 ```

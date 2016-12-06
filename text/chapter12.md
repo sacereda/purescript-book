@@ -267,7 +267,7 @@ X> 1. (Fácil) Usa `readFileCont` y `writeFileCont` para escribir una función q
 X> 1. (Medio) Usa la FFI para dar un tipo apropiado a la función `setTimeout`. Escribe una función envoltorio usando la mónada `Async`:
 X>
 X>     ```haskell
-X>     type Milliseconds = Number
+X>     type Milliseconds = Int
 X>
 X>     foreign import data TIMEOUT :: !
 X>
@@ -393,55 +393,49 @@ Hemos visto cómo usar la mónada `ContT` y la notación do para componer cálcu
 
 Si usamos `ContT` para transformar la mónada `Eff`, podemos realizar cálculos en paralelo simplemente iniciando nuestros dos cálculos uno tras otro.
 
-El paquete `purescript-parallel` define una clase de tipos `MonadPar` para mónadas como `Async` que soportan ejecución paralela. `MonadPar` se define en términos de una función `par` con la siguiente firma de tipo:
+El paquete `purescript-parallel` define una clase de tipos `MonadPar` para mónadas como `Async` que soportan ejecución paralela. Cuando nos encontramos los funtores aplicativos en un capítulo previo, observamos cómo los funtores aplicativos pueden ser útiles para combinar cálculos paralelos. De hecho, una instancia de `Parallel` define una correspondencia entre una mónada `m` (como `Async`) y un funtor aplicativo `f` que se puede usar para combinar cálculos en paralelo:
 
 ```haskell
-par :: forall m a b r
-     . MonadPar m
-    => (a -> b -> r)
-    -> m a
-    -> m b
-    -> m r
+class (Monad m, Applicative f) <= Parallel f m | m -> f, f -> m where
+  sequential :: forall a. f a -> m a
+  parallel :: forall a. m a -> f a
 ```
 
-`par` toma dos cálculos asíncronos y una función para combinar sus resultados, y devuelve un único cálculo que calcula y combina los resultados en paralelo.
+La clase define dos funciones:
 
-Podemos usar la función `par` para leer dos ficheros en paralelo, o para emitir dos peticiones HTTP y esperar a sus resultados en paralelo.
+- `parallel`, que toma un cálculo en la mónada `m` y lo convierte en cálculos en el funtor aplicativo `f`, y
+- `sequential`, que realiza una conversión en sentido inverso.
 
-`purescript-parallel` define una instancia de `MonadPar` para el transformador de mónada `ContT` aplicado a la mónada `Eff eff`. Usa referencias mutables (con el efecto `REF`) para implementar `MonadPar`, llevando registro de cuál de las dos continuaciones se ha llamado. Cuando ambos resultados han sido devueltos, podemos calcular el resultado final y pasarlo a la continuación principal.
+La biblioteca `purescript-parallel` proporciona una instancia `Parallel` para la mónada `Async`. Usa referencias mutables para combinar acciones `Async` en paralelo, llevando registro de cual de las dos continuaciones se ha llamado. Cuando ambos resultados están disponibles, podemos calcular el resultado final y pasarlo a la continuación principal.
 
-Aquí hay un simple ejemplo que lee dos ficheros de texto en paralelo, los concatena e imprime el resultado.
+Podemos usar la función `parallel` para crear una versión de nuestra acción `readFileCont` que se puede combinar en paralelo. Aquí hay un simple ejemplo que lee dos ficheros de texto en paralelo, los concatena e imprime el resultado:
 
 ```haskell
 import Prelude
 import Control.Apply (lift2)
 import Control.Monad.Cont.Trans (runContT)
 import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Parallel.Class (par)
+import Control.Monad.Parallel (parallel, sequential)
 
-main = flip runContT logShow $
-  par (lift2 append) (readFileCont "/tmp/1.txt")
-                     (readFileCont "/tmp/2.txt")
+main = flip runContT logShow do
+  sequential $
+   lift2 append
+     <$> parallel (readFileCont "/tmp/1.txt")
+     <*> parallel (readFileCont "/tmp/2.txt")
 ```
 
 Fíjate en que, ya que `readFileCont` devuelve un valor de tipo `Either ErrorCode String`, necesitamos elevar la función `append` sobre el constructor de tipo `Either` usando `lift2` para formar nuestra función combinadora.
 
+Dado que los funtores aplicativos soportan elevar funciones de aridad arbitraria, podemos realizar más cálculos en paralelo usando los combinadores aplicativos. ¡Podemos también beneficiarnos de todas las funciones de la biblioteca estándar que trabajan con funtores aplicativos, como `traverse` y `sequence`!
+
+También podemos combinar cálculos paralelos con porciones de código secuencial, usando combinadores aplicativos en un bloque en notación do, o viceversa, usando `parallel` y `sequential` para cambiar los constructores de tipo como corresponda.
+
 X> ## Ejercicios
 X>
-X> 1. (Fácil) Usa `par` con `get` para hacer dos peticiones HTTP y recolectar los cuerpos de la respuesta en paralelo. Tu función combinadora debe concatenar ambos cuerpos y tu continuación debe usar `print` para imprimir el resultado a consola.
-X> 1. (Medio) `purescript-parallel` define otra función
+X> 1. (Fácil) Usa `parallel` y `sequential` para hacer dos peticiones HTTP y recolectar los cuerpos de la respuesta en paralelo. Tu función combinadora debe concatenar ambos cuerpos y tu continuación debe usar `print` para imprimir el resultado a consola.
+X> 1. (Medio) El funtor aplicativo que corresponde a `Async` es también una instancia de `Alternative`. El operador `<|>` definido por esta instancia ejecuta dos cálculos en paralelo y devuelve el resultado del cálculo que finaliza primero.
 X>
-X>     ```haskell
-X>     race :: forall m a
-X>           . MonadRace m
-X>          => m a
-X>          -> m a
-X>          -> m a
-X>     ```
-X>
-X>     que ejecuta dos cálculos en paralelo y devuelve el resultado del cálculo que finaliza primero.
-X>
-X>     Usa la función `race` junto a tu función `setTimeoutCont` para definir una función
+X>     Usa esta instancia de `Alternative` junto a tu función `setTimeoutCont` para definir una función
 X>
 X>     ```haskell
 X>     timeout :: forall a eff
@@ -452,70 +446,9 @@ X>     ```
 X>
 X>     que devuelve `Nothing` si el cálculo especificado no proporciona un resultado en el número de milisegundos especificado.
 
-## Un funtor aplicativo para paralelismo
-
-El tipo del combinador `par` se parece mucho al tipo de `lift2` para la mónada `m`. De hecho, es posible definir un nuevo funtor aplicativo para el que `par` es _exactamente_ `lift2`.
-
-Te puedes preguntar por qué no definimos una instancia de `Applicative` para `m` directamente en términos de `par`. La razón es la siguiente: si un constructor de tipo tiene instancia `Monad`, se espera que las instancias de `Monad` y `Applicative` concuerden, en el sentido de que `apply` sea equivalente a la siguiente función:
-
-```haskell
-ap :: forall m a b. Monad m => m (a -> b) -> m a -> m b
-ap mf ma = do
-  f <- mf
-  a <- ma
-  return (f a)
-```
-
-Esto nos permite refactorizar código sustituyendo cálculos independientes en un bloque `do` con una llamada a `apply` (o `lift2`, o una función relacionada). Sin embargo, nuestra hipotética instancia `Applicative` difiere de la instancia `Monad` en la cantidad de paralelismo: `apply` evalúa sus argumentos en paralelo, mientras que `ap` espera a que termine su primer cálculo antes de ejecutar el segundo.
-
-En su lugar, `purescript-parallel` define un envoltorio newtype para `m a`, llamado `Parallel m a`, como sigue:
-
-```haskell
-newtype Parallel m a = Parallel (m a)
-```
-
-Podemos escribir una función que convierte un cálculo `Parallel m` en un cálculo en la mónada `m`, simplemente quitando el constructor de datos externo. Esto lo proporciona la función `runParallel`:
-
-```haskell
-runParallel :: forall m a. Parallel m a -> m a
-```
-
-La transformación inversa, de `Async` a `Parallel` se llama `parallel`:
-
-```haskell
-parallel :: forall m a. m a -> Parallel m a
-```
-
-La instancia `Functor` para `Parallel m` se construye directamente a partir de la instancia `Functor` para `m`. Sin embargo, en el caso de la clase de tipos `Apply`, se usa la función `par` en su lugar:
-
-```haskell
-instance applyParallel :: MonadPar m => Apply (Parallel m) where
-  apply f a = parallel (par ($) (runParallel f) (runParallel a))
-```
-
-`par` se usa para combinar una función con su argumento usando aplicación de función `($)` como función combinadora.
-
-Podemos ahora reescribir nuestro ejemplo anterior para leer dos ficheros en paralelo usando el constructor de tipo `Parallel`:
-
-```haskell
-import Prelude
-import Control.Apply (lift2)
-import Control.Monad.Cont.Trans (runContT)
-import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Parallel.Class (parallel, runParallel)
-
-main = flip runContT logShow $ runParallel $
-  lift2 append <$> parallel (readFileCont "/tmp/1.txt")
-               <*> parallel (readFileCont "/tmp/2.txt")
-```
-
-Dado que los funtores aplicativos soportan elevar funciones de aridad arbitraria, podemos realizar más cálculos en paralelo usando los combinadores aplicativos. ¡Podemos también beneficiarnos de todas las funciones de biblioteca estándar que trabajan con funtores aplicativos, como `traverse` y `sequence`!
-
-Podemos también combinar cálculos paralelos con porciones de código secuencial usando combinadores aplicativos en un bloque en notación do, o viceversa, usando `parallel` y `runParallel` para cambiar los constructores de tipo donde sea apropiado.
-
-X> ## Ejercicios
+X> 1. (Medio) `purescript-parallel` también proporciona instancias de la clase `Parallel` para varios transformadores de mónada, incluyendo `ExceptT`.
 X>
-X> 1. (Medio) Reescribe el ejemplo de entrada/salida de fichero paralela para que use `ExceptT` para gestión de errores, en lugar de elevar `append` con `lift2`. Tu solución debe usar el transformador `ExceptT` para transformar el funtor `Parallel`.
+X>     Reescribe el ejemplo de entrada/salida de fichero paralela para que use `ExceptT` para gestión de errores, en lugar de elevar `append` con `lift2`. Tu solución debe usar el transformador `ExceptT` para transformar la mónada `Async`.
 X>
 X>     Usa este método para modificar tu función `concatenateMany` de forma que lea múltiples ficheros de entrada en paralelo.
 X> 1. (Difícil, Extendido) Supongamos que nos dan una colección de documentos JSON en disco, de forma que cada documento contiene un array de referencias a otros ficheros en disco:

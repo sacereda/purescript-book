@@ -20,22 +20,7 @@ El proyecto tiene las siguientes dependencias Bower:
 - `purescript-strings`, que define funciones que operan sobre cadenas.
 - `purescript-functions`, que define algunas funciones auxiliares para definir funciones PureScript.
 
-El módulo `Data.Hashable` importa varios módulos proporcionados por estos paquetes Bower:
-
-```haskell
-module Data.Hashable where
-
-import Prelude
-
-import Data.Char (toCharCode)
-import Data.Either (Either(..))
-import Data.Foldable (foldl)
-import Data.Function (on)
-import Data.Maybe (Maybe(..))
-import Data.String (toCharArray)
-import Data.Tuple (Tuple(..))
-```
-
+El módulo `Data.Hashable` importa varios módulos proporcionados por estos paquetes Bower.
 ## ¡Muéstrame!
 
 Nuestro primer ejemplo simple de clase de tipos viene dado por una función que hemos visto varias veces: la función `show`, que toma un valor y lo representa como una cadena.
@@ -81,12 +66,12 @@ Estos ejemplos muestran cómo usar `show` para mostrar valores de varios tipos p
 ```text
 > import Data.Tuple
 
-> show $ Tuple 1 true
+> show (Tuple 1 true)
 "(Tuple 1 true)"
 
 > import Data.Maybe
 
-> show $ Just "testing"
+> show (Just "testing")
 "(Just \"testing\")"
 ```
 
@@ -94,16 +79,16 @@ Si intentamos mostrar un valor del tipo `Data.Either` obtenemos un mensaje de er
 
 ```text
 > import Data.Either
-> show $ Left 10
+> show (Left 10)
 
-No type class instance was found for
+The inferred type
 
-  Data.Show.Show t0
+    forall a. Show a => String
 
-The instance head contains unknown type variables. Consider adding a type annotation.
+has type variables which are not mentioned in the body of the type. Consider adding a type annotation.
 ```
 
-El problema aquí no es que no haya una instancia `Show` para el tipo que tratamos de mostrar, sino que PSCi no ha sido capaz de inferir el tipo. Esto viene indicado por el _tipo desconocido_ `t0` del mensaje de error.
+El problema aquí no es que no haya una instancia `Show` para el tipo que tratamos de mostrar, sino que PSCi ha sido incapaz de inferir el tipo. Esto viene indicado por el _tipo desconocido_ `a` en el tipo inferido.
 
 Podemos anotar la expresión con un tipo usando el operador `::`, de manera que PSCi pueda elegir la instancia de clase de tipos correcta:
 
@@ -115,6 +100,7 @@ Podemos anotar la expresión con un tipo usando el operador `::`, de manera que 
 Algunos tipos ni siquiera tienen una instancia `Show` definida. Un ejemplo es el tipo función `->`. Si tratamos de mostrar una función de `Int` a `Int`, obtenemos un mensaje de error apropiado del comprobador de tipos:
 
 ```text
+> import Prelude
 > show $ \n -> n + 1
 
 No type class instance was found for
@@ -158,14 +144,14 @@ La clase de tipos `Ord` define la función `compare`, que se puede usar para com
 ```haskell
 data Ordering = LT | EQ | GT
 
-class (Eq a) <= Ord a where
+class Eq a <= Ord a where
   compare :: a -> a -> Ordering
 ```
 
 La función `compare` compara dos valores y devuelve un `Ordering` con tres alternativas:
 
 - `LT` - si el primer argumento es menor que el segundo.
-- `EQ` - si el primer argumento es igual a (o incomparable con) el segundo.
+- `EQ` - si el primer argumento es igual al segundo.
 - `GT` - si el primer argumento es mayor que el segundo.
 
 De nuevo, podemos probar la función `compare` en PSCi: 
@@ -294,7 +280,7 @@ Se espera que las instancias de la clase de tipos `Functor` obedezcan un conjunt
 - `map id xs = xs`
 - `map g (map f xs) = map (g <<< f) xs`
 
-La primera ley es la _ley de identidad_. Dice que elevar la función identidad sobre una estructura devuelve la estructura original. Esto tiene sentido, ya que la función identidad no modifica su entrada.
+La primera ley es la _ley de identidad_. Dice que elevar la función identidad (la función que devuelve su argumento sin cambios) sobre una estructura devuelve la estructura original. Esto tiene sentido, ya que la función identidad no modifica su entrada.
 
 La segunda ley es la _ley de composición_. Dice que mapear una función sobre una estructura y mapear una segunda función es lo mismo que mapear la composición de las dos funciones sobre la estructura.
 
@@ -314,15 +300,7 @@ X>       }
 X>     ```
 X>       
 X>     Define instancias `Show` y `Eq` para `Complex`.
-X> 1. (Medio) El siguiente tipo define un tipo de arrays no vacíos de elementos de tipo `a`:
-X>
-X>     ```haskell
-X>     data NonEmpty a = NonEmpty a (Array a)
-X>     ```
-X>      
-X>     Escribe una instancia de `Semigroup` para arrays no vacíos reutilizando la instancia `Semigroup` de `Array`.
-X> 1. (Medio) Escribe una instancia`Functor` para `NonEmpty`.
-X> 1. (Difícil) Escribe una instancia de `Foldable` para `NonEmpty`. _Pista_: reutiliza la instancia `Foldable` para arrays.
+
 
 ## Anotaciones de tipo (type annotations)
 
@@ -409,7 +387,15 @@ Cuando se compila el programa, se elige la instancia correcta de clase de tipos 
 
 X> ## Ejercicios
 X>
-X> 1. (Fácil) Escribe una instancia `Eq` para el tipo `NonEmpty a` que reutiliza las instancias de `Eq a` y `Eq (Array a)`.
+X> 1. (Fácil) La siguiente declaración define un tipo de arrays no vacios con elementos de tipo `a`:
+X>
+X>     ```haskell
+X>     data NonEmpty a = NonEmpty a (Array a)
+X>     ```
+X>      
+X>     Escribe una instancia `Eq` para el tipo `NonEmpty a` que reutiliza las instancias de `Eq a` y `Eq (Array a)`.
+X> 1. (Medio) Escribe una instancia de `Semigroup` para `NonEmpty a` reutilizando la instancia de `Semigroup` para `Array`.
+X> 1. (Medio) Escribe una instancia de `Functor` para `NonEmpty`.
 X> 1. (Medio) Dado un tipo `a` cualquiera con una instancia de `Ord`, podemos añadir un nuevo valor "infinito" que es mayor que cualquier otro valor: 
 X>
 X>     ```haskell
@@ -417,6 +403,7 @@ X>     data Extended a = Finite a | Infinite
 X>     ```
 X>         
 X>     Escribe una instancia `Ord` para `Extended a` que reutiliza la instancia `Ord` para `a`.
+X> 1. (Difícil) Escribe una instancia de `Foldable` para `NonEmpty`. _Pista_: reutiliza la instancia `Foldable` para arrays.
 X> 1. (Difícil) Dado un constructor de tipo `f` que define un contenedor ordenado (y por lo tanto tiene una instancia de `Foldable`), podemos crear un nuevo tipo de contenedor que incluye un elemento extra al frente:
 X>
 X>     ```haskell
@@ -443,8 +430,8 @@ import Data.Array as Array
 import Data.Maybe (Maybe)
 import Data.String as String
 
-class Stream list element where
-  uncons :: list -> Maybe { head :: element, tail :: list }
+class Stream stream element where
+  uncons :: stream -> Maybe { head :: element, tail :: stream }
 
 instance streamArray :: Stream (Array a) a where
   uncons = Array.uncons
@@ -473,6 +460,61 @@ foldStream f list =
 ```
 
 Intenta usar `foldStream` en PSCi para diferentes tipos de `Stream` y diferentes tipos de `Monoid`.
+
+## Dependencias funcionales (Functional Dependencies)
+
+Las clases de tipos multiparamétricas pueden ser muy útiles, pero pueden llevar fácilmente a tipos confusos e incluso problemas con la inferencia de tipos. Como ejemplo simple, supongamos que tenemos que escribir una función `tail` genérica sobre flujos usando la clase `Stream` dada arriba:
+
+```haskell
+genericTail xs = map _.tail (uncons xs)
+```
+
+Esto nos da un mensaje de error algo confuso:
+
+```text
+The inferred type
+
+  forall stream a. Stream stream a => stream -> Maybe stream
+
+has type variables which are not mentioned in the body of the type. Consider adding a type annotation.
+```
+
+El problema es que la función `genericTail` no usa el tipo `element` mencionado en la definición de la clase de tipos `Stream`, de manera que el tipo queda sin resolver.
+
+Peor aún, ni siquiera podemos usar `genericTail` aplicándolo a un tipo específico de flujo:
+
+```text
+> map _.tail (uncons "testing")
+
+The inferred type
+
+  forall a. Stream String a => Maybe String
+
+has type variables which are not mentioned in the body of the type. Consider adding a type annotation.
+```
+
+Aquí, podemos esperar que el compilador elija la instancia `streamString`. Después de todo, una `String` es un flujo de `Char`s, y no puede ser un flujo de ningún otro tipo de elementos.
+
+El compilador no es capaz de hacer esa deducción automáticamente, y no puede confiar en la instancia `streamString`. Sin embargo, podemos ayudar al compilador añadiendo una pista en la definición de la clase de tipo:
+
+```haskell
+class Stream stream element | stream -> element where
+  uncons :: stream -> Maybe { head :: element, tail :: stream }
+```
+
+Aquí, `stream -> element` se llama _dependencia funcional_. Una dependencia funcional asegura una relación funcional entre los argumentos de tipo de una clase de tipo multiparamétrica. Esa dependencia funcional dice al compilador que hay una función de tipos de flujo a tipos de elemento (únicos), de manera que si el compilador sabe el tipo del flujo, puede conocer el tipo del elemento.
+
+Esta pista es suficiente para que el compilador infiera el tipo correcto para nuestra función tail genérica de arriba:
+
+```text
+> :type genericTail
+forall stream element. Stream stream element => stream -> Maybe stream
+
+> genericTail "testing"
+(Just "esting")
+```
+
+Las dependencias funcionales pueden ser bastante útiles cuando se usan clases de tipo multiparamétricas para diseñar ciertas APIs.
 
 ## Clases de tipos nularias (nullary type classes)
 
@@ -532,18 +574,22 @@ X>     class Monoid m <= Action m a where
 X>       act :: m -> a -> a
 X>     ```
 X>           
-X>     Una _acción_ es una función que describe cómo se puede usar un monoide para modificar un valor de otro tipo. Esperamos que la acción respete el operador de concatenación del monoide. Por ejemplo, el monoide de los números naturales con la multiplicación _actúa_ sobre cadenas repitiendo la cadena un número de veces:
+X>     Una _acción_ es una función que describe cómo se puede usar un monoide para modificar un valor de otro tipo. Esperamos que la acción respete el operador de concatenación del monoide. Por ejemplo, el monoide de los números naturales con la suma (definido en el módulo `Data.Monoid.Additive`) _actúa_ sobre cadenas repitiendo la cadena un número de veces:
 X>  
 X>     ```haskell
-X>     instance repeatAction :: Action Int String where
-X>       act 0 _ = ""
-X>       act n s = s <> act (n - 1) s
+X>     import Data.Monoid.Additive (Additive(..))
+X>
+X>     instance repeatAction :: Action (Additive Int) String where
+X>       act (Additive n) s = repeat n s where
+X>         repeat 0 _ = ""
+X>         repeat m s = s <> repeat (m - 1) s
 X>     ```
 X>
-X>     Date cuenta de que `act 2 s` es igual a la combinación `act 1 s <> act 1 s`, y `1 <> 1 = 2' en el monoide de enteros aditivos.
+X>     Date cuenta de que `act (Additive 2) s` es igual a la combinación `act (Additive 1) s <> act (Additive 1) s`, y `Additive 1 <> Additive 1 = Additive 2'.
 X>   
 X>     Escribe un conjunto razonable de leyes que describan cómo debe la clase `Action` interactuar con la clase `Monoid`. _Pista_: ¿Cómo esperamos que actúe `mempty` sobre los elementos? ¿Y `append`?
 X> 1. (Medio) Escribe una instancia `Action m a => Action m (Array a)`, donde la acción sobre arrays está definida por la acción sobre los elementos de manera independiente.
+X> 1. (Difícil) ¿Deben los argumentos de la clase de tipo multiparamétrica `Action` estar relacionados por alguna dependencia funcional? ¿Por qué?
 X> 1. (Difícil) Dado el siguiente newtype, escribe una instancia para `Action m (Self m)`, donde el monoide `m` actúa sobre sí mismo usando `append`:
 X>
 X>     ```haskell

@@ -206,7 +206,7 @@ $ pulp run
 
 * Building project in ~/my-project
 * Build successful.
-5
+5.0
 ```
 
 ## Probando el código usando el modo interactivo
@@ -234,6 +234,7 @@ The following commands are available:
     :kind        <type>       Show the kind of <type>
     :show        import       Show imported modules
     :show        loaded       Show loaded modules
+    :paste       paste        Enter multiple lines, terminated by ^D
 ```
 
 Pulsando la tecla Tab puedes ver una lista de todas las funciones disponibles en tu propio código, así como las disponibles en las dependencias Bower y el módulo Prelude.

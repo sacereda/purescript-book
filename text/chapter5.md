@@ -27,7 +27,6 @@ El módulo importa el módulo `Data.Foldable`, que proporciona funciones para pl
 module Data.Picture where
 
 import Prelude
-
 import Data.Foldable (foldl)
 ```
 
@@ -137,8 +136,10 @@ takeFive _ = 0
 El primer patrón sólo se ajusta a arrays de cinco elementos, cuyo primer y segundo elemento son 0 y 1 respectivamente. En ese caso, la función devuelve el producto del tercer y cuarto elemento. En cualquier otro caso, la función devuelve cero. Por ejemplo, en PSCi:
 
 ```text
-> let takeFive [0, 1, a, b, _] = a * b
-      takeFive _ = 0
+> :paste
+… let takeFive [0, 1, a, b, _] = a * b
+…     takeFive _ = 0
+… ^D
 
 > takeFive [0, 1, 2, 3, 4]
 6
@@ -150,7 +151,7 @@ El primer patrón sólo se ajusta a arrays de cinco elementos, cuyo primer y seg
 0
 ```
 
-Los patrones de array literales nos permiten ajustar arrays de una longitud fija, pero PureScript _no_ proporciona ningún medio para ajustar arrays de una longitud no especificada. En versiones más viejas del compilador, una característica llamada _patrones cons_ (cons patterns) proporcionaba una forma de descomponer arrays en su elemento de cabeza y su cola, pero debido al pobre rendimiento de los arrays inmutables en JavaScript, esta característica fue eliminada. Si necesitas una estructura de datos que soporte este tipo de ajuste, la manera recomendada es usar `Data.List`. Existen otras estructuras de datos que proporcionan para distintas operaciones rendimiento asintótico mejorado.
+Los patrones de array literales nos permiten ajustar arrays de una longitud fija, pero PureScript _no_ proporciona ningún medio para ajustar arrays de una longitud no especificada, ya que descomponer arrays inmutables de esta manera resulta en rendimiento pobre. Si necesitas una estructura de datos que soporte este tipo de ajuste, la manera recomendada es usar `Data.List`. Existen otras estructuras de datos que proporcionan rendimiento asintótico mejorado para distintas operaciones.
 
 ## Patrones de registro (record patterns) y polimorfismo de fila (row polymorphism)
 
@@ -210,7 +211,7 @@ Veremos el polimorfismo de fila de nuevo más tarde cuando veamos los _efectos e
 
 Tanto los patrones de array como los patrones de registro combinan patrones más pequeños para construir patrones más grandes. Mayormente, los ejemplos anteriores sólo han usado patrones simples dentro de patrones array y registro, pero es importante notar que los patrones se pueden _anidar_ arbitrariamente, lo que permite definir funciones usando condiciones en tipos de datos potencialmente complejos. 
 
-Por ejemplo, este código combina dos patrones de registro para ajustarse a un registro:
+Por ejemplo, este código combina dos patrones de registro:
 
 ```haskell
 type Address = { street :: String, city :: String }
@@ -251,13 +252,14 @@ Los patrones no sólo aparecen en las declaraciones de función de nivel superio
 Aquí tenemos un ejemplo. Esta función calcula el "sufijo cero más largo" de un array (el sufijo más largo que suma cero):
 
 ```haskell
-import Data.Array.Unsafe (tail)
+import Data.Array.Partial (tail)
+import Partial.Unsafe (unsafePartial)
 
 lzs :: Array Int -> Array Int
 lzs [] = []
 lzs xs = case sum xs of
            0 -> xs
-           _ -> lzs (tail xs)
+           _ -> lzs (unsafePartial tail xs)
 ```
 
 Por ejemplo:
@@ -411,11 +413,11 @@ Por ejemplo, el constructor `Line` definido arriba requería dos `Point`s, así 
 exampleLine :: Shape
 exampleLine = Line p1 p2
   where
-  p1 :: Point
-  p1 = Point { x: 0.0, y: 0.0 }
+    p1 :: Point
+    p1 = Point { x: 0.0, y: 0.0 }
 
-  p2 :: Point
-  p2 = Point { x: 100.0, y: 50.0 }
+    p2 :: Point
+    p2 = Point { x: 100.0, y: 50.0 }
 ```
 
 Para construir los puntos `p1` y `p2`, aplicamos el constructor `Point` a su único argumento, que es un registro.
@@ -511,8 +513,12 @@ $ pulp psci
 
 > import Data.Picture
 
-> showPicture [Line (Point { x: 0.0, y: 0.0 })
-                    (Point { x: 1.0, y: 1.0 })]
+> :paste
+… showPicture
+…   [ Line (Point { x: 0.0, y: 0.0 })
+…          (Point { x: 1.0, y: 1.0 })
+…   ]
+… ^D
 
 ["Line [start: (0.0, 0.0), end: (1.0, 1.0)]"]
 ```
@@ -538,8 +544,8 @@ data Bounds = Bounds
 bounds :: Picture -> Bounds
 bounds = foldl combine emptyBounds
   where
-  combine :: Bounds -> Shape -> Bounds
-  combine b shape = shapeBounds shape \/ b
+    combine :: Bounds -> Shape -> Bounds
+    combine b shape = shapeBounds shape \/ b
 ```
 
 En el caso base, necesitamos encontrar el rectángulo de delimitación mínimo de una `Picture` vacía, y el rectángulo de delimitación mínimo vacío definido por `emptyBounds` es suficiente.

@@ -95,7 +95,6 @@ $ psci
 
 > import Prelude
 > map (\n -> n + 1) [1, 2, 3, 4, 5]
-
 [2, 3, 4, 5, 6]
 ```
 
@@ -107,7 +106,6 @@ La función `map` también se puede escribir entre la función de mapeo y el arr
 
 ```text
 > (\n -> n + 1) `map` [1, 2, 3, 4, 5]
-
 [2, 3, 4, 5, 6]
 ```
 
@@ -117,7 +115,6 @@ Hay un operador que es equivalente a la función `map` cuando se usa con arrays,
 
 ```text
 > (\n -> n + 1) <$> [1, 2, 3, 4, 5]
-
 [2, 3, 4, 5, 6]
 ```
 
@@ -125,7 +122,7 @@ Veamos el tipo de `map`:
 
 ```text
 > :type map
-forall a b f. Prelude.Functor f => (a -> b) -> f a -> f b
+forall a b f. (Functor f) => (a -> b) -> f a -> f b
 ```
 
 El tipo de `map` es de hecho más general de lo que necesitamos en este capítulo. Para nuestros propósitos, podemos tratar `map` como si tuviese el siguiente tipo menos general:
@@ -146,7 +143,6 @@ Aunque el operador infijo `<$>` parece una sintaxis especial, es de hecho un sim
 
 ```text
 > (<$>) show [1, 2, 3, 4, 5]
-
 ["1","2","3","4","5"]
 ```
 
@@ -159,22 +155,21 @@ infix 8 range as ..
 Podemos usar este operador como sigue:
 
 ```text
-> 1 .. 5
+> import Data.Array
 
+> 1 .. 5
 [1, 2, 3, 4, 5]
 
 > show <$> (1 .. 5)
-
 ["1","2","3","4","5"]
 ```
 
-_Nota_: Los operadores infijos pueden ser una gran herramienta para definir lenguajes específicos del dominio con una sintaxis natural. Sin embargo, si se usan sin cuidado, pueden volver el código ilegible para principiantes, de manera que es una buena cosa tener precaución al definir cualquier operador nuevo.
+_Nota_: Los operadores infijos pueden ser una gran herramienta para definir lenguajes específicos del dominio con una sintaxis natural. Sin embargo, si se usan excesivamente, pueden volver el código ilegible para principiantes, de manera que es una buena cosa tener precaución al definir cualquier operador nuevo.
 
 En el ejemplo anterior, hemos puesto la expresión `1 .. 5` entre paréntesis, pero de hecho no era necesario, porque el módulo `Data.Array` asigna un nivel de precedencia mayor al operador `..` que el asignado al operador `<$>`. En el ejemplo anterior, la precedencia del operador `..` se definía como `8`, el número tras la palabra clave `infix`. Este valor es más alto que el nivel de precedencia de `<$>`, lo que significa que no necesitamos añadir paréntesis:
 
 ```text
 > show <$> 1 .. 5
-
 ["1","2","3","4","5"]
 ```
 
@@ -205,12 +200,11 @@ Otra función estándar sobre arrays es la función `concat`, definida en `Data.
 
 ```text
 > import Data.Array
-> :type concat
 
+> :type concat
 forall a. Array (Array a) -> Array a
 
 > concat [[1, 2, 3], [4, 5], [6]]
-
 [1, 2, 3, 4, 5, 6]
 ```
 
@@ -225,7 +219,6 @@ Veámosla en acción:
 forall a b. (a -> Array b) -> Array a -> Array b
 
 > concatMap (\n -> [n, n * n]) (1 .. 5)
-
 [1,1,2,4,3,9,4,16,5,25]
 ```
 
@@ -259,7 +252,12 @@ Podemos probar nuestra función:
 Esto no es exactamente lo que queremos. En lugar de simplemente devolver el segundo elemento de cada par, necesitamos mapear una función sobre la copia interna de `1 .. n` que nos permitirá mantener el par completo:
 
 ```text
-> let pairs' n = concatMap (\i -> map (\j -> [i, j]) (1 .. n)) (1 .. n)
+> :paste
+… let pairs' n =
+…       concatMap (\i ->
+…         map (\j -> [i, j]) (1 .. n)
+…       ) (1 .. n)
+… ^D
 
 > pairs' 3
 [[1,1],[1,2],[1,3],[2,1],[2,2],[2,3],[3,1],[3,2],[3,3]]
@@ -268,8 +266,12 @@ Esto no es exactamente lo que queremos. En lugar de simplemente devolver el segu
 Esto tiene mejor pinta. Sin embargo, estamos generando demasiados pares: tenemos [1, 2] y [2, 1] por ejemplo. Podemos excluir el segundo caso asegurándonos de que `j` sólo va de `i` a `n`:
 
 ```text
-> let pairs'' n = concatMap (\i -> map (\j -> [i, j]) (i .. n)) (1 .. n)
-
+> :paste
+… let pairs'' n =
+…       concatMap (\i ->
+…         map (\j -> [i, j]) (i .. n)
+…       ) (1 .. n)
+… ^D
 > pairs'' 3
 [[1,1],[1,2],[1,3],[2,2],[2,3],[3,3]]
 ```
@@ -376,7 +378,7 @@ Para nuestros propósitos, los siguientes cálculos nos dicen todo lo que necesi
 
 Esto es, si a `guard` se le pasa una expresión que evalúa a `true`, devuelve un array con un único elemento. Si la expresión devuelve `false`, su resultado está vacío.
 
-Esto significa que si la guarda falla, la rama actual del array por comprensión terminará de manera temprana sin resultados. Lo que significa que una llamada a `guard` es equivalente a usar `filter` en el array intermedio. Prueba las dos definiciones de `factors` para verificar que dan el mismo resultado.
+Esto significa que si la guarda falla, la rama actual del array por comprensión terminará de manera temprana sin resultados. Lo que significa que una llamada a `guard` es equivalente a usar `filter` en el array intermedio. Dependiendo de la aplicación, puede que prefieras usar `guard` en lugar de `filter`. Prueba las dos definiciones de `factors` para verificar que dan el mismo resultado.
 
 X> ## Ejercicios
 X>
@@ -507,9 +509,9 @@ Esta implementación no es recursiva final, de manera que el JavaScript generado
 reverse :: forall a. Array a -> Array a
 reverse = reverse' []
   where
-  reverse' acc [] = acc
-  reverse' acc xs = reverse' (unsafePartial head xs : acc)
-                             (unsafePartial tail xs)
+    reverse' acc [] = acc
+    reverse' acc xs = reverse' (unsafePartial head xs : acc)
+                               (unsafePartial tail xs)
 ```
 
 En este caso, delegamos a la función auxiliar `reverse'`, que realiza la tarea pesada de invertir el array. Date cuenta de que la función `reverse'` es recursiva final. Su única llamada recursiva está en el último caso y está en posición de cola. Esto significa que el código generado será un _bucle while_ y no desbordará la pila para entradas grandes.
@@ -526,11 +528,13 @@ Por ejemplo, el ejemplo `reverse` se puede escribir como un pliegue al menos de 
 
 ```text
 > import Data.Foldable
-> let reverse :: forall a. Array a -> Array a
-      reverse = foldr (\x xs -> xs <> [x]) []
+
+> :paste
+… let reverse :: forall a. Array a -> Array a
+…     reverse = foldr (\x xs -> xs <> [x]) []
+… ^D
 
 > reverse [1, 2, 3]
-
 [3,2,1]
 ```
 
@@ -544,7 +548,7 @@ X> 3. (Medio) Reescribe la siguiente función en forma recursiva final usando un
 X>
 X>     ```haskell
 X>     import Prelude
-X>     import Data.Array.Unsafe (head, tail)
+X>     import Data.Array.Partial (head, tail)
 X>     
 X>     count :: forall a. (a -> Boolean) -> Array a -> Int
 X>     count _ [] = 0

@@ -127,9 +127,9 @@ Ahora veremos cómo `map` y `apply` se pueden usar juntas para elevar funciones 
 
 Para funciones de un argumento, podemos simplemente usar `map` directamente.
 
-Para funciones de dos argumentos, digamos que tenemos una función currificada `f` de tipo `a -> b -> c`. Esto es equivalente al tipo `a -> (b -> c)`, de manera que podemos aplicar `map` a `f` para obtener una nueva función de tipo `f a -> f (b -> c)`. Al aplicar parcialmente esta función al primer argumento elevado (de tipo `f a`), obtenemos una nueva función envuelta de tipo `f (b -> c)`. Podemos entonces usar `apply` para aplicar el segundo argumento elevado (de tipo `f b`) para obtener nuestro valor final de tipo `f c`.
+Para funciones de dos argumentos, digamos que tenemos una función currificada `g` de tipo `a -> b -> c`. Esto es equivalente al tipo `a -> (b -> c)`, de manera que podemos aplicar `map` a `g` para obtener una nueva función de tipo `f a -> f (b -> c)` para cualquier constructor de tipo `f` con una instancia de `Functor`. Al aplicar parcialmente esta función al primer argumento elevado (de tipo `f a`), obtenemos una nueva función envuelta de tipo `f (b -> c)`. Si también tenemos una instancia de `Apply` para `f`, podemos entonces usar `apply` para aplicar el segundo argumento elevado (de tipo `f b`) para obtener nuestro valor final de tipo `f c`.
 
-Para juntarlo todo, vemos que si tenemos valores `x :: f a` y `y :: f b`, entonces la expresión `(f <$> x) <*> y` tiene tipo `f c` (recuerda, esta expresión es equivalente a `apply (map f x) y`). Las reglas de precedencia definidas en el Prelude nos permiten quitar los paréntesis: `f <$> x <*> y`.
+Para juntarlo todo, vemos que si tenemos valores `x :: f a` y `y :: f b`, entonces la expresión `(g <$> x) <*> y` tiene tipo `f c` (recuerda, esta expresión es equivalente a `apply (map g x) y`). Las reglas de precedencia definidas en el Prelude nos permiten quitar los paréntesis: `g <$> x <*> y`.
 
 En general, podemos usar `<$>` sobre el primer argumento y `<*>` para los argumentos restantes, como se muestra aquí para `lift3`:
 
@@ -226,8 +226,10 @@ Esto es bueno, porque ahora podemos devolver una respuesta de error desde nuestr
 En lugar de elevar sobre `Maybe`, podemos elevar sobre `Either String` que permite devolver un mensaje de error. Primero, escribamos un operador para convertir entradas opcionales en cálculos que señalan un error usando `Either String`:
 
 ```text
-> let withError Nothing  err = Left err
-      withError (Just a) _   = Right a
+> :paste
+… let withError Nothing  err = Left err
+…     withError (Just a) _   = Right a
+… ^D
 ```
 
 _Nota_: En el funtor aplicativo `Either err`, el constructor `Left` indica un error y el `Right` indica éxito.
@@ -235,10 +237,12 @@ _Nota_: En el funtor aplicativo `Either err`, el constructor `Left` indica un er
 Ahora podemos elevar sobre `Either String` proporcionando un mensaje de error apropiado para cada parámetro:
 
 ```text
-> let fullNameEither first middle last =
-    fullName <$> (first  `withError` "First name was missing")
-             <*> (middle `withError` "Middle name was missing")
-             <*> (last   `withError` "Last name was missing")
+> :paste
+… let fullNameEither first middle last =
+…     fullName <$> (first  `withError` "First name was missing")
+…              <*> (middle `withError` "Middle name was missing")
+…              <*> (last   `withError` "Last name was missing")
+… ^D
 
 > :type fullNameEither
 Maybe String -> Maybe String -> Maybe String -> Either String String
@@ -579,6 +583,7 @@ Pero hay más ejemplos de funtores transitables aparte de arrays y listas. El co
 
 ```text
 > import Data.Maybe
+> import Data.Traversable
 
 > traverse (nonEmpty "Example") Nothing
 (Valid Nothing)
@@ -615,7 +620,7 @@ Sin embargo, en general, los funtores aplicativos son más generales que esto. L
 
 Por ejemplo, el funtor de validación `V` devolvía un _array_ de errores, pero funcionaría igualmente bien si eligiésemos el semigrupo `Set`, en cuyo caso no importaría en qué orden ejecutásemos los distintos validadores. ¡Podríamos incluso ejecutarlos en paralelo sobre la estructura de datos!
 
-Como segundo ejemplo, el paquete `purescript-parallel` proporciona un constructor de tipo `Parallel` que representa _cálculos asíncronos_ (asynchronous computations). `Parallel` tiene una instancia `Applicative` que calcula sus resultados _en paralelo_:
+Como segundo ejemplo, el paquete `purescript-parallel` proporciona un constructor de tipo `Parallel` que representa _cálculos paralelos_. `Parallel` proporciona una función `parallel` que usa un funtor aplicativo para calcular el resultado de sus cálculos de entrada _en paralelo_:
 
 ```haskell
 f <$> parallel computation1

@@ -16,9 +16,7 @@ El proyecto añade las siguientes dependencias Bower:
 - `purescript-react`, un conjunto de vínculos a la biblioteca de interfaz de usuario React, que usaremos para construir una interfaz para nuestra aplicación de agenda.
 
 Además de los módulos del capítulo anterior, este proyecto añade un módulo `Main` que proporciona el punto de entrada para la aplicación, y funciones para representar la interfaz de usuario.
-
-Para ejecutar este proyecto, construye y empaqueta el código JavaScript con `pulp browserify --to dist/Main.js` y abre el fichero `html/index.html` en tu navegador.
-
+Para ejecutar este proyecto, instala primero React usando `npm install`, y construye y empaqueta el código JavaScript con `pulp browserify --to dist/Main.js`. Para ejecutar el proyecto, abre el fichero `html/index.html` en tu navegador.
 ## Mónadas (monads) y notación do
 
 La notación do se presentó cuando vimos los _arrays por comprensión_. Los arrays por comprensión proporcionan azúcar sintáctico (syntactic sugar) para la función `concatMap` del módulo `Data.Array`.
@@ -298,7 +296,7 @@ Toda instancia de la clase de tipos `Monad` es también una instancia de la clas
 Sin embargo, hay una implementación de la clase de tipos `Applicative` que viene "gratis" para cualquier instancia de `Monad`, dada por la función `ap`:
 
 ```haskell
-ap :: forall m. Monad m => m (a -> b) -> m a -> m b
+ap :: forall m a b. Monad m => m (a -> b) -> m a -> m b
 ap mf ma = do
   f <- mf
   a <- ma
@@ -678,17 +676,17 @@ import Prelude
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.ST (ST, newSTRef, readSTRef, modifySTRef)
 
-simulate :: forall eff h. Number -> Number -> Number -> Eff (st :: ST h | eff) Number
+simulate :: forall eff h. Number -> Number -> Int -> Eff (st :: ST h | eff) Number
 simulate x0 v0 time = do
   ref <- newSTRef { x: x0, v: v0 }
-  forE 0.0 (time * 1000.0) $ \i -> do
+  forE 0 (time * 1000) \_ -> do
     modifySTRef ref \o ->
       { v: o.v - 9.81 * 0.001
       , x: o.x + o.v * 0.001
       }
     pure unit
   final <- readSTRef ref
-  return final.x
+  pure final.x
 ```
 
 Al final del cálculo, leemos el valor final de la referencia a celda y devolvemos la posición de la partícula.
@@ -736,10 +734,10 @@ Puedes incluso intentar ejecutar la función en PSCi:
 De hecho, si expandimos la definición de `simulate` en la llamada a `runST` como sigue:
 
 ```haskell
-simulate :: Number -> Number -> Number -> Number
+simulate :: Number -> Number -> Int -> Number
 simulate x0 v0 time = runPure $ runST do
   ref <- newSTRef { x: x0, v: v0 }
-  forE 0.0 (time * 1000.0) $ \i -> do
+  forE 0 (time * 1000) \_ -> do
     modifySTRef ref \o ->  
       { v: o.v - 9.81 * 0.001
       , x: o.x + o.v * 0.001  
@@ -754,7 +752,7 @@ el compilador `psc` se dará cuenta de que la referencia a celda no puede escapa
 ```javascript
 var ref = { x: x0, v: v0 };
 
-Control_Monad_Eff.forE(0.0)(time * 1000.0)(function (i) {
+Control_Monad_Eff.forE(0)(time * 1000 | 0)(function (i) {
   return function __do() {
     ref = (function (o) {
       return {
@@ -785,7 +783,10 @@ Hay un número de paquetes PureScript para trabajar directamente con el DOM o co
 - [`purescript-dom`](http://github.com/purescript-contrib/purescript-dom) es un conjunto amplio de vínculos de bajo nivel al API DOM del navegador.
 - [`purescript-jquery`](http://github.com/paf31/purescript-jquery) es un conjunto de vínculos a la biblioteca [jQuery](http://jquery.org).
 
-Hay también bibliotecas PureScript que construyen abstracciones sobre estas bibliotecas, como [`purescript-thermite`](http://github.com/paf31/purescript-thermite), que se basa en `purescript-react`, y [`purescript-halogen`](http://github.com/slamdata/purescript-halogen) que proporciona un conjunto de abstracciones seguras a nivel de tipos sobre la biblioteca [`virtual-dom`](http://github.com/Matt-Esch/virtual-dom).
+Hay también bibliotecas PureScript que construyen abstracciones sobre estas bibliotecas, como
+
+- [`purescript-thermite`](http://github.com/paf31/purescript-thermite), que se basa en `purescript-react`, y 
+- [`purescript-halogen`](http://github.com/slamdata/purescript-halogen) que proporciona un conjunto de abstracciones seguras a nivel de tipos sobre la biblioteca [`virtual-dom`](http://github.com/Matt-Esch/virtual-dom).
 
 En este capítulo, usaremos la biblioteca `purescript-react` para añadir una interfaz de usuario a nuestra agenda, pero animamos al lector interesado a explorar enfoques alternativos. 
 
@@ -1031,7 +1032,6 @@ X> ## Ejercicios
 X>
 X> 1. (Fácil) Modifica la aplicación para que incluya una caja de texto para un número de teléfono del trabajo. 
 X> 1. (Medio) En lugar de usar un elemento `ul` para mostrar los errores de validación en una lista, modifica el código para crear un `div` con el estilo `alert` para cada error.
-X> 1. (Medio) Reescribe el código del módulo `Data.AddressBook.UI` sin llamadas explícitas a `>>=`.
 X> 1. (Difícil, Extendido) Un problema con esta interfaz de usuario es que los errores de validación no se muestran junto al campo del formulario en que se originan. Modifica el código para solucionar este problema.
 X>   
 X>   _Pista_: el tipo de error devuelto por el validador debe extenderse para que indique qué campo causó el error. Puedes usar el siguiente tipo `Errors` modificado:

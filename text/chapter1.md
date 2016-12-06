@@ -83,6 +83,8 @@ Los requerimientos de software para este libro son mínimos: El primer capítulo
 
 El compilador de PureScript se puede descargar como una distribución binaria o se puede construir a partir de los fuentes en cualquier sistema que tenga una instalación reciente del compilador de Haskell GHC, el siguiente capítulo dará los pasos.
 
+El código de esta versión es compatible con las versiones `0.10.*` del compilador de PureScript.
+
 ## Sobre ti
 
 Voy a asumir que estas familiarizado con JavaScript. Cualquier familiaridad previa con herramientas comunes del ecosistema JavaScript como NPM y Gulp serán beneficiosas si deseas adaptar la configuración estándar para tus necesidades, pero dicho conocimiento no es necesario.

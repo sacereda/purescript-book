@@ -369,15 +369,18 @@ Para propósitos de verificación, normalmente incluimos llamadas a la función 
 Podemos probar `quickCheckPure` usando PSCi. Aquí probamos que la operación `merge` es asociativa:
 
 ```text
+> import Prelude
 > import Merge
 > import Test.QuickCheck
 > import Test.QuickCheck.LCG (mkSeed)
 
-> quickCheckPure (mkSeed 12345) 10 \xs ys zs ->
-    ((xs `merge` ys) `merge` zs) ==
-      (xs `merge` (ys `merge` zs))
+> :paste
+… quickCheckPure (mkSeed 12345) 10 \xs ys zs ->
+…   ((xs `merge` ys) `merge` zs) ==
+…     (xs `merge` (ys `merge` zs))
+… ^D
 
-[Success, Success, ..., Success]
+Success : Success : ...
 ```
 
 `quickCheckPure` toma tres argumentos: la semilla del generador aleatorio, el número de casos de prueba a generar, y la propiedad a verificar. Si todas las pruebas pasan, debes ver un array de constructores de dato `Success` impresos en la consola.

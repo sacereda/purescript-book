@@ -30,7 +30,7 @@ Aquí importamos varios módulos:
 
 Date cuenta de que lo que importamos de estos módulos está listado explícitamente entre paréntesis. Esto es generalmente una buena práctica, ya que ayuda a evitar conflictos entre los símbolos importados.
 
-El proyecto para este capítulo puede construirse usando Pulp mediante los siguientes comandos:
+Asumiendo que has clonado el repositorio con el código fuente del libro, el proyecto para este capítulo puede construirse usando Pulp mediante los siguientes comandos:
 
 ```text
 $ cd chapter3
@@ -81,7 +81,7 @@ Array Int
 Array Boolean
 
 > :type [1, false]
-Cannot unify Int with Boolean.
+Could not match type Int with Boolean.
 ```
 
 El error del último ejemplo es un error del comprobador de tipos, que intenta _unificar_ sin éxito (es decir, igualar) los tipos de los dos elementos.
@@ -127,12 +127,14 @@ add :: Int -> Int -> Int
 add x y = x + y
 ```
 
-De manera alternativa, las funciones se pueden definir en línea usando una barra diagonal inversa seguida de una lista de nombres de argumento delimitada por espacios. Para introducir una declaración de varias líneas, podemos usar el modo multilínea arrancando PSCi con la opción `-m` (o `--multi-line-mode`). En este modo, las declaraciones se terminan usando la secuencia de teclas _Control-D_:
+De manera alternativa, las funciones se pueden definir en línea usando una barra diagonal inversa seguida de una lista de nombres de argumento delimitada por espacios. Para introducir una declaración de varias líneas en PSCi, podemos entrar en "modo paste" usando el comando `:paste`. En este modo, las declaraciones se finalizan usando la secuencia de teclas _Control-D_:
 
 ```text
-> let
-    add :: Int -> Int -> Int
-    add = \x y -> x + y
+> :paste
+… let
+…   add :: Int -> Int -> Int
+…   add = \x y -> x + y
+… ^D
 ```
 
 Habiendo definido esta función en PSCi, podemos _aplicarla_ a sus argumentos separando los dos argumentos del nombre de la función mediante espacio en blanco:
@@ -197,18 +199,22 @@ y + z
 
 En el segundo caso, el compilador de PureScript intentará analizar _dos_ declaraciones, una por cada línea.
 
-Generalmente, las declaraciones definidas en el mismo bloque deben tener sangría al mismo nivel. Por ejemplo, en PSCi con el modo multilínea activo, las declaraciones en una sentencia `let` deben tener la misma sangría. Esto es válido:
+Generalmente, las declaraciones definidas en el mismo bloque deben tener sangría al mismo nivel. Por ejemplo, en PSCi, las declaraciones en una sentencia `let` deben deben tener la misma sangría. Esto es válido:
 
 ```text
-> let x = 1
-      y = 2
+> :paste
+… let x = 1
+…     y = 2
+… ^D
 ```
 
 Pero esto no lo es:
 
 ```text
-> let x = 1
-       y = 2
+> :paste
+… let x = 1
+…      y = 2
+… ^D
 ```
 
 Algunas palabras clave de PureScript (como `where`, `of` y `let`) introducen un nuevo bloque de código, en el cual las declaraciones deben tener mayor nivel de sangría:
@@ -216,8 +222,8 @@ Algunas palabras clave de PureScript (como `where`, `of` y `let`) introducen un 
 ```haskell
 example x y z = foo + bar
   where
-  foo = x * y
-  bar = y * z
+    foo = x * y
+    bar = y * z
 ```
 
 Date cuenta de que las declaraciones de `foo` y `bar` tienen mayor nivel de sangría que la declaración de `example`.
@@ -343,7 +349,7 @@ Podemos crear una entrada usando un registro literal, que tiene el mismo aspecto
 > let address = { street: "123 Fake St.", city: "Faketown", state: "CA" }
 ```
 
-Si usas modo multilínea, no olvides terminar la expresión con Ctrl+D. Ahora intenta aplicar nuestra función al ejemplo:
+Ahora intenta aplicar nuestra función al ejemplo:
 
 ```text
 > showAddress address
@@ -427,7 +433,7 @@ Esto es, `insertEntry` es una función que devuelve una función. Toma un único
 Esto significa que podemos _aplicar parcialmente_ `insertEntry` especificando únicamente su primer argumento, por ejemplo. En PSCi podemos ver el tipo resultante:
 
 ```text
-> :type insertEntry example
+> :type insertEntry entry
 
 AddressBook -> AddressBook
 ```
@@ -435,7 +441,7 @@ AddressBook -> AddressBook
 Como esperábamos, el tipo de retorno es una función. Podemos aplicar la función resultante a un segundo argumento:
 
 ```text
-> :type (insertEntry example) emptyBook
+> :type (insertEntry entry) emptyBook
 AddressBook
 ```
 
@@ -547,14 +553,16 @@ En el código de `findEntry` de arriba, usamos una forma diferente de aplicació
 
 Esto es equivalente a la aplicación usual `head (filter filterEntry book)`.
 
-`($)` es simplemente una función normal, definida en el Prelude como sigue:
+`($)` es simplemente una función normal llamada `apply`, definida en el Prelude como sigue:
 
 ```haskell
-($) :: forall a b. (a -> b) -> a -> b
-($) f x = f x
+apply :: forall a b. (a -> b) -> a -> b
+apply f x = f x
+
+infixr 0 apply as $
 ```
 
-Así, `($)` toma una función y un valor, y aplica la función al valor.
+Así, `apply` toma una función y un valor, y aplica la función al valor. La palabra reservada `infixr` se usa para definir `($)` como un alias de `apply`.
 
 Pero ¿por qué podríamos querer usar `$` en lugar de aplicación de función normal? La razón es que `$` es un operador de baja precedencia asociativo por la derecha. Esto significa que `$` nos permite quitar pares de paréntesis para aplicaciones anidadas profundamente.
 
@@ -589,7 +597,7 @@ En esta forma, podemos aplicar el truco anterior de conversión eta para llegar 
 ```haskell
 findEntry firstName lastName = head <<< filter filterEntry
   where
-  ...
+    ...
 ```
 
 Una parte derecha igualmente válida sería:
@@ -674,7 +682,6 @@ X> 1. (Difícil) Escribe una función `removeDuplicates` que elimina entradas du
 
 En este capítulo hemos cubierto varios conceptos de programación funcional:
 
-- La importancia de los datos inmutables y las funciones puras.
 - Cómo usar el modo interactivo PSCi para experimentar con funciones y probar ideas.
 - El papel de los tipos como herramienta de corrección e implementación.
 - El uso de funciones currificadas para representar funciones de múltiples argumentos.

@@ -298,7 +298,8 @@ Pulp encuentra ficheros `.js` en el directorio `src` y los pasa al compilador co
 Las funciones JavaScript y los valores se exportan de los módulos externos JavaScript asignándolos al objeto `exports` igual que en un módulo CommonJS normal. El compilador `psc` trata este módulo como un módulo CommonJS normal y simplemente lo añade como una dependencia al módulo PureScript compilado. Sin embargo, cuando empaquetamos código para el navegador con `psc-bundle` o `pulp build -O --to` es muy importante seguir el patrón de arriba, asignando lo que queremos exportar al objeto `exports` usando una asignación de propiedad. Esto es porque `psc-bundle` reconoce este formato, permitiendo eliminar funciones o valores no usados exportados por JavaScript del código que empaqueta.
 
 Con estas dos piezas en su sitio, podemos ahora usar la función `encodeURIComponent` desde PureScript igual que cualquier función escrita en PureScript. Por ejemplo, si esta declaración se salva como un módulo y se carga en PSCi, podemos reproducir el cálculo de arriba:
-```haskell
+
+```text
 $ pulp psci
 
 > import Data.URI
@@ -615,32 +616,35 @@ readJSON :: forall a. IsForeign a => String -> F a
 El constructor de tipo `F` es de hecho un sinónimo de tipo definido en `Data.Foreign`:
 
 ```haskell
-type F = Either ForeignError
+type F = Except (NonEmptyList ForeignError)
 ```
+
+Aquí, `Except` es una mónada para gestionar excepciones en código puro, similar a `Either`. Podemos convertir un valor en la mónada `F` en un valor en la mónada `Either` usando la función `runExcept`.
 
 La mayoría de las funciones de la biblioteca `purescript-foreign` devuelven un valor en la mónada `F`, lo que significa que podemos usar notación do y los combinadores de funtor aplicativo para construir valores tipados.
 
 La clase de tipos `IsForeign` representa aquellos tipos que se pueden obtener a partir de datos no tipados. Hay instancias de la clase de tipos definidas para los tipos primitivos y arrays, y podemos también definir nuestras propias instancias.
 
-Intentemos analizar algún documento JSON simple usando `readJSON` en PSCI:
+Intentemos analizar algún documento JSON simple usando `readJSON` en PSCI (recordando usar `runExcept` para desenvolver los resultados):
 
 ```text
-> readJSON "\"Testing\"" :: F String
+> runExcept (readJSON "\"Testing\"" :: F String)
 Right "Testing"
 
-> readJSON "true" :: F Boolean
+> runExcept (readJSON "true" :: F Boolean)
 Right true
 
-> readJSON "[1, 2, 3]" :: F (Array Int)
+> runExcept (readJSON "[1, 2, 3]" :: F (Array Int))
 Right [1, 2, 3]
 ```
 
 Recuerda que en la mónada `Either`, el constructor de datos `Right` indica éxito. Fíjate sin embargo en que un JSON inválido o un tipo incorrecto acaba en error:
 
 ```text
-> readJSON "[1, 2, true]" :: F (Array Int)
+> import Control.Monad.Except
 
-Left (Error at array index 2: Type mismatch: expected Int, found Boolean)
+> runExcept (readJSON "[1, 2, true]" :: F (Array Int))
+(Left (NonEmptyList (NonEmpty (ErrorAtIndex 2 (TypeMismatch "Int" "Boolean")) Nil)))
 ```
 
 La biblioteca `purescript-foreign` nos dice en qué parte del documento JSON ha ocurrido el error.
@@ -654,10 +658,13 @@ Los documentos JSON del mundo real contienen valores nulos e indefinidos, así q
 Cada constructor de tipo proporciona una función para desenvolver el valor interno: `unNull`, `unUndefined` y `unNullOrUndefined`. Podemos elevar la función apropiada sobre la acción `readJSON` para analizar documentos JSON que permiten valores nulos:
 
 ```text
-> unNull <$> readJSON "42" :: F (Null Int)
+> import Prelude
+> import Data.Foreign.Null
+
+> runExcept (unNull <$> readJSON "42" :: F (Null Int))
 (Right (Just 42))
 
-> unNull <$> readJSON "null" :: F (Null Int)
+> runExcept (unNull <$> readJSON "null" :: F (Null Int))
 (Right Nothing)
 ```
 
@@ -666,7 +673,7 @@ En cada caso, la anotación de tipo se aplica al término a la derecha del opera
 El tipo `Null Int` representa valores que son o bien enteros o null. ¿Qué pasa si queremos analizar valores más interesantes, como arrays de enteros, donde cada elemento puede ser `null`? En ese caso, podemos elevar la función `map unNull` sobre la acción `readJSON` como sigue:
 
 ```text
-> map unNull <$> readJSON "[1, 2, null]" :: F (Array (Null Int))
+> runExcept (map unNull <$> readJSON "[1, 2, null]" :: F (Array (Null Int)))
 (Right [(Just 1),(Just 2),Nothing])
 ```
 
@@ -736,8 +743,8 @@ loadSavedData = do
   item <- getItem "person"
 
   let
-    savedData :: F (Maybe FormData)
-    savedData = do
+    savedData :: Either (NonEmptyList ForeignError) (Maybe FormData)
+    savedData = runExcept do
       jsonOrNull <- read item
       traverse readJSON (unNull jsonOrNull)
 ```
@@ -789,4 +796,4 @@ En este capítulo hemos aprendido cómo trabajar con código JavaScript externo 
 - Hemos visto algunos tipos externos comunes definidos en el Prelude y cómo se pueden usar para interoperar con código JavaScript idiomático. En particular, hemos presentado la representación de efectos secundarios en la mónada `Eff` y vimos cómo usar la mónada `Eff` para capturar nuevos efectos secundarios.
 - Vimos cómo deserializar datos JSON usando la clase de tipos `IsForeign`.
 
-Para más ejemplos, las organizaciones `purescript` y `purescript-contrib` proporcionan muchos ejemplos de bibliotecas que usan la FFI. En los capítulos restantes usaremos algunas de estas bibliotecas para resolver problemas del mundo real de una manera segura a nivel de tipos.
+Para ver más ejemplos, las organizaciones `purescript` y `purescript-contrib` en GitHub proporcionan muchos ejemplos de bibliotecas que usan la FFI. En los capítulos restantes usaremos algunas de estas bibliotecas para resolver problemas del mundo real de una manera segura a nivel de tipos.
