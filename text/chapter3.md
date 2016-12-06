@@ -1,16 +1,16 @@
-# Functions and Records
+# Funciones y registros (records)
 
-## Chapter Goals
+## Objetivos del capítulo
 
-This chapter will introduce two building blocks of PureScript programs: functions and records. In addition, we'll see how to structure PureScript programs, and how to use types as an aid to program development.
+Este capítulo presenta dos elementos esenciales de los programas PureScript: funciones y registros. Además veremos cómo estructurar programas PureScript y cómo usar los tipos como una ayuda en el desarrollo de programas.
 
-We will build a simple address book application to manage a list of contacts. This code will introduce some new ideas from the syntax of PureScript.
+Construiremos una aplicación de agenda simple para manejar una lista de contactos. Este código presentará algunas nuevas ideas de la sintaxis de PureScript.
 
-The front-end of our application will be the interactive mode PSCi, but it would be possible to build on this code to write a front-end in Javascript. In fact, we will do exactly that in later chapters, adding form validation and save/restore functionality.
+La interfaz de nuestra aplicación será el modo interactivo PSCi, pero sería posible tomar como base este código para construir una interfaz en JavaScript. De hecho, haremos exactamente eso en capítulos posteriores, añadiendo validación de formulario y funcionalidad de salvado/carga.
 
-## Project Setup
+## Preparación del proyecto
 
-The source code for this chapter is contained in the file `src/Data/AddressBook.purs`. This file starts with a module declaration and its import list:
+El código fuente de este capítulo estará contenido en el fichero `src/Data/AddressBook.purs`. Este fichero comienza con una declaración de módulo y su lista de importación:
 
 ```haskell
 module Data.AddressBook where
@@ -22,15 +22,15 @@ import Data.List (List(..), filter, head)
 import Data.Maybe (Maybe)
 ```
 
-Here, we import several modules:
+Aquí importamos varios módulos:
 
-- The `Control.Plus` module, which defines the `empty` value.
-- The `Data.List` module, which is provided by the `purescript-lists` package which can be installed using Bower. It contains a few functions which we will need for working with linked lists.
-- The `Data.Maybe` module, which defines data types and functions for working with optional values.
+- El módulo `Control.Plus` que define el valor `empty`.
+- El módulo `Data.List` proporcionado por el paquete `purescript-lists` que puede instalarse usando Bower. Contiene unas cuantas funciones que necesitaremos para trabajar con listas enlazadas.
+- El módulo `Data.Maybe` que define tipos de datos y funciones para trabajar con valores opcionales.
 
-Notice that the imports for these modules are listed explicitly in parentheses. This is generally a good practice, as it helps to avoid conflicting imports.
+Date cuenta de que lo que importamos de estos módulos está listado explícitamente entre paréntesis. Esto es generalmente una buena práctica, ya que ayuda a evitar conflictos entre los símbolos importados.
 
-The project for this chapter can be built using Pulp, with the following commands:
+El proyecto para este capítulo puede construirse usando Pulp mediante los siguientes comandos:
 
 ```text
 $ cd chapter3
@@ -38,9 +38,9 @@ $ bower update
 $ pulp build
 ```
 
-## Simple Types
+## Tipos simples
 
-PureScript defines three built-in types which correspond to JavaScript's primitive types: numbers, strings and booleans. These are defined in the `Prim` module, which is implicitly imported by every module. They are called `Number`, `String`, and `Boolean`, respectively, and you can see them in PSCi by using the `:type` command to print the types of some simple values:
+PureScript define tres tipos integrados que se corresponden con los tipos primitivos de JavaScript: números, cadenas y booleanos. Están definidos en el módulo `Prim` que se importa de manera implícita por todos los módulos. Se llaman `Number`, `String` y `Boolean` respectivamente y puedes verlos en PSCi usando el comando `:type` para imprimir los tipos de algunos valores simples:
 
 ```text
 $ pulp psci
@@ -55,23 +55,23 @@ String
 Boolean
 ```
 
-PureScript defines some other built-in types: integers, characters, arrays, records, and functions.
+PureScript define otros tipos integrados: enteros, caracteres, formaciones (arrays en adelante), registros (records) y funciones.
 
-Integers are differentiated from floating point values of type `Number` by the lack of a decimal point:
+Los enteros se diferencian de los tipos de coma flotante de tipo `Number` en que carecen de coma decimal.
 
 ```text
 > :type 1
 Int
 ```
 
-Character literals are wrapped in single quotes, unlike string literals which use double quotes:
+Los caracteres literales van rodeados por comillas simples, a diferencia de las cadenas literales que usan dobles comillas:
 
 ```text
 > :type 'a'
 Char
 ```
 
-Arrays correspond to JavaScript arrays, but unlike in JavaScript, all elements of a PureScript array must have the same type:
+Los arrays se corresponden a arrays de JavaScript, pero al contrario que en JavaScript, todos los elementos de un array PureScript deben tener el mismo tipo:
 
 ```text
 > :type [1, 2, 3]
@@ -84,9 +84,9 @@ Array Boolean
 Cannot unify Int with Boolean.
 ```
 
-The error in the last example is an error from the type checker, which unsuccessfully attempted to _unify_ (i.e. make equal) the types of the two elements.
+El error del último ejemplo es un error del comprobador de tipos, que intenta _unificar_ sin éxito (es decir, igualar) los tipos de los dos elementos.
 
-Records correspond to JavaScript's objects, and record literals have the same syntax as JavaScript's object literals:
+Los registros se corresponden con los objetos de JavaScript y los registros literales tienen la misma sintaxis que los objetos literales de JavaScript:
 
 ```text
 > let author = { name: "Phil", interests: ["Functional Programming", "JavaScript"] }
@@ -97,9 +97,9 @@ Records correspond to JavaScript's objects, and record literals have the same sy
 }
 ```
 
-This type indicates that the specified object has two _fields_, a `name` field which has type `String`, and an `interests` field, which has type `Array String`, i.e. an array of `String`s.
+Este tipo indica que el objeto especificado tiene dos _campos_, un campo `name` de tipo `String` y un campo `interests` que tiene tipo `Array String`, es decir, un array de cadenas.
 
-Fields of records can be accessed using a dot, followed by the label of the field to access:
+Los campos de los registros se pueden acceder usando un punto, seguido por la etiqueta del campo a acceder:
 
 ```text
 > author.name
@@ -109,7 +109,7 @@ Fields of records can be accessed using a dot, followed by the label of the fiel
 ["Functional Programming","JavaScript"]
 ```
 
-PureScript's functions correspond to JavaScript's functions. The PureScript standard libraries provide plenty of examples of functions, and we will see more in this chapter:
+Las funciones de PureScript se corresponden con las funciones de JavaScript. Las bibliotecas estándar de PureScript proporcionan un montón de ejemplos de funciones, y veremos más en este capítulo:
 
 ```text
 > import Prelude
@@ -120,14 +120,14 @@ forall a b c. (a -> b -> c) -> b -> a -> c
 forall a b. a -> b -> a
 ```
 
-Functions can be defined at the top-level of a file by specifying arguments before the equals sign:
+Las funciones pueden ser definidas en el nivel superior de un fichero especificando los argumentos antes del signo igual:
 
 ```haskell
 add :: Int -> Int -> Int
 add x y = x + y
 ```
 
-Alternatively, functions can be defined inline, by using a backslash character followed by a space-delimited list of argument names. To enter a multi-line declaration in PSCi, we can use multi-line mode, by starting PSCi with the `-m` (or `--multi-line-mode`) option. In this mode, declarations are terminated using the _Control-D_ key sequence:
+De manera alternativa, las funciones se pueden definir en línea usando una barra diagonal inversa seguida de una lista de nombres de argumento delimitada por espacios. Para introducir una declaración de varias líneas, podemos usar el modo multilínea arrancando PSCi con la opción `-m` (o `--multi-line-mode`). En este modo, las declaraciones se terminan usando la secuencia de teclas _Control-D_:
 
 ```text
 > let
@@ -135,31 +135,31 @@ Alternatively, functions can be defined inline, by using a backslash character f
     add = \x y -> x + y
 ```
 
-Having defined this function in PSCi, we can _apply_ it to its arguments by separating the two arguments from the function name by whitespace:
+Habiendo definido esta función en PSCi, podemos _aplicarla_ a sus argumentos separando los dos argumentos del nombre de la función mediante espacio en blanco:
 
 ```text
 > add 10 20
 30
 ```
 
-## Quantified Types
+## Tipos cuantificados
 
-In the previous section, we saw the types of some functions defined in the Prelude. For example, the `flip` function had the following type:
+En la sección anterior, vimos los tipos de algunas funciones definidas en el Prelude. Por ejemplo, la función `flip` tenía el siguiente tipo:
 
 ```text
 > :type flip
 forall a b c. (a -> b -> c) -> b -> a -> c
 ```
 
-The keyword `forall` here indicates that `flip` has a _universally quantified type_. It means that we can substitute any types for `a`, `b` and `c`, and `flip` will work with those types.
+La palabra clave `forall` indica aquí que `flip` tiene un _tipo universalmente cuantificado_. Significa que podemos sustituir cualquier tipo por `a`, `b` y `c`, y `flip` funcionará con esos tipos.
 
-For example, we might choose the type `a` to be `Int`, `b` to be `String` and `c` to be `String`. In that case we could _specialize_ the type of `flip` to
+Por ejemplo, podemos elegir que el tipo de `a` sea `Int`, `b` sea `String` y `c` sea `String`. En ese caso, podríamos _especializar_ el tipo de `flip` a:
 
 ```text
 (Int -> String -> String) -> String -> Int -> String
 ```
 
-We don't have to indicate in code that we want to specialize a quantified type - it happens automatically. For example, we can just use `flip` as if it had this type already:
+No tenemos que indicar en el código que queremos especializar un tipo cuantificado, sucede automáticamente. Por ejemplo, podemos simplemente usar `flip` como si ya tuviese este tipo:
 
 ```text
 > flip (\n s -> show n <> s) "Ten" 10
@@ -167,7 +167,7 @@ We don't have to indicate in code that we want to specialize a quantified type -
 "10Ten"
 ```
 
-While we can choose any types for `a`, `b` and `c`, we have to be consistent. The type of the function we passed to `flip` had to be consistent with the types of the other arguments. That is why we passed the string `"Ten"` as the second argument, and the number `10` as the third. It would not work if the arguments were reversed:
+Aunque podemos elegir cualquier tipo para `a`, `b` y `c`, tenemos que ser consistentes. El tipo de la función que hemos pasado a `flip` tenía que ser consistente con los tipos de los otros argumentos. Es por eso que pasamos la cadena "Ten" como segundo argumento, y el número `10` como el tercero. No funcionaría si invirtiésemos los argumentos:
 
 ```text
 > flip (\n s -> show n <> s) 10 "Ten"
@@ -175,43 +175,43 @@ While we can choose any types for `a`, `b` and `c`, we have to be consistent. Th
 Could not match type Int with type String
 ```
 
-## Notes On Indentation
+## Notas sobre la sangría (indentation)
 
-PureScript code is _indentation-sensitive_, just like Haskell, but unlike JavaScript. This means that the whitespace in your code is not meaningless, but rather is used to group regions of code, just like curly braces in C-like languages.
+El código PureScript es _sensible a la sangría_, al igual que Haskell y al contrario que JavaScript. Esto significa que el espacio en blanco de tu código no carece de significado. Se usa para agrupar regiones de código, de la misma manera que se usan las llaves en los lenguajes tipo C.
 
-If a declaration spans multiple lines, then any lines except the first must be indented past the indentation level of the first line.
+Si una declaración abarca múltiples líneas, entonces cualquier línea excepto la primera debe tener sangría más allá del nivel de la primera línea.
 
-Therefore, the following is valid PureScript code:
+Así, lo siguiente es código PureScript válido:
 
 ```haskell
 add x y z = x +
   y + z
 ```
 
-But this is not valid code:
+Pero esto no es código válido:
 
 ```haskell
 add x y z = x +
 y + z
 ```
 
-In the second case, the PureScript compiler will try to parse _two_ declarations, one for each line.
+En el segundo caso, el compilador de PureScript intentará analizar _dos_ declaraciones, una por cada línea.
 
-Generally, any declarations defined in the same block should be indented at the same level. For example, in PSCi with multi-line mode turned on, declarations in a let statement must be indented equally. This is valid:
+Generalmente, las declaraciones definidas en el mismo bloque deben tener sangría al mismo nivel. Por ejemplo, en PSCi con el modo multilínea activo, las declaraciones en una sentencia `let` deben tener la misma sangría. Esto es válido:
 
 ```text
 > let x = 1
       y = 2
 ```
 
-but this is not:
+Pero esto no lo es:
 
 ```text
 > let x = 1
        y = 2
 ```
 
-Certain PureScript keywords (such as `where`, `of` and `let`) introduce a new block of code, in which declarations must be further-indented:
+Algunas palabras clave de PureScript (como `where`, `of` y `let`) introducen un nuevo bloque de código, en el cual las declaraciones deben tener mayor nivel de sangría:
 
 ```haskell
 example x y z = foo + bar
@@ -220,13 +220,13 @@ example x y z = foo + bar
   bar = y * z
 ```
 
-Note how the declarations for `foo` and `bar` are indented past the declaration of `example`.
+Date cuenta de que las declaraciones de `foo` y `bar` tienen mayor nivel de sangría que la declaración de `example`.
 
-The only exception to this rule is the `where` keyword in the initial `module` declaration at the top of a source file.
+La única excepción a esta regla es la palabra clave `where` en la declaración de `module` inicial al comienzo del fichero fuente.
 
-## Defining Our Types
+## Definiendo nuestros tipos
 
-A good first step when tackling a new problem in PureScript is to write out type definitions for any values you will be working with. First, let's define a type for records in our address book:
+Un buen primer paso cuando se aborda un nuevo problema en PureScript es escribir las definiciones de tipos para cualquier valor con el que vayas a trabajar. Primero, definamos un tipo para los registros de nuestra agenda:
 
 ```haskell
 type Entry =
@@ -236,7 +236,7 @@ type Entry =
   }
 ```
 
-This defines a _type synonym_ called `Entry` - the type `Entry` is equivalent to the type on the right of the equals symbol: a record type with three fields - `firstName`, `lastName` and `address`. The two name fields will have type `String`, and the `address` field will have type `Address`, defined as follows:
+Esto define un _sinónimo de tipo_ llamado `Entry`. El tipo `Entry` es equivalente al tipo a la derecha del símbolo igual: un registro con tres campos: `firstName`, `lastName` y `address`. Los dos campos de nombre tendrán tipo `String`, y el campo `address` tendrá tipo `Address` definido como sigue:
 
 ```haskell
 type Address =
@@ -246,23 +246,23 @@ type Address =
   }
 ```
 
-Note that records can contain other records.
+Date cuenta de que los registros pueden contener otros registros.
 
-Now let's define a third type synonym, for our address book data structure, which will represented simply as a linked list of entries:
+Ahora definamos un tercer sinónimo de tipo para nuestra estructura de datos de agenda, que será representada simplemente como una lista enlazada de entradas:
 
 ```haskell
 type AddressBook = List Entry
 ```
 
-Note that `List Entry` is not the same as `Array Entry`, which represents an _array_ of entries.
+Date cuenta de que `List Entry` no es lo mismo que `Array Entry`, que representa un array de entradas.
 
-## Type Constructors and Kinds
+## Constructores de tipo (type constructors) y familias (kinds)
 
-`List` is an example of a _type constructor_. Values do not have the type `List` directly, but rather `List a` for some type `a`. That is, `List` takes a _type argument_ `a` and _constructs_ a new type `List a`.
+`List` es un ejemplo de un _constructor de tipo_. Los valores no tienen el tipo `List` directamente, sino `List a` para algún tipo `a`. Esto es, `List` toma un _argumento de tipo_ `a` y _construye_ un nuevo tipo `List a`.
 
-Note that just like function application, type constructors are applied to other types simply by juxtaposition: the type `List Entry` is in fact the type constructor `List` _applied_ to the type `Entry` - it represents a list of entries.
+Date cuenta de que al igual que la aplicación de función, los constructores de tipo se aplican a otros tipos simplemente por yuxtaposición: el tipo `List Entry` es de hecho el constructor de tipo `List` _aplicado_ al tipo `Entry`, representa una lista de entradas.
 
-If we try to incorrectly define a value of type `List` (by using the type annotation operator `::`), we will see a new type of error:
+Si tratamos de definir incorrectamente un valor de tipo `List` (usando el operador de anotación de tipo `::`), veremos un nuevo tipo de error:
 
 ```text
 > import Data.List
@@ -270,13 +270,13 @@ If we try to incorrectly define a value of type `List` (by using the type annota
 In a type-annotated expression x :: t, the type t must have kind *
 ```
 
-This is a _kind error_. Just like values are distinguished by their _types_, types are distinguished by their _kinds_, and just like ill-typed values result in _type errors_, _ill-kinded_ types result in _kind errors_.
+Esto es un _error de familia_. Al igual que los valores se distinguen por su _tipo_, los tipos se distinguen por su _familia_, y al igual que los valores erróneamente tipados acaban en _errores de tipo_, los tipos mal expresados resultan en _errores de familia_.
 
-There is a special kind called `*` which represents the kind of all types which have values, like `Number` and `String`.
+Hay una familia especial llamada `*` que representa la familia de todos los tipos que tienen valores, como `Number` y `String`.
 
-There are also kinds for type constructors. For example, the kind `* -> *` represents a function from types to types, just like `List`. So the error here occurred because values are expected to have types with kind `*`, but `List` has kind `* -> *`.
+Hay también familias para constructores de tipo. Por ejemplo, la familia `* -> *` representa una función de tipos a tipos, como `List`. Así, el error ha ocurrido aquí porque se espera que los valores tengan tipos de familia `*`, pero `List` tiene familia `* -> *`.
 
-To find out the kind of a type, use the `:kind` command in PSCi. For example:
+Para averiguar la familia de un tipo, usa el comando `:kind` en PSCi. Por ejemplo:
 
 ```text
 > :kind Number
@@ -290,17 +290,17 @@ To find out the kind of a type, use the `:kind` command in PSCi. For example:
 *
 ```
 
-PureScript's _kind system_ supports other interesting kinds, which we will see later in the book.
+El _sistema de familias_ de PureScript soporta otras familias interesantes que veremos más adelante en el libro.
 
-## Displaying Address Book Entries
+## Mostrando entradas de la agenda
 
-Let's write our first function, which will render an address book entry as a string. We start by giving the function a type. This is optional, but good practice, since it acts as a form of documentation. In fact, the PureScript compiler will give a warning if a top-level declaration does not contain a type annotation. A type declaration separates the name of a function from its type with the `::` symbol:
+Escribamos nuestra primera función, que representará una entrada de la agenda como una cadena. Empezamos dando a la función un tipo. Esto es opcional, pero es una buena práctica, ya que actúa como una forma de documentación. De hecho, el compilador de PureScript emitirá un aviso si una declaración del nivel superior no contiene una anotación de tipo. Una declaración de tipo separa con el símbolo `::` el nombre de la función de su tipo:
 
 ```haskell
 showEntry :: Entry -> String
 ```
 
-This type signature says that `showEntry` is a function, which takes an `Entry` as an argument and returns a `String`. Here is the code for `showEntry`:
+La firma de tipo dice que `showEntry` es una función que toma `Entry` como argumento y devuelve una cadena. Aquí está el código para `showEntry`:
 
 ```haskell
 showEntry entry = entry.lastName <> ", " <>
@@ -308,7 +308,7 @@ showEntry entry = entry.lastName <> ", " <>
                   showAddress entry.address
 ```
 
-This function concatenates the three fields of the `Entry` record into a single string, using the `showAddress` function to turn the record inside the `address` field into a `String`. `showAddress` is defined similarly:
+Esta función concatena los tres campos del registro `Entry` en una única cadena, usando la función `showAddress` para convertir el registro contenido en el campo `address` a una cadena. `showAddress` se define de forma similar:
 
 ```haskell
 showAddress :: Address -> String
@@ -317,19 +317,19 @@ showAddress addr = addr.street <> ", " <>
                    addr.state
 ```
 
-A function definition begins with the name of the function, followed by a list of argument names. The result of the function is specified after the equals sign. Fields are accessed with a dot, followed by the field name. In PureScript, string concatenation uses the diamond operator (`<>`), instead of the plus operator like in Javascript.
+Una definición de función comienza con el nombre de la función, seguida por una lista de nombres de argumento. El resultado de la función se especifica tras el signo igual. Los campos se acceden con un punto seguido del nombre de campo. En PureScript, la concatenación usa el operador diamante (`<>`), en lugar del operador de suma que usa JavaScript.
 
-## Test Early, Test Often
+## Prueba temprano, prueba a menudo
 
-The PSCi interactive mode allows for rapid prototyping with immediate feedback, so let's use it to verify that our first few functions behave as expected.
+El modo interactivo PSCi permite prototipado rápido con retroalimentación inmediata, así que usémoslo para verificar que nuestras primeras funciones se comportan como esperamos:
 
-First, build the code you've written:
+Primero, construye el código que has escrito:
 
 ```text
 $ pulp build
 ```
 
-Next, load PSCi, and use the `import` command to import your new module:
+A continuación, carga PSCi y usa el comando `import` para importar tu nuevo módulo:
 
 ```text
 $ pulp psci
@@ -337,13 +337,13 @@ $ pulp psci
 > import Data.AddressBook
 ```
 
-We can create an entry by using a record literal, which looks just like an anonymous object in JavaScript. Bind it to a name with a `let` expression:
+Podemos crear una entrada usando un registro literal, que tiene el mismo aspecto que un objeto anónimo en JavaScript. Vamos a ligarlo a un nombre con una expresión `let`:
 
 ```text
 > let address = { street: "123 Fake St.", city: "Faketown", state: "CA" }
 ```
 
-(If you are using multi-line mode, then don't forget to terminate the expression with Ctrl+D). Now, try applying our function to the example:
+Si usas modo multilínea, no olvides terminar la expresión con Ctrl+D. Ahora intenta aplicar nuestra función al ejemplo:
 
 ```text
 > showAddress address
@@ -351,7 +351,7 @@ We can create an entry by using a record literal, which looks just like an anony
 "123 Fake St., Faketown, CA"
 ```
 
-Let's also test `showEntry` by creating an address book entry record containing our example address:
+Probemos también `showEntry` creando una entrada de la agenda conteniendo nuestra dirección de ejemplo:
 
 ```text
 > let entry = { firstName: "John", lastName: "Smith", address: address }
@@ -360,26 +360,26 @@ Let's also test `showEntry` by creating an address book entry record containing 
 "Smith, John: 123 Fake St., Faketown, CA"
 ```
 
-## Creating Address Books
+## Creando agendas
 
-Now let's write some utility functions for working with address books. We will need a value which represents an empty address book: an empty list.
+Ahora escribamos algunas funciones útiles para trabajar con agendas. Necesitaremos un valor que representa una agenda vacía: una lista vacía.
 
 ```haskell
 emptyBook :: AddressBook
 emptyBook = empty
 ```
 
-We will also need a function for inserting a value into an existing address book. We will call this function `insertEntry`. Start by giving its type:
+Necesitaremos también una función para insertar un valor en una agenda existente. Llamaremos a esta función `insertEntry`. Comienza dándole su tipo:
 
 ```haskell
 insertEntry :: Entry -> AddressBook -> AddressBook
 ```
 
-This type signature says that `insertEntry` takes an `Entry` as its first argument, and an `AddressBook` as a second argument, and returns a new `AddressBook`.
+La firma de tipo dice que `insertEntry` toma `Entry` como primer argumento y `AddressBook` como segundo argumento, y devuelve un nuevo `AddressBook`.
 
-We don't modify the existing `AddressBook` directly. Instead, we return a new `AddressBook` which contains the same data. As such, `AddressBook` is an example of an _immutable data structure_. This is an important idea in PureScript - mutation is a side-effect of code, and inhibits our ability to reason effectively about its behavior, so we prefer pure functions and immutable data where possible.
+No modificamos el `AddressBook` directamente. En su lugar, devolvemos un nuevo `AddressBook` que contiene la nueva entrada. Así, `AddressBook` es un ejemplo de una _estructura de datos inmutable_. Esta es una idea importante en PureScript: la mutación es un efecto secundario del código e inhibe nuestra habilidad para razonar de manera efectiva sobre su comportamiento, de manera que preferimos funciones puras y datos inmutables donde sea posible.
 
-To implement `insertEntry`, we can use the `Cons` function from `Data.List`. To see its type, open PSCi and use the `:type` command:
+Para implementar `insertEntry`, usamos la función `Cons` de `Data.List`. Para ver su tipo, abre PSCi y usa el comando `:type`:
 
 ```text
 $ pulp psci
@@ -390,41 +390,41 @@ $ pulp psci
 forall a. a -> List a -> List a
 ```
 
-This type signature says that `Cons` takes a value of some type `a`, and a list of elements of type `a`, and returns a new list with entries of the same type. Let's specialize this with `a` as our `Entry` type:
+La firma de tipo dice que `Cons` toma un valor de cierto tipo `a` y una lista de elementos de tipo `a`, y devuelve una nueva lista con entradas del mismo tipo. Especialicemos esto con nuestro tipo `Entry` en el papel de `a`:
 
 ```haskell
 Entry -> List Entry -> List Entry
 ```
 
-But `List Entry` is the same as `AddressBook`, so this is equivalent to
+Pero `List Entry` es lo mismo que `AddressBook`, de manera que esto es equivalente a:
 
 ```haskell
 Entry -> AddressBook -> AddressBook
 ```
 
-In our case, we already have the appropriate inputs: an `Entry`, and a `AddressBook`, so can apply `Cons` and get a new `AddressBook`, which is exactly what we wanted!
+En nuestro caso, ya tenemos las entradas apropiadas: un `Entry` y un `AddressBook`, de manera que podemos aplicar `Cons` y obtener un nuevo `AddressBook`, ¡que es exactamente lo que queremos!
 
-Here is our implementation of `insertEntry`:
+Aquí está nuestra implementación de `insertEntry`:
 
 ```haskell
 insertEntry entry book = Cons entry book
 ```
 
-This brings the two arguments `entry` and `book` into scope, on the left hand side of the equals symbol, and then applies the `Cons` function to create the result.
+Esto usa los dos argumentos `entry` y `book` declarados a la izquierda del símbolo igual y les aplica la función `Cons` para crear el resultado.
 
-## Curried Functions
+## Funciones currificadas (curried functions)
 
-Functions in PureScript take exactly one argument. While it looks like the `insertEntry` function takes two arguments, it is in fact an example of a _curried function_.
+Las funciones en PureScript toman exactamente un argumento. Aunque parece que la función `insertEntry` toma dos argumentos, es de hecho un ejemplo de una _función currificada_.
 
-The `->` operator in the type of `insertEntry` associates to the right, which means that the compiler parses the type as
+El operador `->` en el tipo de `insertEntry` se asocia a la derecha, lo que significa que el compilador analiza el tipo como:
 
 ```haskell
 Entry -> (AddressBook -> AddressBook)
 ```
 
-That is, `insertEntry` is a function which returns a function! It takes a single argument, an `Entry`, and returns a new function, which in turn takes a single `AddressBook` argument and returns a new `AddressBook`.
+Esto es, `insertEntry` es una función que devuelve una función. Toma un único argumento, un `Entry`, y devuelve una nueva función que a su vez toma un único argumento `AddressBook` y devuelve un nuevo `AddressBook`.
 
-This means that we can _partially apply_ `insertEntry` by specifying only its first argument, for example. In PSCi, we can see the result type:
+Esto significa que podemos _aplicar parcialmente_ `insertEntry` especificando únicamente su primer argumento, por ejemplo. En PSCi podemos ver el tipo resultante:
 
 ```text
 > :type insertEntry example
@@ -432,56 +432,56 @@ This means that we can _partially apply_ `insertEntry` by specifying only its fi
 AddressBook -> AddressBook
 ```
 
-As expected, the return type was a function. We can apply the resulting function to a second argument:
+Como esperábamos, el tipo de retorno es una función. Podemos aplicar la función resultante a un segundo argumento:
 
 ```text
 > :type (insertEntry example) emptyBook
 AddressBook
 ```
 
-Note though that the parentheses here are unnecessary - the following is equivalent:
+Date cuenta de que los paréntesis son innecesarios. Lo que sigue es equivalente:
 
 ```text
 > :type insertEntry example emptyBook
 AddressBook
 ```
 
-This is because function application associates to the left, and this explains why we can just specify function arguments one after the other, separated by whitespace.
+Esto es porque la aplicación de función asocia a la izquierda, y esto explica por qué podemos simplemente especificar argumentos de función uno tras otro, separados por espacio en blanco.
 
-Note that in the rest of the book, I will talk about things like "functions of two arguments". However, it is to be understood that this means a curried function, taking a first argument and returning another function.
+En el resto del libro hablaremos de cosas como "funciones de dos argumentos". Sin embargo, hay que entender que esto significa una función currificada que toma un primer argumento y devuelve otra función.
 
-Now consider the definition of `insertEntry`:
+Ahora considera la definición de `insertEntry`:
 
 ```haskell
 insertEntry :: Entry -> AddressBook -> AddressBook
 insertEntry entry book = Cons entry book
 ```
 
-If we explicitly parenthesize the right-hand side, we get `(Cons entry) book`. That is, `insertEntry entry` is a function whose argument is just passed along to the `(Cons entry)` function. But if two functions have the same result for every input, then they are the same function! So we can remove the argument `book` from both sides:
+Si ponemos entre paréntesis de manera explícita la parte derecha, tenemos `(Cons entry) book`. Esto es, `insertEntry entry` es una función cuyo argumento se pasa sin más a la función `(Cons entry)`. Pero si dos funciones tienen el mismo resultado para cualquier entrada entonces son la misma función. Así que podemos quitar el argumento `book` de ambos lados:
 
 ```haskell
 insertEntry :: Entry -> AddressBook -> AddressBook
 insertEntry entry = Cons entry
 ```
 
-But now, by the same argument, we can remove `entry` from both sides:
+Pero ahora, con el mismo razonamiento, podemos quitar `entry` de ambos lados:
 
 ```haskell
 insertEntry :: Entry -> AddressBook -> AddressBook
 insertEntry = Cons
 ```
 
-This process is called _eta conversion_, and can be used (along with some other techniques) to rewrite functions in _point-free form_, which means functions defined without reference to their arguments.
+Este proceso se llama _conversión eta_, y se puede usar (junto a otras técnicas) para reescribir funciones en _forma libre de puntos_ (point-free form), que significa que las funciones están definidas sin referencia a sus argumentos.
 
-In the case of `insertEntry`, _eta conversion_ has resulted in a very clear definition of our function - "`insertEntry` is just cons on lists". However, it is arguable whether point-free form is better in general.
+En el caso de `insertEntry`, la _conversión eta_ ha resultado en una definición muy clara de nuestra función: "`insertEntry` es simplemente cons sobre listas". Sin embargo, es discutible si la forma libre de puntos es mejor en general.
 
-## Querying the Address Book
+## Consultando la agenda
 
-The last function we need to implement for our minimal address book application will look up a person by name and return the correct `Entry`. This will be a nice application of building programs by composing small functions - a key idea from functional programming.
+La última función que necesitamos implementar para nuestra aplicación de agenda mínima buscará una persona por nombre y devolverá la `Entry` correcta. Esto será una buena aplicación de la idea de construir programas componiendo pequeñas funciones, una idea clave en la programación funcional.
 
-We can first filter the address book, keeping only those entries with the correct first and last names. Then we can simply return the head (i.e. first) element of the resulting list.
+Podemos primero filtrar la agenda, manteniendo sólo las entradas con los nombres y apellidos correctos. Entonces podemos simplemente devolver la cabeza (es decir, el primer elemento) de la lista resultante.
 
-With this high-level specification of our approach, we can calculate the type of our function. First open PSCi, and find the types of the `filter` and `head` functions:
+Con esta especificación de alto nivel de nuestra estrategia, podemos calcular el tipo de nuestra función. Primero abre PSCi y busca los tipos de las funciones `filter` y `head`:
 
 ```text
 $ pulp psci
@@ -496,13 +496,13 @@ forall a. (a -> Boolean) -> List a -> List a
 forall a. List a -> Maybe a
 ```
 
-Let's pick apart these two types to understand their meaning.
+Vamos a desmontar estos dos tipos para entender su significado.
 
-`filter` is a curried function of two arguments. Its first argument is a function, which takes a list element and returns a `Boolean` value as a result. Its second argument is a list of elements, and the return value is another list.
+`filter` es una función currificada de dos argumentos. Su primer argumento es una función que toma un elemento de una lista y devuelve un valor `Boolean` como resultado. Su segundo argumento es una lista de elementos, y el valor de retorno es otra lista.
 
-`head` takes a list as its argument, and returns a type we haven't seen before: `Maybe a`. `Maybe a` represents an optional value of type `a`, and provides a type-safe alternative to using `null` to indicate a missing value in languages like Javascript. We will see it again in more detail in later chapters.
+`head` toma una lista como argumento y devuelve un tipo que no hemos visto antes: `Maybe a`. `Maybe a` representa un valor opcional de tipo `a`, y proporciona una alternativa de tipo seguro al uso de `null` para indicar un valor inexistente en lenguajes como JavaScript. La veremos de nuevo en más detalle en capítulos posteriores.
 
-The universally quantified types of `filter` and `head` can be _specialized_ by the PureScript compiler, to the following types:
+Los tipos universalmente cuantificados de `filter` y `head` pueden ser _especializados_ por el compilador de PureScript a los siguientes tipos:
 
 ```haskell
 filter :: (Entry -> Boolean) -> AddressBook -> AddressBook
@@ -510,19 +510,19 @@ filter :: (Entry -> Boolean) -> AddressBook -> AddressBook
 head :: AddressBook -> Maybe Entry
 ```
 
-We know that we will need to pass the first and last names that we want to search for, as arguments to our function.
+Sabemos que necesitaremos pasar el nombre y apellidos que queremos buscar como argumentos a nuestra función.
 
-We also know that we will need a function to pass to `filter`. Let's call this function `filterEntry`. `filterEntry` will have type `Entry -> Boolean`. The application `filter filterEntry` will then have type `AddressBook -> AddressBook`. If we pass the result of this function to the `head` function, we get our result of type `Maybe Entry`.
+También sabemos que necesitaremos una función para pasar a `filter`. Llamemos a esta función `filterEntry`. `filterEntry` tendrá tipo `Entry -> Boolean`. La aplicación `filter filterEntry` tendrá entonces tipo `AddressBook -> AddressBook`. Si pasamos el resultado de esta función a la función `head`, obtenemos nuestro resultado de tipo `Maybe Entry`.
 
-Putting these facts together, a reasonable type signature for our function, which we will call `findEntry`, is:
+Juntando esto, una firma de tipo razonable para nuestra función, que llamaremos `findEntry`, es:
 
 ```haskell
 findEntry :: String -> String -> AddressBook -> Maybe Entry
 ```
 
-This type signature says that `findEntry` takes two strings, the first and last names, and a `AddressBook`, and returns an optional `Entry`. The optional result will contain a value only if the name is found in the address book.
+Esta firma de tipo dice que `findEntry` toma dos cadenas, nombre y apellido, un `AddressBook`, y retorna un `Entry` opcional. El resultado opcional contendrá un valor sólo si el nombre se encuentra en la agenda.
 
-And here is the definition of `findEntry`:
+Y aquí está la definición de `findEntry`:
 
 ```haskell
 findEntry firstName lastName book = head $ filter filterEntry book
@@ -531,60 +531,60 @@ findEntry firstName lastName book = head $ filter filterEntry book
     filterEntry entry = entry.firstName == firstName && entry.lastName == lastName
 ```
 
-Let's go over this code step by step.
+Vamos a repasar el código paso a paso.
 
-`findEntry` brings three names into scope: `firstName`, and `lastName`, both representing strings, and `book`, an `AddressBook`.
+`findEntry` pone en contexto tres nombres: `firstName` y `lastName`, ambos representando cadenas, y `book`, un `AddressBook`.
 
-The right hand side of the definition combines the `filter` and `head` functions: first, the list of entries is filtered, and the `head` function is applied to the result.
+La parte derecha de la definición combina las funciones `filter` y `head`: primero, la lista de entradas es filtrada y luego, la función `head` se aplica al resultado.
 
-The predicate function `filterEntry` is defined as an auxiliary declaration inside a `where` clause. This way, the `filterEntry` function is available inside the definition of our function, but not outside it. Also, it can depend on the arguments to the enclosing function, which is essential here because `filterEntry` uses the `firstName` and `lastName` arguments to filter the specified `Entry`.
+La función predicado `filterEntry` se define como una declaración auxiliar dentro de una cláusula `where`. De esta manera, la función `filterEntry` está disponible dentro de la definición de nuestra función pero no fuera de ella. También, puede depender de los argumentos de la función contenedora, lo que es esencial aquí porque `filterEntry` usa los argumentos `firstName` y `lastName` para filtrar la `Entry` especificada.
 
-Note that, just like for top-level declarations, it was not necessary to specify a type signature for `filterEntry`. However, doing so is recommended as a form of documentation.
+Date cuenta de que al igual que en el caso de las declaraciones de nivel superior, no es necesario especificar una firma de tipo para `filterEntry`. Sin embargo, se recomienda hacerlo como una forma de documentación.
 
-## Infix Function Application
+## Aplicación de funciones infija
 
-In the code for `findEntry` above, we used a different form of function application: the `head` function was applied to the expression `filter filterEntry book` by using the infix `$` symbol.
+En el código de `findEntry` de arriba, usamos una forma diferente de aplicación de función: la función `head` ha sido aplicada a la expresión `filter filterEntry book` usando el símbolo infijo `$`.
 
-This is equivalent to the usual application `head (filter filterEntry book)`
+Esto es equivalente a la aplicación usual `head (filter filterEntry book)`.
 
-`($)` is just a regular function, defined in the Prelude. It is defined as follows:
+`($)` es simplemente una función normal, definida en el Prelude como sigue:
 
 ```haskell
 ($) :: forall a b. (a -> b) -> a -> b
 ($) f x = f x
 ```
 
-So `($)` takes a function and a value and applies the function to the value.
+Así, `($)` toma una función y un valor, y aplica la función al valor.
 
-But why would we want to use `$` instead of regular function application? The reason is that `$` is a right-associative, low precedence operator. This means that `$` allows us to remove sets of parentheses for deeply-nested applications.
+Pero ¿por qué podríamos querer usar `$` en lugar de aplicación de función normal? La razón es que `$` es un operador de baja precedencia asociativo por la derecha. Esto significa que `$` nos permite quitar pares de paréntesis para aplicaciones anidadas profundamente.
 
-For example, the following nested function application, which finds the street in the address of an employee's boss:
+Por ejemplo, la siguiente aplicación de función anidada que encuentra la calle en la dirección del jefe de un empleado:
 
 ```haskell
 street (address (boss employee))
 ```
 
-becomes (arguably) easier to read when expressed using `$`:
+Es probablemente más legible cuando se expresa usando `$`:
 
 ```haskell
 street $ address $ boss employee
 ```
 
-## Function Composition
+## Composición de funciones
 
-Just like we were able to simplify the `insertEntry` function by using eta conversion, we can simplify the definition of `findEntry` by reasoning about its arguments.
+Al igual que hemos sido capaces de simplificar la función `insertEntry` usando conversión eta, podemos simplificar la definición de `findEntry` razonando sobre sus argumentos.
 
-Note that the `book` argument is passed to the `filter filterEntry` function, and the result of this application is passed to `head`. In other words, `book` is passed to the _composition_ of the functions `filter filterEntry` and `head`.
+Date cuenta de que el argumento `book` se pasa a la función `filter filterEntry`, y el resultado de esta aplicación se pasa a `head`. En otras palabras, `book` se pasa a la _composición_ de las funciones `filter filterEntry` y `head`.
 
-In PureScript, the function composition operators are `<<<` and `>>>`. The first is "backwards composition", and the second is "forwards composition".
+En PureScript, los operadores de composición de función son `<<<` y `>>>`. El primero es "composición hacia atrás" (backwards composition) y el segundo es "composición hacia delante" (forwards composition).
 
-We can rewrite the right-hand side of `findEntry` using either operator. Using backwards-composition, the right-hand side would be
+Podemos reescribir la parte derecha de `findEntry` usando cualquier operador. Usando composición hacia atrás, la parte derecha sería:
 
 ```
 (head <<< filter filterEntry) book
 ```
 
-In this form, we can apply the eta conversion trick from earlier, to arrive at the final form of `findEntry`:
+En esta forma, podemos aplicar el truco anterior de conversión eta para llegar a la forma final de `findEntry`:
 
 ```haskell
 findEntry firstName lastName = head <<< filter filterEntry
@@ -592,19 +592,19 @@ findEntry firstName lastName = head <<< filter filterEntry
   ...
 ```
 
-An equally valid right-hand side would be:
+Una parte derecha igualmente válida sería:
 
 ```haskell
 filter filterEntry >>> head
 ```
 
-Either way, this gives a clear definition of the `findEntry` function: "`findEntry` is the composition of a filtering function and the `head` function".
+De cualquier modo, esto nos da una definición clara de la función `findEntry`: "`findEntry` es la composición de una función de filtrado y la función `head`".
 
-I will let you make your own decision which definition is easier to understand, but it is often useful to think of functions as building blocks in this way - each function executing a single task, and solutions assembled using function composition.
+Voy a dejar que tomes tu propia decisión sobre qué definición es más fácil de entender, pero a menudo es útil pensar en las funciones como bloques de construcción de esta manera. Cada función ejecutando una única tarea y soluciones ensambladas usando composición de funciones.
 
-## Tests, Tests, Tests ...
+## Prueba, prueba, prueba...
 
-Now that we have the core of a working application, let's try it out using PSCi.
+Ahora que tenemos el núcleo de una aplicación, probémosla usando PSCi:
 
 ```text
 $ pulp psci
@@ -612,7 +612,7 @@ $ pulp psci
 > import Data.AddressBook
 ```
 
-Let's first try looking up an entry in the empty address book (we obviously expect this to return an empty result):
+Vamos primero a intentar buscar una entrada en una agenda vacía (obviamente esperamos que esto devuelva un resultado vacío):
 
 ```text
 > findEntry "John" "Smith" emptyBook
@@ -628,13 +628,13 @@ No type class instance was found for
                    }
 ```
 
-An error! Not to worry, this error simply means that PSCi doesn't know how to print a value of type `Entry` as a String.
+¡Un error! No hay que preocuparse, este error simplemente significa que PSCi no sabe cómo imprimir un valor de tipo `Entry` como String.
 
-The return type of `findEntry` is `Maybe Entry`, which we can convert to a `String` by hand.
+El tipo de retorno de `findEntry` es `Maybe Entry`, que podemos convertir a `String` a mano.
 
-Our `showEntry` function expects an argument of type `Entry`, but we have a value of type `Maybe Entry`. Remember that this means that the function returns an optional value of type `Entry`. What we need to do is apply the `showEntry` function if the optional value is present, and propagate the missing value if not.
+Nuestra función `showEntry` espera un argumento de tipo `Entry`, pero tenemos un valor de tipo `Maybe Entry`. Recuerda que esto significa que la función devuelve un valor opcional de tipo `Entry`. Lo que necesitamos es aplicar la función `showEntry` si el valor opcional está presente y propagar el valor ausente si no lo está.
 
-Fortunately, the Prelude module provides a way to do this. The `map` operator can be used to lift a function over an appropriate type constructor like `Maybe` (we'll see more on this function, and others like it, later in the book, when we talk about functors):
+Afortunadamente, el módulo Prelude proporciona una manera de hacer esto. El operador `map` se puede usar para elevar (lift) una función sobre un constructor de tipo apropiado como `Maybe` (veremos más sobre esta función y otras como ella más tarde cuando hablemos de funtores):
 
 ```text
 > import Prelude
@@ -643,15 +643,15 @@ Fortunately, the Prelude module provides a way to do this. The `map` operator ca
 Nothing
 ```
 
-That's better - the return value `Nothing` indicates that the optional return value does not contain a value - just as we expected.
+Eso está mejor. El valor de retorno `Nothing` indica que el valor de retorno opcional no contiene un valor, como esperábamos.
 
-For ease of use, we can create a function which prints an `Entry` as a String, so that we don't have to use `showEntry` every time:
+Para facilitar el uso, podemos crear una función que imprime `Entry` como una String, de manera que no tengamos que usar `showEntry` cada vez:
 
 ```text
 > let printEntry firstName lastName book = map showEntry (findEntry firstName lastName book)
 ```
 
-Now let's create a non-empty address book, and try again. We'll reuse our example entry from earlier:
+Ahora creemos una agenda no vacía e intentemos de nuevo. Reutilizaremos nuestra entrada de ejemplo anterior:
 
 ```text
 > let book1 = insertEntry entry emptyBook
@@ -661,26 +661,26 @@ Now let's create a non-empty address book, and try again. We'll reuse our exampl
 Just ("Smith, John: 123 Fake St., Faketown, CA")
 ```
 
-This time, the result contained the correct value. Try defining an address book `book2` with two names by inserting another name into `book1`, and look up each entry by name.
+Esta vez, el resultado contenía el valor correcto. Intenta definir una agenda `book2` con dos nombres insertando otro nombre en `book1` y busca cada entrada por nombre.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Test your understanding of the `findEntry` function by writing down the types of each of its major subexpressions. For example, the type of the `head` function as used is specialized to `AddressBook -> Maybe Entry`.
-X> 1. (Medium) Write a function which looks up an `Entry` given a street address, by reusing the existing code in `findEntry`. Test your function in PSCi.
-X> 1. (Medium) Write a function which tests whether a name appears in a `AddressBook`, returning a Boolean value. _Hint_: Use PSCi to find the type of the `Data.List.null` function, which test whether a list is empty or not.
-X> 1. (Difficult) Write a function `removeDuplicates` which removes duplicate address book entries with the same first and last names. _Hint_: Use PSCi to find the type of the `Data.List.nubBy` function, which removes duplicate elements from a list based on an equality predicate.
+X> 1. (Fácil) Comprueba que entiendes la función `findEntry` escribiendo los tipos de cada una de sus expresiones principales. Por ejemplo, el tipo de la función `head` en este uso se especializa a `AddressBook -> Maybe Entry`.
+X> 1. (Medio) Escribe una función que busca una `Entry` dada una dirección reutilizando el código existente en `findEntry`. Prueba tu función en PSCi.
+X> 1. (Medio) Escribe una función que comprueba si un nombre aparece en `AddressBook` devolviendo un valor Boolean. _Pista_: Usa PSCi para buscar el tipo de la función `Data.List.null` que comprueba si una lista está o no vacía.
+X> 1. (Difícil) Escribe una función `removeDuplicates` que elimina entradas duplicadas de la agenda con el mismo nombre y apellido. _Pista_: Usa PSCi para buscar el tipo de la función `Data.List.nubBy` que elimina elementos duplicados de una lista basándose en un predicado de igualdad.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we covered several new functional programming concepts:
+En este capítulo hemos cubierto varios conceptos de programación funcional:
 
-- The importance of immutable data and pure functions.
-- How to use the interactive mode PSCi to experiment with functions and test ideas.
-- The role of types as both a correctness tool, and an implementation tool.
-- The use of curried functions to represent functions of multiple arguments.
-- Creating programs from smaller components by composition.
-- Structuring code neatly using `where` expressions.
-- How to avoid null values by using the `Maybe` type.
-- Using techniques like eta conversion and function composition to refactor code into a clear specification.
+- La importancia de los datos inmutables y las funciones puras.
+- Cómo usar el modo interactivo PSCi para experimentar con funciones y probar ideas.
+- El papel de los tipos como herramienta de corrección e implementación.
+- El uso de funciones currificadas para representar funciones de múltiples argumentos.
+- Crear programas a partir de componentes más pequeñas mediante composición.
+- Estructurar el código de manera limpia usando expresiones `where`.
+- Como evitar valores nulos usando el tipo `Maybe`.
+- El uso de técnicas como la conversión eta y la composición de funciones para refactorizar código.
 
-In the following chapters, we'll build on these ideas.
+En los siguientes capítulos nos basaremos en estas ideas.

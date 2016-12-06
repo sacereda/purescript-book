@@ -1,10 +1,10 @@
-# Introduction
+# Introducción
 
-## Functional JavaScript
+## JavaScript funcional
 
-Functional programming techniques have been making appearances in JavaScript for some time now:
+Hace ya algún tiempo que han empezado a aparecer las técnicas de programación funcional en Javascript: 
 
-- Libraries such as [UnderscoreJS](http://underscorejs.org) allow the developer to leverage tried-and-trusted functions such as `map`, `filter` and `reduce` to create larger programs from smaller programs by composition:
+- Bibliotecas como [UnderscoreJS](http://underscorejs.org) permiten al desarrollador aprovechar funciones probadas como `map`, `filter` y `reduce` para crear programas más grandes a partir de programas más pequeños mediante composición:
 
     ```javascript
     var sumOfPrimes =
@@ -16,7 +16,7 @@ Functional programming techniques have been making appearances in JavaScript for
          .value();
     ```
 
-- Asynchronous programming in NodeJS leans heavily on functions as first-class values to define callbacks.
+- La programación asíncrona en NodeJS se apoya firmemente en las funciones como valores de primera clase para definir retrollamadas (callbacks). 
 
     ```javascript
     require('fs').readFile(sourceFile, function (error, data) {
@@ -30,17 +30,17 @@ Functional programming techniques have been making appearances in JavaScript for
     });
     ```
 
-- Libraries such as [React](http://facebook.github.io/react/) and [virtual-dom](https://github.com/Matt-Esch/virtual-dom) model views as pure functions of application state.
+- Bibliotecas como [React](http://facebook.github.io/react/) y [virtual-dom](https://github.com/Matt-Esch/virtual-dom) modelan las vistas como funciones puras sobre el estado de la aplicación.
 
-Functions enable a simple form of abstraction which can yield great productivity gains. However, functional programming in JavaScript has its own disadvantages: JavaScript is verbose, untyped, and lacks powerful forms of abstraction. Unrestricted JavaScript code also makes equational reasoning very difficult.
+Las funciones permiten una forma simple de abstracción que puede resultar en grandes ganancias en productividad. Sin embargo, la programación funcional en JavaScript tiene sus propias desventajas. JavaScript es verboso, no tipado, y carece de formas potentes de abstracción. El JavaScript no restringido hace también el razonamiento ecuacional muy difícil.
 
-PureScript is a programming language which aims to address these issues. It features lightweight syntax, which allows us to write very expressive code which is still clear and readable. It uses a rich type system to support powerful abstractions. It also generates fast, understandable code, which is important when interoperating with JavaScript, or other languages which compile to JavaScript. All in all, I hope to convince you that PureScript strikes a very practical balance between the theoretical power of purely functional programming, and the fast-and-loose programming style of JavaScript.
+PureScript es un lenguaje de programación cuyo objetivo es abarcar estos problemas. Proporciona sintaxis ligera, que nos permite escribir código muy expresivo que sigue siendo claro y legible. Usa un rico sistema de tipos para soportar abstracciones potentes. También genera código rápido e inteligible, cosa importante cuando hay que interoperar con JavaScript u otros lenguajes que compilan a JavaScript. Total, espero convencerte de que PureScript consigue un equilibrio muy práctico entre el poder teórico de la programación funcional pura y el estilo de programación rápida y flexible de JavaScript.
 
-## Types and Type Inference
+## Tipos e inferencia de tipos
 
-The debate over statically typed languages versus dynamically typed languages is well-documented. PureScript is a _statically typed_ language, meaning that a correct program can be given a _type_ by the compiler which indicates its behavior. Conversely, programs which cannot be given a type are _incorrect programs_, and will be rejected by the compiler. In PureScript, unlike in dynamically typed languages, types exist only at _compile-time_, and have no representation at runtime.
+El debate sobre los lenguajes de tipado estático contra los de tipado dinámico está bien documentado. PuseScript es un lenguaje de _tipado estático_, lo que significa que el compilador puede dar a un programa correcto un _tipo_ que indica su comportamiento. A la inversa, los programas a los que no se les puede dar un tipo son _programas incorrectos_, y serán rechazados por el compilador. En PureScript, al contrario que en los lenguajes de tipado dinámico, los tipos existen únicamente en _tiempo de compilación_, y no tienen representación en tiempo de ejecución.
 
-It is important to note that in many ways, the types in PureScript are unlike the types that you might have seen in other languages like Java or C#. While they serve the same purpose at a high level, the types in PureScript are inspired by languages like ML and Haskell. PureScript's types are expressive, allowing the developer to assert strong claims about their programs. Most importantly, PureScript's type system supports _type inference_ - it requires far fewer explicit type annotations than other languages, making the type system a _tool_ rather than a hindrance. As a simple example, the following code defines a _number_, but there is no mention of the `Number` type anywhere in the code:
+Es importante notar que, de varias maneras, los tipos en Purescript no son como los tipos que has visto en otros lenguajes como Java o C#. Aunque sirven el mismo propósito a un nivel alto, los tipos en PureScript están inspirados por lenguajes como ML y Haskell. Los tipos de PureScript son expresivos, permitiendo al desarrollador hacer afirmaciones sólidas sobre sus programas. Más importante, el sistema de tipos de PureScript soporta _inferencia de tipos_ requiriendo muchas menos anotaciones de tipo explícitas que otros lenguajes, convirtiendo el sistema de tipos en una _herramienta_ en lugar de en un estorbo. Un simple ejemplo, el siguiente código define un _número_, pero no hay mención del tipo `Number` en ningún sitio del código:
 
 ```haskell
 iAmANumber =
@@ -48,56 +48,56 @@ iAmANumber =
   in square 42.0
 ```
 
-A more involved example shows that type-correctness can be confirmed without type annotations, even when there exist types which are _unknown to the compiler_:
+Un ejemplo más elaborado muestra que la corrección de los tipos puede ser confirmada sin anotación de tipos, incluso cuando existen tipos que son _desconocidos para el compilador_:
 
 ```haskell
 iterate f 0 x = x
 iterate f n x = iterate f (n - 1) (f x)
 ```
 
-Here, the type of `x` is unknown, but the compiler can still verify that `iterate` obeys the rules of the type system, no matter what type `x` might have.
+Aquí, el tipo de `x` es desconocido, pero el compilador sigue pudiendo verificar que `iterate` obedece las reglas del sistema de tipos, sin importar qué tipo pueda tener `x`.
 
-In this book, I will try to convince you (or reaffirm your belief) that static types are not only a means of gaining confidence in the correctness of your programs, but also an aid to development in their own right. Refactoring a large body of code in JavaScript can be difficult when using any but the simplest of abstractions, but an expressive type system together with a type checker can even make refactoring into an enjoyable, interactive experience.
+En este libro, intentaré convencerte (o reafirmar tu creencia) de que los tipos estáticos no sólo son medios para ganar confianza en la corrección de tus programas, sino que también ayudan al desarrollo por derecho propio. Refactorizar una base de código extensa en JavaScript puede ser difícil para cualquier cosa que no sean las abstracciones más simples, pero un sistema de tipos expresivo junto a un comprobador de tipos puede incluso convertir la refactorización en una experiencia divertida e interactiva.
 
-In addition, the safety net provided by a type system enables more advanced forms of abstraction. In fact, PureScript provides a powerful form of abstraction which is fundamentally type-driven: type classes, made popular in the functional programming language Haskell.
+Además, la red de seguridad proporcionada por un sistema de tipos permite formas de abstracción más avanzadas. De hecho, PureScript proporciona una poderosa forma de abstracción que es fundamentalmente guiada por tipos: las clases de tipos (type classes) populares en el lenguaje de programación funcional Haskell.
 
-## Polyglot Web Programming
+## Programación web políglota
 
-Functional programming has its success stories - applications where it has been particularly successful: data analysis, parsing, compiler implementation, generic programming, parallelism, to name a few.
+La programación funcional tiene sus historias de éxito, aplicaciones donde ha sido particularmente exitosa: análisis de datos, análisis sintáctico, implementación de compiladores, programación genérica o paralelismo por nombrar unas cuantas.
 
-It would be possible to practice end-to-end application development in a functional language like PureScript. PureScript provides the ability to import existing JavaScript code, by providing types for its values and functions, and then to use those functions in regular PureScript code. We'll see this approach later in the book.
+Sería posible practicar desarrollo de aplicaciones de extremo a extremo en un lenguaje funcional como PureScript. PureScript proporciona la habilidad de importar código JavaScript existente, proporcionando tipos para sus valores y funciones, y usar entonces esas funciones en código PureScript normal. Veremos este enfoque más tarde en el libro.
 
-However, one of PureScript's strengths is its interoperability with other languages which target JavaScript. Another approach would be to use PureScript for a subset of your application's development, and to use one or more other languages to write the rest of the JavaScript.
+Sin embargo, una de las fortalezas de PureScript es su interoperabilidad con otros lenguajes que compilan a JavaScript. Otro enfoque sería usar PureScript como un subconjunto del desarrollo de tu aplicación y usar otro(s) lenguajes para escribir el resto del código JavaScript.
 
-Here are some examples:
+Aquí hay algunos ejemplos:
 
-- Core logic written in PureScript, with the user interface written in JavaScript.
-- Application written in JavaScript or another compile-to-JS language, with tests written in PureScript.
-- PureScript used to automate user interface tests for an existing application.
+- Lógica central escrita en PureScript, con la interfaz de usuario escrita en JavaScript.
+- Aplicación escrita en JavaScript u otro lenguaje que compile a JavaScript, con pruebas escritas en PureScript.
+- PureScript usado para automatizar las pruebas de interfaz de usuario para una aplicación ya existente.
 
-In this book, we'll focus on solving small problems with PureScript. The solutions could be integrated into a larger application, but we will also look at how to call PureScript code from JavaScript, and vice versa.
+En este libro, nos vamos a enfocar en resolver pequeños problemas con PureScript. Las soluciones se podrían integrar en una aplicación más grande, pero también veremos como llamar a código PureScript desde JavaScript y viceversa.
 
-## Prerequisites
+## Prerrequisitos
 
-The software requirements for this book are minimal: the first chapter will guide you through setting up a development environment from scratch, and the tools we will use are available in the standard repositories of most modern operating systems.
+Los requerimientos de software para este libro son mínimos: El primer capítulo te guiará para preparar un entorno de desarrollo desde cero, y las herramientas que vamos a usar están disponibles en los repositorios estándar de la mayoría de sistemas operativos modernos.
 
-The PureScript compiler itself can be downloaded as a binary distribution, or built from source on any system running an up-to-date installation of the GHC Haskell compiler, and we will walk through this process in the next chapter.
+El compilador de PureScript se puede descargar como una distribución binaria o se puede construir a partir de los fuentes en cualquier sistema que tenga una instalación reciente del compilador de Haskell GHC, el siguiente capítulo dará los pasos.
 
-## About You
+## Sobre ti
 
-I will assume that you are familiar with the basics of JavaScript. Any prior familiarity with common tools from the JavaScript ecosystem, such as NPM and Gulp, will be beneficial if you wish to customize the standard setup to your own needs, but such knowledge is not necessary.
+Voy a asumir que estas familiarizado con JavaScript. Cualquier familiaridad previa con herramientas comunes del ecosistema JavaScript como NPM y Gulp serán beneficiosas si deseas adaptar la configuración estándar para tus necesidades, pero dicho conocimiento no es necesario.
 
-No prior knowledge of functional programming is required, but it certainly won't hurt. New ideas will be accompanied by practical examples, so you should be able to form an intuition for the concepts from functional programming that we will use.
+No se necesita ningún conocimiento previo de programación funcional, pero ciertamente no hace daño. Las ideas nuevas estarán acompañadas de ejemplos prácticos, de manera que seas capaz de formar una intuición para los conceptos de programación funcional que usaremos.
 
-Readers who are familiar with the Haskell programming language will recognize a lot of the ideas and syntax presented in this book, because PureScript is heavily influenced by Haskell. However, those readers should understand that there are a number of important differences between PureScript and Haskell. It is not necessarily always appropriate to try to apply ideas from one language in the other, although many of the concepts presented here will have some interpretation in Haskell.
+Los lectores que estén familiarizados con el lenguaje de programación Haskell reconocerán un montón de las ideas y sintaxis presentadas en este libro, ya que PureScript está fuertemente influenciado por Haskell. Sin embargo, dichos lectores deben entender que hay unas cuantas diferencias importantes entre PureScript y Haskell. No siempre va a ser apropiado intentar aplicar ideas de un lenguaje en el otro, aunque muchos de los conceptos presentados aquí tendrán una interpretación en Haskell.
 
-## How to Read This Book
+## Cómo leer este libro
 
-The chapters in this book are largely self contained. A beginner with little functional programming experience would be well-advised, however, to work through the chapters in order. The first few chapters lay the groundwork required to understand the material later on in the book. A reader who is comfortable with the ideas of functional programming (especially one with experience in a strongly-typed language like ML or Haskell) will probably be able to gain a general understanding of the code in the later chapters of the book without reading the preceding chapters.
+Los capítulos de este libro son bastante autocontenidos. Sin embargo, un principiante con poca experiencia en programación funcional debería estudiar los capítulos en orden. Los primeros capítulos sientan las bases requeridas para entender el material que aparece más tarde en el libro. Un lector que se sienta cómodo con las ideas de la programación funcional (especialmente uno con experiencia en un lenguaje fuértemente tipado como ML o Haskell) probablemente será capaz de adquirir una comprensión general del código en los capítulos posteriores del libro sin leer los capítulos iniciales. 
 
-Each chapter will focus on a single practical example, providing the motivation for any new ideas introduced. Code for each chapter are available from the book's [GitHub repository](https://github.com/paf31/purescript-book). Some chapters will include code snippets taken from the chapter's source code, but for a full understanding, you should read the source code from the repository alongside the material from the book. Longer sections will contain shorter snippets which you can execute in the interactive mode PSCi to test your understanding.
+Cada capítulo se va a enfocar en un único ejemplo práctico, proporcionando la motivación para cualquier idea nueva introducida. El código de cada capítulo está disponible en este [repositorio GitHub](https://github.com/paf31/purescript-book). Algunos capítulos incluirán fragmentos de código tomados del código fuente del capítulo, pero para adquirir un entendimiento completo debes leer el código del repositorio junto al material del libro. Las secciones más largas contendrán fragmentos más cortos que puedes ejecutar en el modo interactivo (PSCi) para ayudarte a entender.
 
-Code samples will appear in a monospaced font, as follows:
+Los ejemplos de código aparecerán en una fuente monoespaciada, como sigue:
 
 ```haskell
 module Example where
@@ -107,51 +107,51 @@ import Control.Monad.Eff.Console (log)
 main = log "Hello, World!"
 ```
 
-Commands which should be typed at the command line will be preceded by a dollar symbol:
+Los comandos que deben escribirse en la línea de comandos estarán precedidos por un símbolo de dólar:
 
 ```text
 $ pulp build
 ```
 
-Usually, these commands will be tailored to Linux/Mac OS users, so Windows users may need to make small changes such as modifying the file separator, or replacing shell built-ins with their Windows equivalents.
+Normalmente, estos comandos estarán orientados a usuarios de Unix, de manera que los usuarios de Windows tendrán que hacer pequeños cambios como modificar el separador de ficheros o reemplazar los comandos empotrados de shell con sus equivalentes de Windows.
 
-Commands which should be typed at the PSCi interactive mode prompt will be preceded by an angle bracket:
+Los comandos que se deben escribir en el indicador de comandos de modo interactivo de PSCi estarán precedidos por un signo 'mayor que'.
 
 ```text
 > 1 + 2
 3
 ```
 
-Each chapter will contain exercises, labelled with their difficulty level. It is strongly recommended that you attempt the exercises in each chapter to fully understand the material.
+Cada capítulo contendrá ejercicios etiquetados con su nivel de dificultad. Es muy recomendable que intentes hacer los ejercicios de cada capítulo para entender el material completamente.
 
-This book aims to provide an introduction to the PureScript language for beginners, but it is not the sort of book that provides a list of template solutions to problems. For beginners, this book should be a fun challenge, and you will get the most benefit if you read the material, attempt the exercises, and most importantly of all, try to write some code of your own.
+Este libro pretende proporcionar una introducción al lenguaje PureScript para principiantes, pero no es la clase de libro que proporciona una lista de soluciones 'plantilla' para problemas. Para los principiantes, este libro debe ser un reto divertido, y lograrás sacarle el mayor partido si lees el material, intentas hacer los ejercicios y, lo más importante, intentas escribir algún código por tu cuenta.
 
-## Getting Help
+## Consiguiendo ayuda
 
-If you get stuck at any point, there are a number of resources available online for learning PureScript:
+Si te atascas en algún punto, hay un número de recursos disponibles online para aprender PureScript:
 
-- The PureScript IRC channel is a great place to chat about issues you may be having. Point your IRC client at irc.freenode.net, and connect to the #purescript channel.
-- The [PureScript website](http://purescript.org) contains links to several learning resources, including code samples, videos and other resources for beginners.
-- The [PureScript wiki](http://wiki.purescript.org) collects articles and examples on a wide variety of topics, written by PureScript developers and users.
-- [Try PureScript!](http://try.purescript.org) is a website which allows users to compile PureScript code in the web browser, and contains several simple examples of code.
-- [Pursuit](http://pursuit.purescript.org) is a searchable database of PureScript types and functions.
+- El canal IRC de PureScript es un sitio estupendo para hablar sobre los problemas que puedas estar teniendo. Entra con tu cliente IRC en irc.freenode.net y conéctate al canal #purescript.
+- El [sitio web de PureScript](http://purescript.org) contiene enlaces a varios recursos de aprendizaje, incluyendo ejemplos de código, videos y otros recursos para principiantes.
+- La [wiki de PureScript](http://wiki.purescript.org) recopila artículos y ejemplos sobre una amplia variedad de tópicos, escritos por desarrolladores y usuarios de PureScript.
+- [Try PureScript!](http://try.purescript.org) es un sitio web que permite a los usuarios compilar código PureScript en el navegador web y contiene varios ejemplos de código simples.
+- [Pursuit](http://pursuit.purescript.org) es una base de datos donde puedes buscar tipos y funciones de PureScript.
 
-If you prefer to learn by reading examples, the `purescript`, `purescript-node` and `purescript-contrib` GitHub organizations contain plenty of examples of PureScript code.
+Si prefieres aprender leyendo ejemplos, las organizaciones de Github `purescript`, `purescript-node` y `purescript-contrib` contienen un montón de ejemplos de código PureScript.
 
-## About the Author
+## Acerca del autor
 
-I am the original developer of the PureScript compiler. I'm based in Los Angeles, California, and started programming at an early age in BASIC on an 8-bit personal computer, the Amstrad CPC. Since then I have worked professionally in a variety of programming languages (including Java, Scala, C#, F#, Haskell and PureScript).
+Soy el desarrollador original del compilador de PureScript. Vivo en Los Angeles, California, y empecé a programar a una edad temprana en BASIC sobre un ordenador personal de 8 bits, el Amstrad CPC. Desde entonces he trabajado profesionalmente en una variedad de lenguajes de programación (incluyendo Java, Scala, C#, F#, Haskell y PureScript).
 
-Not long into my professional career, I began to appreciate functional programming and its connections with mathematics, and enjoyed learning functional concepts using the Haskell programming language.
+No muy tarde en mi carrera profesional, empecé a apreciar la programación funcional y sus conexiones con las matemáticas, y disfrutaba aprendiendo conceptos de programación funcional usando el lenguaje de programación Haskell.
 
-I started working on the PureScript compiler in response to my experience with JavaScript. I found myself using functional programming techniques that I had picked up in languages like Haskell, but wanted a more principled environment in which to apply them. Solutions at the time included various attempts to compile Haskell to JavaScript while preserving its semantics (Fay, Haste, GHCJS), but I was interested to see how successful I could be by approaching the problem from the other side - attempting to keep the semantics of JavaScript, while enjoying the syntax and type system of a language like Haskell.
+Empecé a trabajar en el compilador de PureScript como respuesta a mi experiencia con JavaScript. Me encontré usando técnicas de programación funcional que había adquirido en lenguajes como Haskell, pero quería un entorno más escrupuloso en el que aplicarlas. Las soluciones del momento incluían varios intentos de compilar Haskell a JavaScript conservando su semántica (Fay, Haste, GHCJS), pero estaba interesado en ver si tendría éxito afrontando el problema desde el otro lado - intentando mantener la semántica de JavaScript, disfrutando la sintaxis y el sistema de tipos de un lenguaje como Haskell.
 
-I maintain [a blog](http://blog.functorial.com), and can be [reached on Twitter](http://twitter.com/paf31).
+Mantengo [un blog](http://blog.functorial.com), y se me puede encontrar en [Twitter](http://twitter.com/paf31).
 
-## Acknowledgements
+## Agradecimientos
 
-I would like to thank the many contributors who helped PureScript to reach its current state. Without the huge collective effort which has been made on the compiler, tools, libraries, documentation and tests, the project would certainly have failed.  
+Me gustaría dar las gracias a los muchos contribuyentes que ayudaron a que PureScript alcanzara su estado actual. Sin el enorme esfuerzo colectivo que se ha hecho en el compilador, herramientas, bibliotecas, documentación y pruebas, el proyecto habría fracasado sin duda.
 
-The PureScript logo which appears on the cover of this book was created by Gareth Hughes, and is gratefully reused here under the terms of the [Creative Commons Attribution 4.0 license](https://creativecommons.org/licenses/by/4.0/).
+El logo de PureScript que aparece en la portada de este libro fue creado por Gareth Hughes, y es utilizado bajo los términos de la [licencia Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-Finally, I would like to thank everyone who has given me feedback and corrections on the contents of this book.
+Finalmente, me gustaría dar las gracias a todos los que me han aportado comentarios y correcciones sobre el contenido de este libro.

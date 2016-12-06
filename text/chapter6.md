@@ -1,26 +1,26 @@
-# Type Classes
+# Clases de tipos (type classes)
 
-## Chapter Goals
+## Objetivos del capítulo
 
-This chapter will introduce a powerful form of abstraction which is enabled by PureScript's type system - type classes.
+Este capítulo presentará una poderosa forma de abstracción disponible en el sistema de tipos de PureScript: las clases de tipos.
 
-This motivating example for this chapter will be a library for hashing data structures. We will see how the machinery of type classes allow us to hash complex data structures without having to think directly about the structure of the data itself.
+El ejemplo motivador de este capítulo será una biblioteca para resumir (hashing) estructuras de datos. Veremos cómo la maquinaria de las clases de tipos nos permiten resumir estructuras de datos complejas sin tener que pensar directamente en la estructura de los propios datos.
 
-We will also see a collection of standard type classes from PureScript's Prelude and standard libraries. PureScript code leans heavily on the power of type classes to express ideas concisely, so it will be beneficial to familiarize yourself with these classes.
+Veremos también una colección de clases de tipos estándar del Prelude de PureScript y de las bibliotecas estándar. El código PureScript se apoya firmemente en la potencia de las clases de tipos para expresar ideas de manera concisa, así que será beneficioso que te familiarices con estas clases.
 
-## Project Setup
+## Preparación del proyecto
 
-The source code for this chapter is defined in the file `src/Data/Hashable.purs`. 
+El código fuente de este capítulo está definido en el fichero `src/Data/Hashable.purs`. 
 
-The project has the following Bower dependencies:
+El proyecto tiene las siguientes dependencias Bower:
 
-- `purescript-maybe`, which defines the `Maybe` data type, which represents optional values.
-- `purescript-tuples`, which defines the `Tuple` data type, which represents pairs of values.
-- `purescript-either`, which defines the `Either` data type, which represents disjoint unions.
-- `purescript-strings`, which defines functions which operate on strings.
-- `purescript-functions`, which defines some helper functions for defining PureScript functions.
+- `purescript-maybe`, definiendo el tipo de datos `Maybe`, que representa valores opcionales.
+- `purescript-tuples`, definiendo el tipo de datos `Tuple`, que representa pares de valores.
+- `purescript-either`, definiendo el tipo de datos `Either`, que representa uniones disjuntas.
+- `purescript-strings`, que define funciones que operan sobre cadenas.
+- `purescript-functions`, que define algunas funciones auxiliares para definir funciones PureScript.
 
-The module `Data.Hashable` imports several modules provided by these Bower packages:
+El módulo `Data.Hashable` importa varios módulos proporcionados por estos paquetes Bower:
 
 ```haskell
 module Data.Hashable where
@@ -36,22 +36,22 @@ import Data.String (toCharArray)
 import Data.Tuple (Tuple(..))
 ```
 
-## Show Me!
+## ¡Muéstrame!
 
-Our first simple example of a type class is provided by a function we've seen several times already: the `show` function, which takes a value and displays it as a string.
+Nuestro primer ejemplo simple de clase de tipos viene dado por una función que hemos visto varias veces: la función `show`, que toma un valor y lo representa como una cadena.
 
-`show` is defined by a type class in the `Prelude` module called `Show`, which is defined as follows:
+`show` está definido por una clase de tipos del módulo `Prelude` llamada `Show`, definida como sigue:
 
 ```haskell
 class Show a where
   show :: a -> String
 ```
 
-This code declares a new _type class_ called `Show`, which is parameterized by the type variable `a`.
+Este código declara una nueva _clase de tipos_ llamada `Show`, que está parametrizada por la variable de tipo `a`.
 
-A type class _instance_ contains implementations of the functions defined in a type class, specialized to a particular type.
+Una _instancia_ de clase de tipos contiene implementaciones de las funciones definidas en una clase de tipos, especializada para un tipo particular.
 
-For example, here is the definition of the `Show` type class instance for `Boolean` values, taken from the Prelude:
+Por ejemplo, aquí está la definición de la instancia de clase de tipos `Show` para valores `Boolean`, tomada del Prelude:
 
 ```haskell
 instance showBoolean :: Show Boolean where
@@ -59,9 +59,9 @@ instance showBoolean :: Show Boolean where
   show false = "false"
 ```
 
-This code declares a type class instance called `showBoolean` - in PureScript, type class instances are named to aid the readability of the generated JavaScript. We say that the `Boolean` type _belongs to the `Show` type class_.
+Este código declara una instancia de clase de tipos llamada `showBoolean`; en PureScript, las instancias de clases de tipos tienen nombre para ayudar con la legibilidad del JavaScript generado. Decimos que el tipo `Boolean` _pertenece a la clase de tipos `Show`_.
 
-We can try out the `Show` type class in PSCi, by showing a few values with different types:
+Podemos probar la clase de tipos `Show` en PSCi mostrando unos cuantos valores de diferentes tipos:
 
 ```text
 > import Prelude
@@ -76,7 +76,7 @@ We can try out the `Show` type class in PSCi, by showing a few values with diffe
 "\"Hello World\""
 ```
 
-These examples demonstrate how to `show` values of various primitive types, but we can also `show` values with more complicated types:
+Estos ejemplos muestran cómo usar `show` para mostrar valores de varios tipos primitivos, pero también podemos usar `show` para mostrar valores de tipos más complejos:
 
 ```text
 > import Data.Tuple
@@ -90,7 +90,7 @@ These examples demonstrate how to `show` values of various primitive types, but 
 "(Just \"testing\")"
 ```
 
-If we try to show a value of type `Data.Either`, we get an interesting error message:
+Si intentamos mostrar un valor del tipo `Data.Either` obtenemos un mensaje de error interesante:
 
 ```text
 > import Data.Either
@@ -103,16 +103,16 @@ No type class instance was found for
 The instance head contains unknown type variables. Consider adding a type annotation.
 ```
 
-The problem here is not that there is no `Show` instance for the type we intended to `show`, but rather that PSCi was unable to infer the type. This is indicated by the _unknown type_ `t0` in the error message.
+El problema aquí no es que no haya una instancia `Show` para el tipo que tratamos de mostrar, sino que PSCi no ha sido capaz de inferir el tipo. Esto viene indicado por el _tipo desconocido_ `t0` del mensaje de error.
 
-We can annotate the expression with a type, using the `::` operator, so that PSCi can choose the correct type class instance:
+Podemos anotar la expresión con un tipo usando el operador `::`, de manera que PSCi pueda elegir la instancia de clase de tipos correcta:
 
 ```text
 > show (Left 10 :: Either Int String)
 "(Left 10)"
 ```
 
-Some types do not have a `Show` instance defined at all. One example of this is the function type `->`. If we try to `show` a function from `Int` to `Int`, we get an appropriate error message from the type checker:
+Algunos tipos ni siquiera tienen una instancia `Show` definida. Un ejemplo es el tipo función `->`. Si tratamos de mostrar una función de `Int` a `Int`, obtenemos un mensaje de error apropiado del comprobador de tipos:
 
 ```text
 > show $ \n -> n + 1
@@ -122,26 +122,26 @@ No type class instance was found for
   Data.Show.Show (Int -> Int)
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use the `showShape` function from the previous chapter to define a `Show` instance for the `Shape` type.
+X> 1. (Fácil) Usa la función `showShape` del capítulo anterior para definir una instancia `Show` para el tipo `Shape`.
 
-## Common Type Classes
+## Clases de tipos comunes
 
-In this section, we'll look at some standard type classes defined in the Prelude and standard libraries. These type classes form the basis of many common patterns of abstraction in idiomatic PureScript code, so a basic understanding of their functions is highly recommended.
+En esta sección, vamos a ver algunas clases de tipos estándar definidas en el Prelude y en las bibliotecas estándar. Estas clases de tipos forman la base de muchos patrones comunes de abstracción en el código PureScript idiomático, de manera que una comprensión básica de sus funciones es altamente recomendable.
 
 ### Eq
 
-The `Eq` type class defines the `eq` function, which tests two values for equality. The `==` operator is actually just an alias for `eq`.
+La clase de tipos `Eq` define la función `eq` que comprueba la igualdad entre dos valores. El operador `==` es un sinónimo de `eq`.
 
 ```haskell
 class Eq a where
   eq :: a -> a -> Boolean
 ```
 
-Note that in either case, the two arguments must have the same type: it does not make sense to compare two values of different types for equality.
+Date cuenta de que en cualquier caso, los dos argumentos deben tener el mismo tipo. No tiene sentido comprobar la igualdad entre dos valores de distinto tipo.
 
-Try out the `Eq` type class in PSCi:
+Prueba la clase de tipos `Eq` en PSCi:
 
 ```text
 > 1 == 2
@@ -153,7 +153,7 @@ true
 
 ### Ord
 
-The `Ord` type class defines the `compare` function, which can be used to compare two values, for types which support ordering. The comparison operators `<` and `>` along with their non-strict companions `<=` and `>=`, can be defined in terms of `compare`.
+La clase de tipos `Ord` define la función `compare`, que se puede usar para comparar dos valores para tipos que soporten ordenación. Los operadores de comparación `<` y `>` junto a sus compañeros no estrictos `<=` y `>=` se pueden definir en términos de `compare`.
 
 ```haskell
 data Ordering = LT | EQ | GT
@@ -162,13 +162,13 @@ class (Eq a) <= Ord a where
   compare :: a -> a -> Ordering
 ```
 
-The `compare` function compares two values, and returns an `Ordering`, which has three alternatives:
+La función `compare` compara dos valores y devuelve un `Ordering` con tres alternativas:
 
-- `LT` - if the first argument is less than the second.
-- `EQ` - if the first argument is equal to (or incomparable with) the second.
-- `GT` - if the first argument is greater than the second.
+- `LT` - si el primer argumento es menor que el segundo.
+- `EQ` - si el primer argumento es igual a (o incomparable con) el segundo.
+- `GT` - si el primer argumento es mayor que el segundo.
 
-Again, we can try out the `compare` function in PSCi:
+De nuevo, podemos probar la función `compare` en PSCi: 
 
 ```text
 > compare 1 2
@@ -180,41 +180,41 @@ LT
 
 ### Field
 
-The `Field` type class identifies those types which support numeric operators such as addition, subtraction, multiplication and division. It is provided to abstract over those operators, so that they can be reused where appropriate.
+La clase de tipos `Field` identifica los tipos que soportan operadores numéricos como suma, resta, multiplicación y división. Se proporciona para abstraer sobre esos operadores de manera que puedan ser reutilizados donde sea apropiado.
 
-_Note_: Just like the `Eq` and `Ord` type classes, the `Field` type class has special support in the PureScript compiler, so that simple expressions such as `1 + 2 * 3` get translated into simple JavaScript, as opposed to function calls which dispatch based on a type class implementation.
+_Nota_: Al igual que las clases de tipos `Eq` y `Ord`, la clase de tipos `Field` tiene soporte especial en el compilador de PureScript, de manera que expresiones simples como `1 + 2 * 3` se traduzcan a JavaScript simple, en contraposición a llamadas de función que se despachan en base a una implementación de clase de tipos.
 
 ```haskell
 class EuclideanRing a <= Field a
 ```
 
-The `Field` type class is composed from several more general _superclasses_. This allows us to talk abstractly about types which support some but not all of the `Field` operations. For example, a type of natural numbers would be closed under addition and multiplication, but not necessarily under subtraction, so that type might have an instance of the `Semiring` class (which is a superclass of `Num`), but not an instance of `Ring` or `Field`.
+La clase de tipos `Field` está compuesta de varias _superclases_ generales más. Esto nos permite hablar de manera abstracta de tipos que soportan algunas, no todas, de las operaciones de `Field`. Por ejemplo, un tipo de números naturales sería cerrado bajo la suma y la multiplicación, pero no necesariamente bajo la resta, de manera que ese tipo puede tener una instancia de la clase `Semiring` (que es una superclase de `Num`), pero no una instancia de `Ring` o `Field`. 
 
-Superclasses will be explained later in this chapter, but the full numeric type class hierarchy is beyond the scope of this chapter. The interested reader is encouraged to read the documentation for the superclasses of `Field` in `purescript-prelude`.
+Las superclases se explicarán más tarde en este capítulo, pero la jerarquía completa de tipos numéricos está más allá del ámbito de este capítulo. Animamos al lector interesado a leer la documentación de las superclases de `Field` en `purescript-prelude`. 
 
-### Semigroups and Monoids
+### Semigrupos (semigroups) y Monoides (monoids)
 
-The `Semigroup` type class identifies those types which support an `append` operation to combine two values:
+La clase de tipos `Semigroup` identifica aquellos tipos que soportan una operación `append` para combinar dos valores:
 
 ```haskell
 class Semigroup a where
   append :: a -> a -> a
 ```
 
-Strings form a semigroup under regular string concatenation, and so do arrays. Several other standard instances are provided by the `purescript-monoid` package.
+Las cadenas forman un semigrupo bajo la concatenación de cadenas normal, y lo mismo es cierto para los arrays. Muchas otras instancias estándar se proporcionan en el paquete `purescript-monoid`.
 
-The `<>` concatenation operator, which we have already seen, is provided as an alias for `append`.
+El operador de concatenación `<>`, que ya hemos visto, se proporciona como un sinónimo de `append`.
 
-The `Monoid` type class (provided by the `purescript-monoid` package) extends the `Semigroup` type class with the concept of an empty value, called `mempty`:
+La clase de tipos `Monoid` (proporcionada por el paquete `purescript-monoid`) extiende el tipo `Semigroup` con el concepto de un valor vacío llamado `mempty`:
 
 ```haskell
 class Semigroup m <= Monoid m where
   mempty :: m
 ```
 
-Again, strings and arrays are simple examples of monoids.
+De nuevo, las cadenas y los arrays son ejemplos simples de monoides.
 
-A `Monoid` type class instance for a type describes how to _accumulate_ a result with that type, by starting with an "empty" value, and combining new results. For example, we can write a function which concatenates an array of values in some monoid by using a fold. In PSCi:
+Una instancia de la clase de tipos `Monoid` para un tipo describe cómo _acumular_ un resultado con ese tipo, comenzando por un valor "vacío" y combinando nuevos resultados. Por ejemplo, podemos escribir una función que concatena un grupo de valores en algún monoide usando un pliegue. En PSCi:
 
 ```haskell
 > import Data.Monoid
@@ -227,15 +227,15 @@ A `Monoid` type class instance for a type describes how to _accumulate_ a result
 [1,2,3,4,5,6]
 ```
 
-The `purescript-monoid` package provides many examples of monoids and semigroups, which we will use in the rest of the book.
+El paquete `purescript-monoid` proporciona muchos ejemplos de monoides y semigrupos que usaremos en el resto del libro.
 
 ### Foldable
 
-If the `Monoid` type class identifies those types which act as the result of a fold, then the `Foldable` type class identifies those type constructors which can be used as the source of a fold.
+Si la clase de tipos `Monoid` identifica los tipos que pueden actuar como resultado de un pliegue, la clase de tipos `Foldable` identifica los constructores de tipos que pueden ser usados como la fuente de un pliegue.
 
-The `Foldable` type class is provided in the `purescript-foldable-traversable` package, which also contains instances for some standard containers such as arrays and `Maybe`.
+La clase de tipos `Foldable` se suministra en el paquete `purescript-foldable-traversable`, que también contiene instancias para algunos contenedores estándar como `Array` y `Maybe`.
 
-The type signatures for the functions belonging to the `Foldable` class are a little more complicated than the ones we've seen so far:
+Las firmas de tipo de las funciones pertenecientes a `Foldable` son un poco más complicadas que las que hemos visto hasta ahora:
 
 ```haskell
 class Foldable f where
@@ -244,11 +244,11 @@ class Foldable f where
   foldMap :: forall a m. Monoid m => (a -> m) -> f a -> m
 ```
 
-It is instructive to specialize to the case where `f` is the array type constructor. In this case, we can replace `f a` with `Array a` for any a, and we notice that the types of `foldl` and `foldr` become the types that we saw when we first encountered folds over arrays.
+Es instructivo especializar para el caso en que `f` es el constructor de tipo array. En este caso, podemos reemplazar `f a` con `Array a` para cualquier `a`, y nos damos cuenta de que los tipos de `foldl` y `foldr` se convierten en los tipos que vimos cuando encontramos por primera vez los pliegues sobre arrays.
 
-What about `foldMap`? Well, that becomes `forall a m. Monoid m => (a -> m) -> Array a -> m`. This type signature says that we can choose any type `m` for our result type, as long as that type is an instance of the `Monoid` type class. If we can provide a function which turns our array elements into values in that monoid, then we can accumulate over our array using the structure of the monoid, and return a single value.
+¿Qué pasa con `foldMap`? Bien, esa se convierte en `forall a m. Monoid m => (a -> m) -> Array a -> m`. Esta firma de tipo dice que podemos elegir cualquier tipo `m` para nuestro tipo resultado, siempre y cuando ese tipo sea una instancia de la clase de tipos `Monoid`. Si podemos proporcionar una función que convierte nuestros elementos de array en valores en ese monoide, entonces podemos acumular sobre nuestro array usando la estructura del monoide y devolver un único valor.
 
-Let's try out `foldMap` in PSCi:
+Probemos `foldMap` en PSCi:
 
 ```text
 > import Data.Foldable
@@ -257,20 +257,20 @@ Let's try out `foldMap` in PSCi:
 "12345"
 ```
 
-Here, we choose the monoid for strings, which concatenates strings together, and the `show` function which renders an `Int` as a `String`. Then, passing in an array of integers, we see that the results of `show`ing each integer have been concatenated into a single `String`.
+Aquí, elegimos el monoide para cadenas, que concatena cadenas, y la función `show` que representa un `Int` como un `String`. Entonces, pasando un array de enteros, vemos que los resultados de mostrar cada entero han sido concatenados en una única `String`. 
 
-But arrays are not the only types which are foldable. `purescript-foldable-traversable` also defines `Foldable` instances for types like `Maybe` and `Tuple`, and other libraries like `purescript-lists` define `Foldable` instances for their own data types. `Foldable` captures the notion of an _ordered container_.
+Pero los arrays no son los únicos tipos plegables. `purescript-foldable-traversable` también define instancias de `Foldable` para tipos como `Maybe` y `Tuple`, y otras bibliotecas como `purescript-lists` definen instancias de `Foldable` para sus propios tipos de datos. `Foldable` captura la noción de _contenedor ordenado_. 
 
-### Functor, and Type Class Laws
+### Funtor (functor) y leyes de clases de tipos (type class laws)
 
-The Prelude also defines a collection of type classes which enable a functional style of programming with side-effects in PureScript: `Functor`, `Applicative` and `Monad`. We will cover these abstractions later in the book, but for now, let's look at the definition of the `Functor` type class, which we have seen already in the form of the `map` function:
+El Prelude también define una colección de clases de tipos que permiten un estilo de programación funcional con efectos secundarios en PureScript: `Functor`, `Applicative` y `Monad`. Veremos estas abstracciones más adelante, pero por ahora veamos la definición de la clase de tipos `Functor`, que ya hemos visto en forma de la función `map`:
 
 ```haskell
 class Functor f where
   map :: forall a b. (a -> b) -> f a -> f b
 ```
 
-The `map` function (and its alias `<$>`) allows a function to be "lifted" over a data structure. The precise definition of the word "lifted" here depends on the data structure in question, but we have already seen its behavior for some simple types:
+La función `map` (y su sinónimo `<$>`) permite "elevar" una función a una estructura de datos. La definición precisa de la palabra "elevar" depende de la estructura de datos en cuestión, pero ya hemos visto su comportamiento para algunos tipos simples:
 
 ```text
 > import Prelude
@@ -285,26 +285,26 @@ The `map` function (and its alias `<$>`) allows a function to be "lifted" over a
 (Just 7)
 ```
 
-How can we understand the meaning of the `map` function, when it acts on many different structures, each in a different way?
+¿Cómo podemos entender el significado de la función `map` cuando actúa sobre muchas estructuras diferentes de una manera diferente cada vez?
 
-Well, we can build an intuition that the `map` function applies the function it is given to each element of a container, and builds a new container from the results, with the same shape as the original. But how do we make this concept precise?
+Podemos intuir que la función `map` aplica la función que se le da a cada elemento del contenedor y construye un nuevo contenedor a partir de los resultados, con la misma forma que el original. ¿Pero cómo podemos precisar este concepto?
 
-Type class instances for `Functor` are expected to adhere to a set of _laws_, called the _functor laws_:
+Se espera que las instancias de la clase de tipos `Functor` obedezcan un conjunto de _leyes_ llamadas las _leyes del funtor_ (functor laws):
 
 - `map id xs = xs`
 - `map g (map f xs) = map (g <<< f) xs`
 
-The first law is the _identity law_. It states that lifting the identity function over a structure just returns the original structure. This makes sense since the identity function does not modify its input.
+La primera ley es la _ley de identidad_. Dice que elevar la función identidad sobre una estructura devuelve la estructura original. Esto tiene sentido, ya que la función identidad no modifica su entrada.
 
-The second law is the _composition law_. It states that mapping one function over a structure, and then mapping a second, is the same thing as mapping the composition of the two functions over the structure.
+La segunda ley es la _ley de composición_. Dice que mapear una función sobre una estructura y mapear una segunda función es lo mismo que mapear la composición de las dos funciones sobre la estructura.
 
-Whatever "lifting" means in the general sense, it should be true that any reasonable definition of lifting a function over a data structure should obey these rules.
+Signifique lo que signifique "elevar" en el sentido general, debe ser cierto que cualquier definición razonable de elevar una función sobre una estructura de datos debe obedecer estas reglas.
 
-Many standard type classes come with their own set of similar laws. The laws given to a type class give structure to the functions of that type class and allow us to study its instances in generality. The interested reader can research the laws ascribed to the standard type classes that we have seen already.
+Muchas clases de tipos estándar vienen con su propio conjunto de leyes similares. Las leyes dadas a una clase de tipos dan estructura a las funciones de esa clase de tipos y nos permiten estudiar sus instancias en general. El lector interesado puede investigar las leyes atribuidas a las clases de tipos estándar que ya hemos visto.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) The following newtype represents a complex number:
+X> 1. (Fácil) El newtype siguiente representa un número complejo:
 X>
 X>     ```haskell
 X>     newtype Complex = Complex
@@ -313,31 +313,31 @@ X>       , imaginary :: Number
 X>       }
 X>     ```
 X>       
-X>     Define `Show` and `Eq` instances for `Complex`.
-X> 1. (Medium) The following type defines a type of non-empty arrays of elements of type `a`:
+X>     Define instancias `Show` y `Eq` para `Complex`.
+X> 1. (Medio) El siguiente tipo define un tipo de arrays no vacíos de elementos de tipo `a`:
 X>
 X>     ```haskell
 X>     data NonEmpty a = NonEmpty a (Array a)
 X>     ```
 X>      
-X>     Write a `Semigroup` instance for non-empty arrays by reusing the `Semigroup` instance for `Array`.
-X> 1. (Medium) Write a `Functor` instance for `NonEmpty`.
-X> 1. (Difficult) Write a `Foldable` instance for `NonEmpty`. _Hint_: reuse the `Foldable` instance for arrays.
+X>     Escribe una instancia de `Semigroup` para arrays no vacíos reutilizando la instancia `Semigroup` de `Array`.
+X> 1. (Medio) Escribe una instancia`Functor` para `NonEmpty`.
+X> 1. (Difícil) Escribe una instancia de `Foldable` para `NonEmpty`. _Pista_: reutiliza la instancia `Foldable` para arrays.
 
-## Type Annotations
+## Anotaciones de tipo (type annotations)
 
-Types of functions can be constrained by using type classes. Here is an example: suppose we want to write a function which tests if three values are equal, by using equality defined using an `Eq` type class instance.
+Los tipos de las funciones pueden ser restringidos usando clases de tipos. Aquí tenemos un ejemplo: supongamos que queremos escribir una función que comprueba si tres valores son iguales, usando la igualdad definida por una instancia de clase de tipos `Eq`.
 
 ```haskell
 threeAreEqual :: forall a. Eq a => a -> a -> a -> Boolean
 threeAreEqual a1 a2 a3 = a1 == a2 && a2 == a3
 ```
 
-The type declaration looks like an ordinary polymorphic type defined using `forall`. However, there is a type class constraint in parentheses, separated from the rest of the type by a double arrow `=>`.
+La declaración de tipo parece un tipo polimórfico ordinario definido usando `forall`. Sin embargo, a continuación hay una restricción de clase de tipos separada del resto del tipo por una flecha doble `=>`.
 
-This type says that we can call `threeAreEqual` with any choice of type `a`, as long as there is an `Eq` instance available for `a` in one of the imported modules.
+Este tipo dice que podemos llamar `threeAreEqual` con cualquier elección de tipo `a`, siempre y cuando haya una instancia `Eq` disponible para `a` en uno de los módulos importados.
 
-Constrained types can contain several type class instances, and the types of the instances are not restricted to simple type variables. Here is another example which uses `Ord` and `Show` instances to compare two values:
+Los tipos restringidos pueden contener varias instancias de clases de tipos, y los tipos de las instancias no están limitados a simples variables de tipo. Aquí hay otro ejemplo que usa instancias `Ord` y `Show` para comparar dos valores:  
 
 ```haskell
 showCompare :: forall a. (Ord a, Show a) => a -> a -> String
@@ -349,9 +349,9 @@ showCompare a1 a2 =
   show a1 <> " is equal to " <> show a2
 ```
 
-The PureScript compiler will try to infer constrained types when a type annotation is not provided. This can be useful if we want to use the most general type possible for a function.
+El compilador PureScript intentará inferir los tipos restringidos cuando no se proporcione una anotación de tipo. Esto puede ser util si queremos usar el tipo más general posible para una función.
 
-To see this, try using one of the standard type classes like `Semiring` in PSCi:
+Para verlo, intenta usar una de las clases de tipos estándar como `Semiring` en PSCi:
 
 ```text
 > import Prelude
@@ -360,13 +360,13 @@ To see this, try using one of the standard type classes like `Semiring` in PSCi:
 forall a. Semiring a => a -> a
 ```
 
-Here, we might have annotated this function as `Int -> Int`, or `Number -> Number`, but PSCi shows us that the most general type works for any `Semiring`, allowing us to use our function with both `Int`s and `Number`s.
+Aquí, podríamos haber anotado esta función como `Int -> Int`, o `Number -> Number`, pero PSCi nos muestra que el tipo más general funciona para cualquier `Semiring`, permitiéndonos usar nuestra función tanto con `Int`s como con `Number`s.
 
-## Overlapping Instances
+## Instancias superpuestas (overlapping instances)
 
-PureScript has another rule regarding type class instances, called the _overlapping instances rule_. Whenever a type class instance is required at a function call site, PureScript will use the information inferred by the type checker to choose the correct instance. At that time, there should be exactly one appropriate instance for that type. If there are multiple valid instances, the compiler will issue a warning.
+PureScript tiene otra regla relativa a las instancias de clases de tipos, llamada la _regla de instancias superpuestas_ (overlapping instances rule). Cuando una instancia de clase de tipos se necesita en un punto de llamada a función, PureScript usará la información inferida por el comprobador de tipos para elegir la instancia correcta. En ese momento, debe haber exactamente una instancia apropiada para ese tipo. Si hay varias instancias válidas, el compilador emitirá un aviso. 
 
-To demonstrate this, we can try creating two conflicting type class instances for an example type. In the following code, we create two overlapping `Show` instances for the type `T`:
+Para mostrar esto, podemos intentar crear dos instancias de clase de tipos en conflicto para un tipo de ejemplo. En el siguiente código, creamos dos instancias superpuestas de `Show` para le tipo `T`:
 
 ```haskell
 module Overlapped where
@@ -382,59 +382,59 @@ instance showT2 :: Show T where
   show _ = "Instance 2"
 ```
 
-This module will compile with no warnings. However, if we _use_ `show` at type `T` (requiring the compiler to to find a `Show` instance), the overlapping instances rule will be enforced, resulting in a warning:
+Este módulo compilará sin avisos. Sin embargo, si _usamos_ `show` sobre el tipo `T` (requiriendo al compilador que encuentre una instancia `Show`), la regla de instancias superpuestas se aplicará dando un aviso:
 
 ```text
 Overlapping instances found for Prelude.Show T
 ```
 
-The overlapping instances rule is enforced so that automatic selection of type class instances is a predictable process. If we allowed two type class instances for a type to exist, then either could be chosen depending on the order of module imports, and that could lead to unpredictable behavior of the program at runtime, which is undesirable.
+La regla de instancias superpuestas debe cumplirse para que la selección de instancias de clases de tipos sea un proceso predecible. Si permitiésemos que existiesen dos instancias de clase de tipos para un tipo, cualquiera podría elegirse dependiendo del orden de importación de los módulos, y podría llevar a comportamiento impredecible del programa en tiempo de ejecución, algo no deseable.
 
-If it is truly the case that there are two valid type class instances for a type, satisfying the appropriate laws, then a common approach is to define newtypes which wrap the existing type. Since different newtypes are allowed to have different type class instances under the overlapping instances rule, there is no longer an issue. This approach is taken in PureScript's standard libraries, for example in `purescript-monoids`, where the `Maybe a` type has multiple valid instances for the `Monoid` type class.
+Si realmente es cierto que hay dos instancias de clase de tipos válidas para un tipo que satisfacen las leyes apropiadas, una aproximación común es definir newtypes para envolver el tipo existente. Como se permite que los newtypes diferentes tengan diferentes instancias de clases de tipos, para la regla de instancias superpuestas ya no es un problema. Esta aproximación se usa en las bibliotecas estándar de PureScript, por ejemplo en `purescript-monoids`, donde el tipo `Maybe a` tiene múltiples instancias válidas para la clase de tipos `Monoid`.
 
-## Instance Dependencies
+## Dependencias de instancia (instance dependencies)
 
-Just as the implementation of functions can depend on type class instances using constrained types, so can the implementation of type class instances depend on other type class instances. This provides a powerful form of program inference, in which the implementation of a program can be inferred using its types.
+Al igual que la implementación de funciones puede depender de las instancias de clases de tipos usando tipos restringidos, también puede la implementación de instancias de clases de tipos depender de otras instancias de clases de tipos. Esto proporciona una forma poderosa de inferencia de programa, en la que la implementación de un programa se puede inferir usando sus tipos.
 
-For example, consider the `Show` type class. We can write a type class instance to `show` arrays of elements, as long as we have a way to `show` the elements themselves:
+Por ejemplo, considera la clase de tipos `Show`. Podemos escribir una instancia de clase de tipos para mostrar arrays de elementos, siempre y cuando tengamos una manera de mostrar los propios elementos.
 
 ```haskell
 instance showArray :: Show a => Show (Array a) where
   ...
 ```
 
-This type class instance is provided in the `purescript-prelude` library.
+Esta instancia de clase de tipos se proporciona el la biblioteca `purescript-prelude`.
 
-When the program is compiled, the correct type class instance for `Show` is chosen based on the inferred type of the argument to `show`. The selected instance might depend on many such instance relationships, but this complexity is not exposed to the developer.
+Cuando se compila el programa, se elige la instancia correcta de clase de tipos para `Show` basándose en el tipo inferido del argumento pasado a `show`. La instancia seleccionada puede depender de muchas relaciones de instancia, pero esta complejidad no se expone al desarrollador.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Write an `Eq` instance for the type `NonEmpty a` which reuses the instances for `Eq a` and `Eq (Array a)`.
-X> 1. (Medium) Given any type `a` with an instance of `Ord`, we can add a new "infinite" value which is greater than any other value:
+X> 1. (Fácil) Escribe una instancia `Eq` para el tipo `NonEmpty a` que reutiliza las instancias de `Eq a` y `Eq (Array a)`.
+X> 1. (Medio) Dado un tipo `a` cualquiera con una instancia de `Ord`, podemos añadir un nuevo valor "infinito" que es mayor que cualquier otro valor: 
 X>
 X>     ```haskell
 X>     data Extended a = Finite a | Infinite
 X>     ```
 X>         
-X>     Write an `Ord` instance for `Extended a` which reuses the `Ord` instance for `a`.
-X> 1. (Difficult) Given an type constructor `f` which defines an ordered container (and so has a `Foldable` instance), we can create a new container type which includes an extra element at the front:
+X>     Escribe una instancia `Ord` para `Extended a` que reutiliza la instancia `Ord` para `a`.
+X> 1. (Difícil) Dado un constructor de tipo `f` que define un contenedor ordenado (y por lo tanto tiene una instancia de `Foldable`), podemos crear un nuevo tipo de contenedor que incluye un elemento extra al frente:
 X>
 X>     ```haskell
 X>     data OneMore f a = OneMore a (f a)
 X>     ```
 X>         
-X>     The container `OneMore f` is also has an ordering, where the new element comes before any element of `f`. Write a `Foldable` instance for `OneMore f`:
+X>     El contenedor `OneMore f` también tiene un orden, donde el nuevo elemento va antes que cualquier elemento de `f`. Escribe una instancia de `Foldable` para `OneMore f`:
 X>   
 X>     ```haskell
 X>     instance foldableOneMore :: Foldable f => Foldable (OneMore f) where
 X>       ...
 X>     ```
 
-## Multi Parameter Type Classes
+## Clases de tipos de varios parámetros (multi parameter type classes)
 
-It's not the case that a type class can only take a single type as an argument. This is the most common case, but in fact, a type class can be parameterized by _zero or more_ type arguments.
+No es cierto que una clase de tipos pueda tomar un único tipo como argumento. Es el caso más común, pero de hecho, una clase de tipos se puede parametrizar por _cero o más_ argumentos de tipo.
 
-Let's see an example of a type class with two type arguments.
+Veamos un ejemplo de una clase de tipos con dos argumentos de tipo.
 
 ```haskell
 module Stream where
@@ -453,13 +453,13 @@ instance streamString :: Stream String Char where
   uncons = String.uncons
 ```
 
-The `Stream` module defines a class `Stream` which identifies types which look like streams of elements, where elements can be pulled from the front of the stream using the `uncons` function.
+El módulo `Stream` define una clase `Stream` que identifica tipos que se pueden ver como flujos de elementos, donde los elementos pueden ser extraídos del frente del flujo usando la función `uncons`.
 
-Note that the `Stream` type class is parameterized not only by the type of the stream itself, but also by its elements. This allows us to define type class instances for the same stream type but different element types.
+Date cuenta de que la clase de tipos `Stream` está parametrizada no sólo por el tipo del flujo, sino también por sus elementos. Esto permite definir instancias de clase de tipos para el mismo tipo de flujo pero con diferentes tipos de elementos.
 
-The module defines two type class instances: an instance for arrays, where `uncons` removes the head element of the array using pattern matching, and an instance for String, which removes the first character from a String.
+El módulo define dos instancias de clase de tipos: una instancia para arrays, donde `uncons` quita el elemento de cabeza del array usando ajuste de patrones, y una instancia para `String` que quita el primer carácter de una `String`.
 
-We can write functions which work over arbitrary streams. For example, here is a function which accumulates a result in some `Monoid` based on the elements of a stream:
+Podemos escribir funciones que trabajan sobre flujos arbitrarios. Por ejemplo, aquí hay una función que acumula un resultado en algún `Monoid` basándose en los elementos de un flujo:
 
 ```haskell
 import Prelude
@@ -472,13 +472,13 @@ foldStream f list =
     Just cons -> f cons.head <> foldStream f cons.tail
 ```
 
-Try using `foldStream` in PSCi for different types of `Stream` and different types of `Monoid`.
+Intenta usar `foldStream` en PSCi para diferentes tipos de `Stream` y diferentes tipos de `Monoid`.
 
-## Nullary Type Classes
+## Clases de tipos nularias (nullary type classes)
 
-We can even define type classes with zero type arguments! These correspond to compile-time assertions about our functions, allowing us to track global properties of our code in the type system.
+¡Podemos incluso definir clases de tipos sin argumentos de tipo! Se corresponden a aseveraciones (asserts) en tiempo de compilación sobre nuestras funciones, permitiéndonos seguir la pista a propiedades globales de nuestro código en el sistema de tipos.
 
-An important example is the `Partial` class which we saw earlier when discussing partial functions. We've seen the partial functions `head` and `tail`, defined in `Data.Array.Partial` already:
+Un ejemplo importante es la clase `Partial` que vimos anteriormente cuando hablábamos de las funciones parciales. Hemos visto ya las funciones parciales `head` y `tail` definidas en `Data.Array.Partial`:
 
 ```haskell
 head :: forall a. Partial => Array a -> a
@@ -486,7 +486,7 @@ head :: forall a. Partial => Array a -> a
 tail :: forall a. Partial => Array a -> Array a
 ```
 
-Note that there is no instance defined for the `Partial` type class! Doing so would defeat its purpose: attempting to use the `head` function directly will result in a type error:
+¡Date cuenta de que no hay instancias definidas para la clase de tipos `Partial`! Hacerlo anularía su propósito: intentar usar la función `head` directamente resultará en un error de tipo:
 
 ```text
 > head [1, 2, 3]
@@ -496,43 +496,43 @@ No type class instance was found for
   Prim.Partial
 ```
 
-Instead, we can republish the `Partial` constraint for any functions making use of partial functions:
+En su lugar, podemos volver a publicar la restricción `Partial` para cualquier función que haga uso de funciones parciales:
 
 ```haskell
 secondElement :: forall a. Partial => Array a -> a
 secondElement xs = head (tail xs)
 ```
 
-We've already seen the `unsafePartial` function, which allows us to treat a partial function as a regular function (unsafely). This function is defined in the `Partial.Unsafe` module:
+Ya hemos visto la función `unsafePartial` que nos permite tratar una función parcial como una función normal (de manera insegura). Esta función está definida en el módulo `Partial.Unsafe`:
 
 ```haskell
 unsafePartial :: forall a. (Partial => a) -> a
 ```
 
-Note that the `Partial` constraint appears _inside the parentheses_ on the left of the function arrow, but not in the outer `forall`. That is, `unsafePartial` is a function from partial values to regular values.
+Date cuenta de que la restricción `Partial` aparece _entre paréntesis_ a la izquierda de la flecha de función, pero no en el `forall` de fuera. Esto es, `unsafePartial` es una función de valores parciales a valores normales.
 
-## Superclasses
+## Superclases (superclasses)
 
-Just as we can express relationships between type class instances by making an instance dependent on another instance, we can express relationships between type classes themselves using so-called _superclasses_.
+Al igual que podemos expresar relaciones entre instancias de clases de tipos haciendo que una instancia dependa de otra, podemos expresar relaciones entre las propias clases de tipos usando las llamadas _superclases_.
 
-We say that one type class is a superclass of another if every instance of the second class is required to be an instance of the first, and we indicate a superclass relationship in the class definition by using a backwards facing double arrow.
+Decimos que una clase de tipos es una superclase de otra si se requiere que toda instancia de la segunda clase sea una instancia de la primera, e indicamos una relación de superclase en la definición de clase usando una doble flecha hacia atrás. 
 
-We've already seen some examples of superclass relationships: the `Eq` class is a superclass of `Ord`, and the `Semigroup` class is a superclass of `Monoid`. For every type class instance of the `Ord` class, there must be a corresponding `Eq` instance for the same type. This makes sense, since in many cases, when the `compare` function reports that two values are incomparable, we often want to use the `Eq` class to determine if they are in fact equal.
+Hemos visto ya algunos ejemplos de relaciones de superclase: La clase `Eq` es una superclase de `Ord`, y la clase `Semigroup` es una superclase de `Monoid`. Para todas las instancias de clase de tipos de la clase `Ord` tiene que haber una instancia correspondiente de `Eq` para el mismo tipo. Esto tiene sentido, ya que en muchos casos, cuando la función `compare` informa de que dos valores son incomparables, a menudo queremos usar la clase `Eq` para determinar si de hecho son iguales. 
 
-In general, it makes sense to define a superclass relationship when the laws for the subclass mention the members of the superclass. For example, it is reasonable to assume, for any pair of `Ord` and `Eq` instances, that if two values are equal under the `Eq` instance, then the `compare` function should return `EQ`. In order words, `a == b` should be true exactly when `compare a b` evaluates to `EQ`. This relationship on the level of laws justifies the superclass relationship between `Eq` and `Ord`.
+En general, tiene sentido definir una relación de superclase cuando las leyes de la subclase mencionan los miembros de la superclase. Por ejemplo, es razonable asumir, para cualquier par de instancias `Ord` y `Eq`, que si dos valores son iguales bajo la instancia `Eq`, entonces la función `compare` debe devolver `EQ`. En otras palabras, `a == b` debe ser ciero exactamente cuando `compare a b` se evalúa a `EQ`. Esta relación a nivel de leyes justifica la relación de superclase entre `Eq` y `Ord`.
 
-Another reason to define a superclass relationship is in the case where there is a clear "is-a" relationship between the two classes. That is, every member of the subclass _is a_ member of the superclass as well.
+Otra razón para definir una relación de superclase es en el caso donde hay una clara relación "es-un" entre las dos clases. Esto es, todos los miembros de la subclase _son_ miembros de la superclase también.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) The `Action` class is a multi-parameter type class which defines an action of one type on another:
+X> 1. (Medio) La clase `Action` es una clase de tipos de varios parámetros que define una acción de un tipo sobre otro:
 X>
 X>     ```haskell
 X>     class Monoid m <= Action m a where
 X>       act :: m -> a -> a
 X>     ```
 X>           
-X>     An _action_ is a function which describes how a monoid can be used to modify a value of another type. We expect the action to respect the concatenation operator of the monoid. For example, the monoid of natural numbers with multiplication _acts_ on strings by repeating a string some number of times:
+X>     Una _acción_ es una función que describe cómo se puede usar un monoide para modificar un valor de otro tipo. Esperamos que la acción respete el operador de concatenación del monoide. Por ejemplo, el monoide de los números naturales con la multiplicación _actúa_ sobre cadenas repitiendo la cadena un número de veces:
 X>  
 X>     ```haskell
 X>     instance repeatAction :: Action Int String where
@@ -540,30 +540,30 @@ X>       act 0 _ = ""
 X>       act n s = s <> act (n - 1) s
 X>     ```
 X>
-X>     Note that `act 2 s` is equal to the combination `act 1 s <> act 1 s`, and `1 <> 1 = 2` in the monoid of additive integers.
+X>     Date cuenta de que `act 2 s` es igual a la combinación `act 1 s <> act 1 s`, y `1 <> 1 = 2' en el monoide de enteros aditivos.
 X>   
-X>     Write down a reasonable set of laws which describe how the `Action` class should interact with the `Monoid` class. _Hint_: how do we expect `mempty` to act on elements? What about `append`?
-X> 1. (Medium) Write an instance `Action m a => Action m (Array a)`, where the action on arrays is defined by acting on the elements independently.
-X> 1. (Difficult) Given the following newtype, write an instance for `Action m (Self m)`, where the monoid `m` acts on itself using `append`:
+X>     Escribe un conjunto razonable de leyes que describan cómo debe la clase `Action` interactuar con la clase `Monoid`. _Pista_: ¿Cómo esperamos que actúe `mempty` sobre los elementos? ¿Y `append`?
+X> 1. (Medio) Escribe una instancia `Action m a => Action m (Array a)`, donde la acción sobre arrays está definida por la acción sobre los elementos de manera independiente.
+X> 1. (Difícil) Dado el siguiente newtype, escribe una instancia para `Action m (Self m)`, donde el monoide `m` actúa sobre sí mismo usando `append`:
 X>
 X>     ```haskell
 X>     newtype Self m = Self m
 X>     ```
 X>
-X> 1. (Medium) Define a partial function which finds the maximum of a non-empty array of integers. Your function should have type `Partial => Array Int -> Int`. Test out your function in PSCi using `unsafePartial`. _Hint_: Use the `maximum` function from `Data.Foldable`.
+X> 1. (Medio) Define una función parcial que encuentra el máximo de un array no vacío de enteros. Tu función debe tener el tipo `Partial => Array Int -> Int`. Prueba tu función en PSCi usando `unsafePartial`. _Pista_: Usa la función `maximum` de `Data.Foldable`.
 
-## A Type Class for Hashes
+## Una clase de tipos para funciones resumen
 
-In the last section of this chapter, we will use the lessons from the rest of the chapter to create a library for hashing data structures.
+En la última sección de este capítulo vamos a usar las lecciones del resto del capítulo para crear una biblioteca para resumir estructuras de datos.
 
-Note that this library is for demonstration purposes only, and is not intended to provide a robust hashing mechanism.
+Date cuenta de que esta biblioteca es para propósitos de demostración solamente y no pretende proporcionar un mecanismo de resumen robusto.
 
-What properties might we expect of a hash function?
+¿Qué propiedades podemos esperar de una función resumen?
 
-- A hash function should be deterministic, and map equal values to equal hash codes.
-- A hash function should distribute its results approximately uniformly over some set of hash codes.
+- Una función resumen debe ser determinista y mapear valores iguales a códigos resumen iguales.
+- Una función resumen debe distribuir sus resultados de manera aproximadamente uniforme sobre el conjunto de códigos resumen.
 
-The first property looks a lot like a law for a type class, whereas the second property is more along the lines of an informal contract, and certainly would not be enforceable by PureScript's type system. However, this should provide the intuition for the following type class:
+La primera propiedad se parece bastante a una ley para una clase de tipos, mientras que la segunda propiedad es más bien un contrato informal y ciertamente no sería realizable con el sistema de tipos de PureScript. Sin embargo, esto debe proporcionar la intuición para la siguiente clase de tipos:
 
 ```haskell
 newtype HashCode = HashCode Int
@@ -575,36 +575,36 @@ class Eq a <= Hashable a where
   hash :: a -> HashCode
 ```
 
-with the associated law that `a == b` implies `hash a == hash b`.
+Con la ley asociada de que `a == b` implica `hash a == hash b`.
 
-We'll spend the rest of this section building a library of instances and functions associated with the `Hashable` type class.
+Pasaremos el resto de esta sección construyendo una biblioteca de instancias y funciones asociadas a la clase de tipos `Hashable`.
 
-We will need a way to combine hash codes in a deterministic way:
+Necesitaremos una forma de combinar códigos hash de una forma determinista:
 
 ```haskell
 combineHashes :: HashCode -> HashCode -> HashCode
 combineHashes (HashCode h1) (HashCode h2) = hashCode (73 * h1 + 51 * h2)
 ```
 
-The `combineHashes` function will mix two hash codes and redistribute the result over the interval 0-65535.
+La función `combineHashes` mezclará dos códigos resumen y redistribuirá el resultado sobre el intervalo 0-65535.
 
-Let's write a function which uses the `Hashable` constraint to restrict the types of its inputs. One common task which requires a hashing function is to determine if two values hash to the same hash code. The `hashEqual` relation provides such a capability:
+Escribamos una función que usa la restricción `Hashable` para restringir los tipos de sus entradas. Una tarea común que requiere una función resumen es determinar si dos valores se mapean al mismo código resumen. La relación `hashEqual` proporciona dicha capacidad:
 
-```haskell
+```Haskell
 hashEqual :: forall a. Hashable a => a -> a -> Boolean
 hashEqual = eq `on` hash
 ```
 
-This function uses the `on` function from `Data.Function` to define hash-equality in terms of equality of hash codes, and should read like a declarative definition of hash-equality: two values are "hash-equal" if they are equal after each value has been passed through the `hash` function.
+Esta función usa la función `on` de `Data.Function` para definir la igualdad de resumen en términos de igualdad de códigos resumen, y debe leerse como una definición declarativa de la igualdad de resumen: dos valores son iguales a nivel de resumen si son iguales después de que cada valor haya pasado a través de la función `hash`.
 
-Let's write some `Hashable` instances for some primitive types. Let's start with an instance for integers. Since a `HashCode` is really just a wrapped integer, this is simple - we can use the `hashCode` helper function:
+Escribamos algunas instancias de `Hashable` para algunos tipos primitivos. Comencemos con una instancia para enteros. Ya que `HashCode` es en realidad un entero envuelto, esto es fácil, podemos usar la función auxiliar `hashCode`:
 
 ```haskell
 instance hashInt :: Hashable Int where
   hash = hashCode
 ```
 
-We can also define a simple instance for `Boolean` values using pattern matching:
+Podemos también definir una instancia simple para valores `Boolean` usando ajuste de patrones:
 
 ```haskell
 instance hashBoolean :: Hashable Boolean where
@@ -612,38 +612,38 @@ instance hashBoolean :: Hashable Boolean where
   hash true  = hashCode 1
 ```
 
-With an instance for hashing integers, we can create an instance for hashing `Char`s by using the `toCharCode` function from `Data.Char`:
+Con una instancia para resumir enteros, podemos crear una instancia para resumir `Char`s usando la función `toCharCode` de `Data.Char`:
 
 ```haskell
 instance hashChar :: Hashable Char where
   hash = hash <<< toCharCode
 ```
 
-To define an instance for arrays, we can `map` the `hash` function over the elements of the array (if the element type is also an instance of `Hashable`) and then perform a left fold over the resulting hashes using the `combineHashes` function:
+Para definir una instancia para arrays, podemos mapear la función `hash` sobre los elementos del array (si el tipo elemental es también una instancia de `Hashable`) y entonces realizar un pliegue por la izquierda sobre los códigos resultantes usando la función `combineHashes`:
 
 ```haskell
 instance hashArray :: Hashable a => Hashable (Array a) where
   hash = foldl combineHashes (hashCode 0) <<< map hash
 ```
 
-Notice how we build up instances using the simpler instances we have already written. Let's use our new `Array` instance to define an instance for `String`s, by turning a `String` into an array of `Char`s:
+Date cuenta de cómo construimos instancias usando las instancias más simples que ya hemos escrito. Usemos nuestra nueva instancia para `Array` para definir una instancia para `String`s, convirtiendo una `String` en un array de `Char`s:
 
 ```haskell
 instance hashString :: Hashable String where
   hash = hash <<< toCharArray
 ```
 
-How can we prove that these `Hashable` instances satisfy the type class law that we stated above? We need to make sure that equal values have equal hash codes. In cases like `Int`, `Char`, `String` and `Boolean`, this is simple because there are no values of those types which are equal in the sense of `Eq` but not equal identically.
+¿Cómo podemos probar que estas instancias de `Hashable` satisfacen las leyes de clase de tipos que hemos enunciado antes? Necesitamos asegurarnos de que valores iguales tienen códigos resumen iguales. En casos como `Int`, `Char`, `String` y `Boolean`, esto es simple porque no hay valores de esos tipos que sean iguales en el sentido de `Eq` pero no sean idénticamente iguales. 
 
-What about some more interesting types? To prove the type class law for the `Array` instance, we can use induction on the length of the array. The only array with length zero is `[]`. Any two non-empty arrays are equal only if they have equals head elements and equal tails, by the definition of `Eq` on arrays. By the inductive hypothesis, the tails have equal hashes, and we know that the head elements have equal hashes if the `Hashable a` instance must satisfy the law. Therefore, the two arrays have equal hashes, and so the `Hashable (Array a)` obeys the type class law as well.
+¿Y en el caso de los tipos más interesantes? Para probar la ley de clase para la instancia de `Array` podemos usar inducción sobre la longitud del array. El único array con longitud cero es `[]`. Cualquier par de arrays no vacíos son iguales sólo si tienen elementos iguales a la cabeza y sus colas son iguales, por la definición de `Eq` sobre arrays. Por hipótesis inductiva, las colas tienen códigos resumen iguales, y sabemos que los elementos de la cabeza tienen códigos resumen iguales si la instancia de `Hashable a` tiene que satisfacer la ley. Por lo tanto, los dos arrays tienen códigos resumen iguales, de manera que el `Hashable (Array a)` obedece la ley de clase de tipos también.
 
-The source code for this chapter includes several other examples of `Hashable` instances, such as instances for the `Maybe` and `Tuple` type.
+El código fuente para este capítulo incluye varios ejemplos de instancias `Hashable`, como instancias para los tipos `Maybe` y `Tuple`.  
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use PSCi to test the hash functions for each of the defined instances.
-X> 1. (Medium) Use the `hashEqual` function to write a function which tests if an array has any duplicate elements, using hash-equality as an approximation to value equality. Remember to check for value equality using `==` if a duplicate pair is found. _Hint_: the `nubBy` function in `Data.Array` should make this task much simpler.
-X> 1. (Medium) Write a `Hashable` instance for the following newtype which satisfies the type class law:
+X> 1. (Fácil) Usa PSCi para probar las funciones resumen para cada una de las instancias definidas.
+X> 1. (Medio) Usa la función `hashEqual` para probar si un array tiene algún elemento duplicado, usando la igualdad de código resumen como una aproximación a la igualdad de valor. Recuerda comprobar la igualdad de valor usando `==` si se encuentra un duplicado. _Pista_: la función `nubBy` de `Data.Array` debe hacer esta tarea mucho más simple.
+X> 1. (Medio) Escribe una instancia `Hashable` para el siguiente newtype que satisfaga la ley de clase de tipos:
 X>
 X>     ```haskell
 X>     newtype Hour = Hour Int
@@ -652,11 +652,11 @@ X>     instance eqHour :: Eq Hour where
 X>       eq (Hour n) (Hour m) = mod n 12 == mod m 12
 X>     ```
 X>     
-X>     The newtype `Hour` and its `Eq` instance represent the type of integers modulo 12, so that 1 and 13 are identified as equal, for example. Prove that the type class law holds for your instance.
-X> 1. (Difficult) Prove the type class laws for the `Hashable` instances for `Maybe`, `Either` and `Tuple`.
+X>     El newtype `Hour` y su instancia `Eq` representan el tipo de enteros módulo 12, de manera que 1 y 13 se identifican como iguales, por ejemplo. Prueba que la ley de clase de tipos se cumple para tu instancia.
+X> 1. (Difícil) Prueba las leyes de clase de tipos para las instancias `Hashable` de `Maybe`, `Either` y `Tuple`.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we've been introduced to _type classes_, a type-oriented form of abstraction which enables powerful forms of code reuse. We've seen a collection of standard type classes from the PureScript standard libraries, and defined our own library based on a type class for computing hash codes.
+En este capítulo hemos visto las _clases de tipos_, una forma de abstracción orientada a tipos que permite formas potentes de reutilización de código. Hemos visto una colección de clases de tipos estándar de las bibliotecas estándar de PureScript, y hemos definido nuestra propia biblioteca basada en una clase de tipos para calcular códigos de función resumen.
 
-This chapter also gave an introduction to the notion of type class laws, a technique for proving properties about code which uses type classes for abstraction. Type class laws are part of a larger subject called _equational reasoning_, in which the properties of a programming language and its type system are used to enable logical reasoning about its programs. This is an important idea, and will be a theme which we will return to throughout the rest of the book.
+Este capítulo también ha presentado la noción de leyes de clases de tipos, una técnica para probar propiedades acerca del código que usa clases de tipos como forma de abstracción. Las leyes de clases de tipos son parte de un tema más amplio llamado _razonamiento ecuacional_ (equational reasoning), en el que las propiedades de un lenguaje de programación y su sistema de tipos se usan para permitir razonamiento lógico acerca de sus programas. Esta es una idea importante y es un tema al que vamos a volver durante el resto del libro.

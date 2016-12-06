@@ -1,26 +1,26 @@
-# Generative Testing
+# Verificación generativa (generative testing)
 
-## Chapter Goals
+## Objetivos del capítulo
 
-In this chapter, we will see a particularly elegant application of type classes to the problem of testing. Instead of testing our code by telling the compiler _how_ to test, we simply assert _what_ properties our code should have. Test cases can be generated randomly from this specification, using type classes to hide the boilerplate code of random data generation. This is called _generative testing_ (or _property-based testing_), a technique made popular by the [QuickCheck](http://www.haskell.org/haskellwiki/Introduction_to_QuickCheck1) library in Haskell.
+En este capítulo veremos una aplicación particularmente elegante de las clases de tipos al problema de probar código. En lugar de probar nuestro código diciendo al compilador _cómo_ probar, simplemente decimos _qué_ propiedades debe tener nuestro código. Los casos de prueba se pueden generar de manera aleatoria a partir de esta especificación usando clases de tipos para ocultar el código repetitivo que genera los datos aleatorios. Esto se llama _verificación generativa_ (generative testing) o _verificación basada en propiedades_ (property-based testing), una técnica popularizada en Haskell por la biblioteca [QuickCheck](http://www.haskell.org/haskellwiki/Introduction_to_QuickCheck1).
 
-The `purescript-quickcheck` package is a port of Haskell's QuickCheck library to PureScript, and for the most part, it preserves the types and syntax of the original library. We will see how to use `purescript-quickcheck` to test a simple library, using Pulp to integrate our test suite into our development process.
+El paquete `purescript-quickcheck` es un conversión de la biblioteca QuickCheck de Haskell a PureScript, que mayormente preserva los tipos y sintaxis de la biblioteca original. Veremos cómo usar `purescript-quickcheck` para verificar una biblioteca simple, usando Pulp para integrar nuestro conjunto de pruebas en nuestro proceso de desarrollo.
 
-## Project Setup
+## Preparación del proyecto
 
-This chapter's project adds `purescript-quickcheck` as a Bower dependency.
+El proyecto de este capítulo añade `purescript-quickcheck` como dependencia Bower.
 
-In a Pulp project, test sources should be placed in the `test` directory, and the main module for the test suite should be named `Test.Main`. The test suite can be run using the `pulp test` command.
+En un proyecto Pulp, el código fuente de las pruebas debe ponerse en el directorio `test`, y el módulo principal del conjunto de pruebas debe llamarse `Test.Main`. El conjunto de pruebas se puede ejecutar usando el comando `pulp test`.
 
-## Writing Properties
+## Escribiendo propiedades
 
-The `Merge` module implements a simple function `merge`, which we will use to demonstrate the features of the `purescript-quickcheck` library.
+El módulo `Merge` implementa una función simple `merge` que usaremos para demostrar las capacidades de la biblioteca `purescript-quickcheck`.
 
 ```haskell
 merge :: Array Int -> Array Int -> Array Int
 ```
 
-`merge` takes two sorted arrays of integers, and merges their elements so that the result is also sorted. For example:
+`merge` toma dos arrays de enteros ordenados y mezcla sus elementos de manera que el resultado también está ordenado. Por ejemplo:
 
 ```text
 > import Merge
@@ -29,12 +29,12 @@ merge :: Array Int -> Array Int -> Array Int
 [1, 2, 3, 4, 5, 6]
 ```
 
-In a typical test suite, we might test `merge` by generating a few small test cases like this by hand, and asserting that the results were equal to the appropriate values. However, everything we need to know about the `merge` function can be summarized in two properties:
+En un conjunto de pruebas típico, podemos probar `merge` generando unos pocos casos de prueba pequeños como este a mano, asegurando que los resultados deben ser iguales a los valores apropiados. Sin embargo, todo lo que necesitamos saber sobre la función `merge` se puede resumir en dos propiedades:
 
-- (Sortedness) If `xs` and `ys` are sorted, then `merge xs ys` is also sorted.
-- (Subarray) `xs` and `ys` are both subarrays of `merge xs ys`, and their elements appear in the same order.
+- (Orden) Si `xs` e `ys` están ordenados, entonces `merge xs ys` está también ordenado.
+- (Subarray) `xs` e `ys` son ambos subarrays de `merge xs ys`, y sus elementos aparecen en el mismo orden.
 
-`purescript-quickcheck` allows us to test these properties directly, by generating random test cases. We simply state the properties that we want our code to have, as functions:
+`purescript-quickcheck` nos permite verificar estas propiedades directamente generando casos de prueba aleatorios. Podemos simplemente dar las propiedades que queremos que tenga nuestro código como funciones:
 
 ```haskell
 main = do
@@ -44,14 +44,14 @@ main = do
     xs `isSubarrayOf` merge xs ys
 ```
 
-Here, `isSorted` and `isSubarrayOf` are implemented as helper functions with the following types:
+Aquí, `isSorted` e `isSubarrayOf` se implementan como funciones auxiliares con los siguientes tipos:
 
 ```haskell
 isSorted :: forall a. Ord a => Array a -> Boolean
 isSubarrayOf :: forall a. Eq a => Array a -> Array a -> Boolean
 ```
 
-When we run this code, `purescript-quickcheck` will attempt to disprove the properties we claimed, by generating random inputs `xs` and `ys`, and passing them to our functions. If our function returns `false` for any inputs, the property will be incorrect, and the library will raise an error. Fortunately, the library is unable to disprove our properties after generating 100 random test cases:
+Cuando ejecutamos este código, `purescript-quickcheck` intentará falsear las propiedades que afirmamos, generando entradas aleatorias de `xs` e `ys`, y pasándolas a nuestras funciones. Si nuestra función devuelve `false` para cualquier entrada, la propiedad es incorrecta y la biblioteca lanzará un error. Afortunadamente, la biblioteca es incapaz de falsear nuestras propiedades tras generar 100 casos de prueba aleatorios:
 
 ```text
 $ pulp test
@@ -64,18 +64,18 @@ $ pulp test
 * Tests OK.
 ```
 
-If we deliberately introduce a bug into the `merge` function (for example, by changing the less-than check for a greater-than check), then an exception is thrown at runtime after the first failed test case:
+Si introducimos un fallo deliberadamente en la función `merge` (por ejemplo, cambiando la comprobación menor-que por mayor-que), se lanza una excepción en tiempo de ejecución tras el primer caso de prueba fallido:
 
 ```text
 Error: Test 1 failed:
 Test returned false
 ```
 
-As we can see, this error message is not very helpful, but it can be improved with a little work.
+Como vemos, este mensaje de error no es de mucha ayuda, pero puede mejorarse con un poco de trabajo.
 
-## Improving Error Messages
+## Mejorando los mensajes de error
 
-To provide error messages along with our failed test cases, `purescript-quickcheck` provides the `<?>` operator. Simply separate the property definition from the error message using `<?>`, as follows:
+Para proporcionar mensajes de error junto a nuestros casos de prueba fallidos, `purescript-quickcheck` suministra el operador `<?>`. Simplemente separa la definición de la propiedad del mensaje de error usando `<?>` como sigue:
 
 ```haskell
 quickCheck \xs ys ->
@@ -85,29 +85,29 @@ quickCheck \xs ys ->
     xs `isSubarrayOf` result <?> show xs <> " not a subarray of " <> show result
 ```
 
-This time, if we modify the code to introduce a bug, we see our improved error message after the first failed test case:
+Esta vez, si modificamos el código para introducir un fallo, vemos nuestro mensaje mejorado tras el primer caso de prueba fallido:
 
 ```text
 Error: Test 6 failed:
 [79168] not a subarray of [-752832,686016]
 ```
 
-Notice how the input `xs` and `ys` were generated as a arrays of randomly-selected integers.
+Fíjate en cómo las entradas `xs` e `ys` fueron generadas como arrays de enteros seleccionados al azar.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Write a property which asserts that merging an array with the empty array does not modify the original array.
-X> 1. (Easy) Add an appropriate error message to the remaining property for `merge`.
+X> 1. (Fácil) Escribe una propiedad que asegura que mezclar un array con el array vacío no modifica el array original.
+X> 1. (Fácil) Añade un mensaje de error apropiado a la propiedad restante de `merge`.
 
-## Testing Polymorphic Code
+## Verificando código polimórfico
 
-The `Merge` module defines a generalization of the `merge` function, called `mergePoly`, which works not only with arrays of numbers, but also arrays of any type belonging to the `Ord` type class:
+El módulo `Merge` define una generalización de la función `merge` llamada `mergePoly`, que trabaja no sólo con arrays de números, sino con cualquier array que pertenezca a la clase de tipos `Ord`:
 
 ```haskell
 mergePoly :: forall a. Ord a => Array a -> Array a -> Array a
 ```
 
-If we modify our original tests to use `mergePoly` in place of `merge`, we see the following error message:
+Si modificamos nuestras pruebas originales para usar `mergePoly` en lugar de `merge`, vemos el siguiente mensaje de error:
 
 ```text
 No type class instance was found for
@@ -118,14 +118,14 @@ The instance head contains unknown type variables.
 Consider adding a type annotation.
 ```
 
-This error message indicates that the compiler could not generate random test cases, because it did not know what type of elements we wanted our arrays to have. In these sorts of cases, we can use a helper function to force the compiler to infer a particular type. For example, if we define a function `ints` as a synonym for the identity function:
+Este mensaje de error indica que el compilador no pude generar casos de prueba aleatorios, porque no sabía qué tipo de elementos queríamos que tuviesen nuestros arrays. En estos casos, podemos usar una función auxiliar para forzar al compilador a inferir un tipo particular. Por ejemplo, si definimos una función `ints` como sinónimo de la función identidad:
 
 ```haskell
 ints :: Array Int -> Array Int
 ints = id
 ```
 
-then we can modify our tests so that the compiler infers the type `Array Int` for our two array arguments:
+podemos modificar nuestras pruebas de manera que el compilador infiera el tipo `Array Int` para nuestros dos argumentos de tipo array:
 
 ```haskell
 quickCheck \xs ys ->
@@ -134,29 +134,29 @@ quickCheck \xs ys ->
   ints xs `isSubarrayOf` mergePoly xs ys
 ```
 
-Here, `xs` and `ys` both have type `Array Int`, since the `ints` function has been used to disambiguate the unknown type.
+Aquí, `xs` e `ys` tienen ambos el tipo `Array Int`, ya que hemos usado la función `ints` para desambiguar los tipos desconocidos.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Write a function `bools` which forces the types of `xs` and `ys` to be `Array Boolean`, and add additional properties which test `mergePoly` at that type.
-X> 1. (Medium) Choose a pure function from the core libraries (for example, from the `purescript-arrays` package), and write a QuickCheck property for it, including an appropriate error message. Your property should use a helper function to fix any polymorphic type arguments to either `Int` or `Boolean`.
+X> 1. (Fácil) Escribe una función `bools` que fuerza que los tipos de `xs` e `ys` sean `Array Boolean`, y añade propiedades adicionales que comprueban `mergePoly` con ese tipo.
+X> 1. (Medio) Elige una función pura de las bibliotecas estándar (por ejemplo, del paquete `purescript-arrays`) y escribe una propiedad QuickCheck para ella, incluyendo un mensaje de error apropiado. Tu propiedad debe usar una función auxiliar para fijar cualquier tipo polimórfico a `Int` o `Boolean`.
 
-## Generating Arbitrary Data
+## Generando datos arbitrarios
 
-Now we will see how the `purescript-quickcheck` library is able to randomly generate test cases for our properties.
+Ahora veremos cómo la biblioteca `purescript-quickcheck` es capaz de generar casos de prueba para nuestras propiedades de manera aleatoria.
 
-Those types whose values can be randomly generated are captured by the `Arbitrary` type class:
+Los tipos cuyos valores pueden ser generados aleatoriamente están capturados por la clase de tipos `Arbitrary`:
 
 ```haskell
 class Arbitrary t where
   arbitrary :: Gen t
 ```
 
-The `Gen` type constructor represents the side-effects of _deterministic random data generation_. It uses a pseudo-random number generator to generate deterministic random function arguments from a seed value. The `Test.QuickCheck.Gen` module defines several useful combinators for building generators.
+El constructor de tipo `Gen` representa los efectos secundarios de _generación de datos aleatorios determinista_. Usa un generador de números pseudo-aleatorios para generar argumentos de función deterministas a partir de un valor semilla. El módulo `Test.QuickCheck.Gen` define varios combinadores útiles para construir generadores.
 
-`Gen` is also a monad and an applicative functor, so we have the usual collection of combinators at our disposal for creating new instances of the `Arbitrary` type class.
+`Gen` es también una mónada y un funtor aplicativo, de manera que tenemos la habitual colección de combinadores a nuestra disposición para crear nuevas instancias de la clase de tipos `Arbitrary`.
 
-For example, we can use the `Arbitrary` instance for the `Int` type, provided in the `purescript-quickcheck` library, to create a distribution on the 256 byte values, using the `Functor` instance for `Gen` to map a function from integers to bytes over arbitrary integer values:
+Por ejemplo, podemos usar la instancia `Arbitrary` para el tipo `Int` proporcionada en la biblioteca `purescript-quickcheck` para crear una distribución en los 256 valores posibles de un byte, usando la instancia `Functor` de `Gen` para mapear una función de enteros a bytes sobre valores enteros arbitrarios:
 
 ```haskell
 newtype Byte = Byte Int
@@ -168,16 +168,16 @@ instance arbitraryByte :: Arbitrary Byte where
                 | otherwise = intToByte (-n)
 ```
 
-Here, we define a type `Byte` of integral values between 0 and 255. The `Arbitrary` instance uses the `map` function to lift the `intToByte` function over the `arbitrary` action. The type of the inner `arbitrary` action is inferred as `Gen Int`.
+Aquí definimos un tipo `Byte` de valores enteros entre 0 y 255. La instancia `Arbitrary` usa la función `map` para elevar la función `intToByte` sobre la acción `arbitrary`. El tipo de la acción `arbitrary` interna se infiere como `Gen Int`.
 
-We can also use this idea to improve our sortedness test for `merge`:
+Podemos también usar esta idea para mejorar nuestra prueba de orden de `merge`:
 
 ```haskell
 quickCheck \xs ys ->
   isSorted $ numbers $ mergePoly (sort xs) (sort ys)
 ```
 
-In this test, we generated arbitrary arrays `xs` and `ys`, but had to sort them, since `merge` expects sorted input. On the other hand, we could create a newtype representing sorted arrays, and write an `Arbitrary` instance which generates sorted data:
+En esta prueba, hemos generado los arrays arbitrarios `xs` e `ys`, pero hemos tenido que ordenarlos porque `merge` espera entradas ordenadas. Por otra parte, podríamos crear un newtype representando arrays ordenados y escribir una instancia `Arbitrary` que genera datos ordenados:
 
 ```haskell
 newtype Sorted a = Sorted (Array a)
@@ -189,16 +189,16 @@ instance arbSorted :: (Arbitrary a, Ord a) => Arbitrary (Sorted a) where
   arbitrary = map (Sorted <<< sort) arbitrary
 ```
 
-With this type constructor, we can modify our test as follows:
+Con este constructor de tipo, podemos modificar nuestras pruebas como sigue:
 
 ```haskell
 quickCheck \xs ys ->
   isSorted $ ints $ mergePoly (sorted xs) (sorted ys)
 ```
 
-This may look like a small change, but the types of `xs` and `ys` have changed to `Sorted Int`, instead of just `Array Int`. This communicates our _intent_ in a clearer way - the `mergePoly` function takes sorted input. Ideally, the type of the `mergePoly` function itself would be updated to use the `Sorted` type constructor.
+Esto parece un cambio pequeño, pero los tipos de `xs` e `ys` han cambiado a `Sorted Int` en lugar de simplemente `Array Int`. Esto comunica nuestra _intención_ de manera más clara; la función `mergePoly` toma entradas ordenadas. Idealmente, el tipo de la función `mergePoly` se actualizaría para usar el constructor de tipo `Sorted`.
 
-As a more interesting example, the `Tree` module defines a type of sorted binary trees with values at the branches:
+Como ejemplo más interesante, el módulo `Tree` define un tipo de árboles binarios ordenados con valores en las ramas:
 
 ```haskell
 data Tree a
@@ -206,7 +206,7 @@ data Tree a
   | Branch (Tree a) a (Tree a)
 ```
 
-The `Tree` module defines the following API:
+El módulo `Tree` define la siguiente API:
 
 ```haskell
 insert    :: forall a. Ord a => a -> Tree a -> Tree a
@@ -215,7 +215,7 @@ fromArray :: forall a. Ord a => Array a -> Tree a
 toArray   :: forall a. Tree a -> Array a
 ```
 
-The `insert` function is used to insert a new element into a sorted tree, and the `member` function can be used to query a tree for a particular value. For example:
+La función `insert` se usa para insertar un nuevo elemento en un árbol ordenado, y la función `member` se puede usar para preguntar al árbol por un valor particular. Por ejemplo:
 
 ```text
 > import Tree
@@ -227,32 +227,32 @@ true
 false
 ```
 
-The `toArray` and `fromArray` functions can be used to convert sorted trees to and from arrays. We can use `fromArray` to write an `Arbitrary` instance for trees:
+Las funciones `toArray` y `fromArray` se pueden usar para convertir árboles ordenados en arrays y viceversa. Podemos usar `fromArray` para escribir una instancia `Arbitrary` para árboles:
 
 ```haskell
 instance arbTree :: (Arbitrary a, Ord a) => Arbitrary (Tree a) where
   arbitrary = map fromArray arbitrary
 ```
 
-We can now use `Tree a` as the type of an argument to our test properties, whenever there is an `Arbitrary` instance available for the type `a`. For example, we can test that the `member` test always returns `true` after inserting a value:
+Podemos ahora usar `Tree a` como el tipo de un argumento a nuestras propiedades de prueba, siempre que haya una instancia de `Arbitrary` disponible para el tipo `a`. Por ejemplo, podemos verificar que `member` siempre devuelve `true` para un cierto valor tras insertarlo:
 
 ```haskell
 quickCheck \t a ->
   member a $ insert a $ treeOfInt t
 ```
 
-Here, the argument `t` is a randomly-generated tree of type `Tree Int`, where the type argument disambiguated by the identity function `treeOfInt`.
+Aquí, el argumento `t` es un árbol generado aleatoriamente de tipo `Tree Int`, donde el tipo del argumento está desambiguado por la función identidad `treeOfInt`.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Create a newtype for `String` with an associated `Arbitrary` instance which generates collections of randomly-selected characters in the range `a-z`. _Hint_: use the `elements` and `arrayOf` functions from the `Test.QuickCheck.Gen` module.
-X> 1. (Difficult) Write a property which asserts that a value inserted into a tree is still a member of that tree after arbitrarily many more insertions.
+X> 1. (Medio) Crea un newtype para `String` con una instancia asociada de `Arbitrary` que genera colecciones de carateres aleatorios en el rango `a-z`. _Pista_: usa las funciones `elements` y `arrayOf` del módulo `Test.QuickCheck.Gen`.
+X> 1. (Difícil) Escribe una propiedad que asegura que un valor insertado en un árbol es todavía miembro de ese árbol tras un cierto número arbitrario de inserciones.
 
-## Testing Higher-Order Functions
+## Probando funciones de orden mayor
 
-The `Merge` module defines another generalization of the `merge` function - the `mergeWith` function takes an additional function as an argument which is used to determine the order in which elements should be merged. That is, `mergeWith` is a higher-order function.
+El módulo `Merge` define otra generalización de la función `merge`; la función `mergeWith` toma como argumento adicional una función que se usa para determinar el orden en que los elementos deben mezclarse. Esto es, `mergeWith` es una función de orden mayor.
 
-For example, we can pass the `length` function as the first argument, to merge two arrays which are already in length-increasing order. The result should also be in length-increasing order:
+Por ejemplo, podemos pasar la función `length` como primer argumento para mezclar dos arrays que están ordenados por la longitud de sus elementos. El resultado debe estar también ordenado:
 
 ```haskell
 > import Data.String
@@ -264,26 +264,26 @@ For example, we can pass the `length` function as the first argument, to merge t
 ["","x","ab","xyz","abcd"]
 ```
 
-How might we test such a function? Ideally, we would like to generate values for all three arguments, including the first argument which is a function.
+¿Cómo podemos verificar dicha función? Idealmente, querríamos generar valores para los tres argumentos, incluyendo el primer argumento que es una función.
 
-There is a second type class which allows us to create randomly-generated functions. It is called `Coarbitrary`, and it is defined as follows:
+Hay una segunda clase de tipos que nos permite crear funciones generadas aleatoriamente. Se llama `Coarbitrary` y está definida como sigue:
 
 ```haskell
 class Coarbitrary t where
   coarbitrary :: forall r. t -> Gen r -> Gen r
 ```
 
-The `coarbitrary` function takes a function argument of type `t`, and a random generator for a function result of type `r`, and uses the function argument to _perturb_ the random generator. That is, it uses the function argument to modify the random output of the random generator for the result.
+La función `coarbitrary` toma como argumento una función de tipo `t`, y un generador aleatorio para un resultado de función de tipo `r`, y usa la función argumento para _perturbar_ el generador aleatorio. Esto es, para obtener el resultado aplica la función proporcionada para modificar la salida del generador aleatorio.
 
-In addition, there is a type class instance which gives us `Arbitrary` functions if the function domain is `Coarbitrary` and the function codomain is `Arbitrary`:
+Además, hay una instancia de clase de tipos que nos da funciones `Arbitrary` si el dominio de la función es `Coarbitrary` y el codominio de la función es `Arbitrary`:
 
 ```haskell
 instance arbFunction :: (Coarbitrary a, Arbitrary b) => Arbitrary (a -> b)
 ```
 
-In practice, this means that we can write properties which take functions as arguments. In the case of the `mergeWith` function, we can generate the first argument randomly, modifying our tests to take account of the new argument.
+En la práctica esto significa que podemos escribir propiedades que toman funciones como argumentos. En el caso de la función `mergeWith` podemos generar el primer argumento aleatoriamente, modificando nuestras pruebas para que tengan en cuenta el nuevo argumento.
 
-In the case of the sortedness property, we cannot guarantee that the result will be sorted - we do not even necessarily have an `Ord` instance - but we can expect that the result be sorted with respect to the function `f` that we pass in as an argument. In addition, we need the two input arrays to be sorted with respect to `f`, so we use the `sortBy` function to sort `xs` and `ys` based on comparison after the function `f` has been applied:
+En el caso de la propiedad de orden, no podemos garantizar que el resultado estará ordenado (no tenemos necesariamente una instancia de `Ord`) pero podemos esperar que el resultado esté ordenado con respecto a la función `f` que pasamos como argumento. Además, necesitamos que los arrays de entrada estén ordenados con respecto a `f`, de manera que usamos la función `sortBy` para ordenar `xs` e `ys` basándonos en la comparación tras aplicar la función `f`:
 
 ```haskell
 quickCheck \xs ys f ->
@@ -294,45 +294,45 @@ quickCheck \xs ys f ->
                 (sortBy (compare `on` f) ys)
 ```
 
-Here, we use a function `intToBool` to disambiguate the type of the function `f`:
+Aquí usamos una función `intToBool` para desambiguar el tipo de la función `f`:
 
 ```haskell
 intToBool :: (Int -> Boolean) -> Int -> Boolean
 intToBool = id
 ```
 
-In the case of the subarray property, we simply have to change the name of the function to `mergeWith` - we still expect our input arrays to be subarrays of the result:
+En el caso de la propiedad de subarray, simplemente tenemos que cambiar el nombre de la función a `mergeWith`; seguimos esperando que nuestros arrays de entrada sean subarrays del resultado:
 
 ```haskell
 quickCheck \xs ys f ->
   xs `isSubarrayOf` mergeWith (numberToBool f) xs ys
 ```
 
-In addition to being `Arbitrary`, functions are also `Coarbitrary`:
+Además de ser `Arbitrary`, las funciones son también `Coarbitrary`:
 
 ```haskell
 instance coarbFunction :: (Arbitrary a, Coarbitrary b) => Coarbitrary (a -> b)
 ```
 
-This means that we are not limited to just values and functions - we can also randomly generate _higher-order functions_, or functions whose arguments are higher-order functions, and so on.
+Esto significa que no estamos limitados únicamente a valores y funciones; podemos generar aleatoriamente _funciones de orden mayor_, o funciones cuyos argumentos son funciones de orden mayor, etc.
 
-## Writing Coarbitrary Instances
+## Escribiendo instancias de Coarbitrary
 
-Just as we can write `Arbitrary` instances for our data types by using the `Monad` and `Applicative` instances of `Gen`, we can write our own `Coarbitrary` instances as well. This allows us to use our own data types as the domain of randomly-generated functions.
+Al igual que podemos escribir instancias de `Arbitrary` para nuestros tipos de datos usando las instancias `Monad` y `Applicative` de `Gen`, podemos escribir nuestras propias instancias de `Coarbitrary` también. Esto nos permite usar nuestros propios tipos de datos como dominio de funciones generadas aleatoriamente.
 
-Let's write a `Coarbitrary` instance for our `Tree` type. We will need a `Coarbitrary` instance for the type of the elements stored in the branches:
+Escribamos una instancia de `Coarbitrary` para nuestro tipo `Tree`. Necesitaremos una instancia de `Coarbitrary` para el tipo de los elementos almacenados en las ramas:
 
 ```haskell
 instance coarbTree :: Coarbitrary a => Coarbitrary (Tree a) where
 ```
 
-We have to write a function which perturbs a random generator given a value of type `Tree a`. If the input value is a `Leaf`, then we will just return the generator unchanged:
+Tenemos que escribir una función que perturba un generador aleatorio dado un valor de tipo `Tree a`. Si el valor de entrada es una `Leaf`, simplemente devolvemos el generador sin cambios:
 
 ```haskell
   coarbitrary Leaf = id
 ```
 
-If the tree is a `Branch`, then we will perturb the generator using the left subtree, the value and the right subtree, using function composition to create our perturbing function:
+Si el árbol es una `Branch`, perturbaremos el generador usando el subárbol izquierdo, el valor y el subárbol derecho, usando composición de funciones para crear nuestra función perturbadora:
 
 ```haskell
   coarbitrary (Branch l a r) =
@@ -341,13 +341,13 @@ If the tree is a `Branch`, then we will perturb the generator using the left sub
     coarbitrary r
 ```
 
-Now we are free to write properties whose arguments include functions taking trees as arguments. For example, the `Tree` module defines a function `anywhere`, which tests if a predicate holds on any subtree of its argument:
+Ahora somos libres de escribir propiedades cuyos argumentos incluyan funciones que toman árboles como argumentos. Por ejemplo, el módulo `Tree` define una función `anywhere` que comprueba si un predicado se mantiene en cualquier subárbol de su argumento:
 
 ```haskell
 anywhere :: forall a. (Tree a -> Boolean) -> Tree a -> Boolean
 ```
 
-Now we are able to generate the predicate function randomly. For example, we expect the `anywhere` function to _respect disjunction_:
+Ahora somos capaces de generar la función predicado aleatoriamente. Por ejemplo, esperamos que la función `anywhere` _respete la disyunción_:
 
 ```haskell
 quickCheck \f g t ->
@@ -355,18 +355,18 @@ quickCheck \f g t ->
     anywhere f (treeOfInt t) || anywhere g t
 ```
 
-Here, the `treeOfInt` function is used to fix the type of values contained in the tree to the type `Int`:
+Aquí, la función `treeOfInt` se usa para fijar el tipo de los valores contenidos en el árbol al tipo `Int`:
 
 ```haskell
 treeOfInt :: Tree Int -> Tree Int
 treeOfInt = id
 ```
 
-## Testing Without Side-Effects
+## Verificando sin efectos secundarios
 
-For the purposes of testing, we usually include calls to the `quickCheck` function in the `main` action of our test suite. However, there is a variant of the `quickCheck` function, called `quickCheckPure` which does not use side-effects. Instead, it is a pure function which takes a random seed as an input, and returns an array of test results.
+Para propósitos de verificación, normalmente incluimos llamadas a la función `quickCheck` en la acción `main` de nuestro conjunto de pruebas. Sin embargo, hay una variante de la función `quickCheck` llamada `quickCheckPure` que no usa efectos secundarios. En su lugar, es una función pura que toma una semilla aleatoria como entrada y devuelve un array de resultados de la prueba.
 
-We can test `quickCheckPure` using PSCi. Here, we test that the `merge` operation is associative:
+Podemos probar `quickCheckPure` usando PSCi. Aquí probamos que la operación `merge` es asociativa:
 
 ```text
 > import Merge
@@ -380,28 +380,28 @@ We can test `quickCheckPure` using PSCi. Here, we test that the `merge` operatio
 [Success, Success, ..., Success]
 ```
 
-`quickCheckPure` takes three arguments: the random seed, the number of test cases to generate, and the property to test. If all tests pass, you should see an array of `Success` data constructors printed to the console.
+`quickCheckPure` toma tres argumentos: la semilla del generador aleatorio, el número de casos de prueba a generar, y la propiedad a verificar. Si todas las pruebas pasan, debes ver un array de constructores de dato `Success` impresos en la consola.
 
-`quickCheckPure` might be useful in other situations, such as generating random input data for performance benchmarks, or generating sample form data for web applications.
+`quickCheckPure` puede ser útil en otras situaciones, como generar datos de entrada aleatorios para pruebas de rendimiento, o para generar datos de formulario de ejemplo para aplicaciones web.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Write `Coarbitrary` instances for the `Byte` and `Sorted` type constructors.
-X> 1. (Medium) Write a (higher-order) property which asserts associativity of the `mergeWith f` function for any function `f`. Test your property in PSCi using `quickCheckPure`.
-X> 1. (Medium) Write `Arbitrary` and `Coarbitrary` instances for the following data type:
+X> 1. (Fácil) Escribe instancias de `Coarbitrary` para los constructores de tipo `Byte` y `Sorted`.
+X> 1. (Medio) Escribe una propiedad (de orden mayor) que asegura la asociatividad de la función `mergeWith f` para cualquier función `f`. Prueba tu propiedad en PSCi usando `quickCheckPure`.
+X> 1. (Medio) Escribe instancias `Arbitrary` y `Coarbitrary` para el siguiente tipo de datos:
 X>
 X>     ```haskell
 X>     data OneTwoThree a = One a | Two a a | Three a a a
 X>     ```
 X>
-X>     _Hint_: Use the `oneOf` function defined in `Test.QuickCheck.Gen` to define your `Arbitrary` instance.
-X> 1. (Medium) Use the `all` function to simplify the result of the `quickCheckPure` function - your function should return `true` if every test passes, and `false` otherwise. Try using the `First` monoid, defined in `purescript-monoids` with the `foldMap` function to preserve the first error in case of failure.
+X>     _Pista_: Usa la función `oneOf` definida en `Test.QuickCheck.Gen` para definir tu instancia `Arbitrary`.
+X> 1. (Medio) Usa la función `all` para simplificar el resultado de la función `quickCheckPure`. Tu función debe devolver `true` si todas las pruebas pasan y `false` en caso contrario. Intenta usar el monoide `First` definido en `purescript-monoids` con la función `foldMap` para preservar el primer error en caso de fallo.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we met the `purescript-quickcheck` package, which can be used to write tests in a declarative way using the paradigm of _generative testing_. In particular:
+En este capítulo hemos conocido el paquete `purescript-quickcheck`, que se puede usar para escribir pruebas de manera declarativa usando el paradigma de _verificación generativa_. En particular:
 
-- We saw how to automate QuickCheck tests using `pulp test`.
-- We saw how to write properties as functions, and how to use the `<?>` operator to improve error messages.
-- We saw how the `Arbitrary` and `Coarbitrary` type classes enable generation of boilerplate testing code, and how they allow us to test higher-order properties.
-- We saw how to implement custom `Arbitrary` and `Coarbitrary` instances for our own data types.
+- Vimos cómo automatizar las pruebas QuickCheck usando `pulp test`.
+- Vimos cómo escribir propiedades como funciones, y cómo usar el operador `<?>` para mejorar los mensajes de error.
+- Vimos cómo las clases de tipos `Arbitrary` y `Coarbitrary` permiten la generación de código de prueba repetitivo, y cómo nos permiten probar propiedades de orden mayor.
+- Vimos cómo implementar instancias `Arbitrary` y `Coarbitrary` a medida para nuestros propios tipos de datos.

@@ -1,25 +1,25 @@
-# Canvas Graphics
+# Gráficos con Canvas
 
-## Chapter Goals
+## Objetivos del capítulo
 
-This chapter will be an extended example focussing on the `purescript-canvas` package, which provides a way to generate 2D graphics from PureScript using the HTML5 Canvas API.
+Este capítulo será un ejemplo extendido enfocado en el paquete `purescript-canvas`, que proporciona una forma de generar gráficos 2D desde Purescript usando la API Canvas de HTML5.
 
-## Project Setup
+## Preparación del proyecto
 
-This module's project introduces the following new Bower dependencies:
+El módulo de este proyecto introduce las siguientes dependencias de Bower nuevas:
 
-- `purescript-canvas`, which gives types to methods from the HTML5 Canvas API
-- `purescript-refs`, which provides a side-effect for using _global mutable references_
+- `purescript-canvas`, que da tipos a los métodos de la API Canvas de HTML5
+- `purescript-refs`, que proporciona un efecto secundario para usar _referencias globales mutables_
 
-The source code for the chapter is broken up into a set of modules, each of which defines a `main` method. Different sections of this chapter are implemented in different files, and the `Main` module can be changed by modifying the Pulp build command to run the appropriate file's `main` method at each point.
+El código fuente para el capítulo está dividido en un conjunto de módulos, cada uno de los cuales define un método `main`. Las distintas secciones de este capítulo están implementadas en ficheros diferentes, y el módulo `Main` se puede cambiar modificando el comando de construcción de Pulp para ejecutar el método `main` del fichero adecuado en cada momento.
 
-The HTML file `html/index.html` contains a single `canvas` element which will be used in each example, and a `script` element to load the compiled PureScript code. To test the code for each section, open the HTML file in your browser.
+El fichero HTML `html/index.html` contiene un único elemento `canvas` que se usará en cada ejemplo, y un elemento `script` para cargar el código PureScript compilado. Para probar el código de cada sección, abre el fichero HTML en tu navegador.
 
-## Simple Shapes
+## Formas simples
 
-The `Example/Rectangle.purs` file contains a simple introductory example, which draws a single blue rectangle at the center of the canvas. The module imports the `Control.Monad.Eff` module, and also the `Graphics.Canvas` module, which contains actions in the `Eff` monad for working with the Canvas API.
+El fichero `Example/Rectangle.purs` contiene un ejemplo introductorio simple que dibuja un único rectángulo azul en el centro del lienzo. El módulo importa `Control.Monad.Eff`, y también el módulo `Graphics.Canvas` que contiene acciones en la mónada `Eff` para trabajar con la API Canvas.
 
-The `main` action starts, like in the other modules, by using the `getCanvasElementById` action to get a reference to the canvas object, and the `getContext2D` action to access the 2D rendering context for the canvas:
+La acción `main` comienza, como los otros módulos, usando la acción `getCanvasElementById` para obtener una referencia al objeto lienzo, y la acción `getContext2D` para acceder al contexto de representación 2D del canvas:
 
 ```haskell
 main = void $ unsafePartial do
@@ -27,9 +27,9 @@ main = void $ unsafePartial do
   ctx <- getContext2D canvas
 ```
 
-_Note_: the call to `unsafePartial` here is necessary since the pattern match on the result of `getCanvasElementById` is partial, matching only the `Just` constructor. For our purposes, this is fine, but in production code, we would probably want to match the `Nothing` constructor and provide an appropriate error message.
+_Nota_: la llamada a `unsafePartial` es necesaria ya que el ajuste de patrón sobre el resultado de `getCanvasElementById` es parcial, coincidiendo sólo con el constructor `Just`. Para nuestros propósitos es suficiente, pero en código de producción querremos probablemente ajustarnos también al constructor `Nothing` y proporcionar un mensaje de error adecuado.
 
-The types of these actions can be found using PSCi or by looking at the documentation:
+Los tipos de estas acciones se pueden averiguar usando PSCi o mirando la documentación:
 
 ```haskell
 getCanvasElementById :: forall eff. String -> Eff (canvas :: CANVAS | eff) (Maybe CanvasElement)
@@ -37,19 +37,19 @@ getCanvasElementById :: forall eff. String -> Eff (canvas :: CANVAS | eff) (Mayb
 getContext2D :: forall eff. CanvasElement -> Eff (canvas :: CANVAS | eff) Context2D
 ```
 
-`CanvasElement` and `Context2D` are types defined in the `Graphics.Canvas` module. The same module also defines the `Canvas` effect, which is used by all of the actions in the module.
+`CanvasElement` y `Context2D` son tipos definidos en el módulo `Graphics.Canvas`. El mismo módulo define también el efecto `CANVAS` usado por todas las acciones del módulo.
 
-The graphics context `ctx` manages the state of the canvas, and provides methods to render primitive shapes, set styles and colors, and apply transformations.
+El contexto gráfico `ctx` gestiona el estado del canvas y proporciona métodos para dibujar formas primitivas, fijar estilos y colores, y aplicar transformaciones.
 
-We continue by setting the fill style to solid blue, by using the `setFillStyle` action:
+Continuamos fijando el estilo de relleno para que sea azul mediante la acción `setFillStyle`:
 
 ```haskell
   setFillStyle "#0000FF" ctx
 ```
 
-Note that the `setFillStyle` action takes the graphics context as an argument. This is a common pattern in the `Graphics.Canvas` module.
+Fíjate en que la acción `setFillStyle` toma el contexto gráfico como argumento. Este es un patrón común en el módulo `Graphics.Canvas`.
 
-Finally, we use the `fillPath` action to fill the rectangle. `fillPath` has the following type:
+Finalmente, usamos la acción `fillPath` para rellenar el rectángulo. `fillPath` tiene el siguiente tipo:
 
 ```haskell
 fillPath :: forall eff a. Context2D ->
@@ -57,7 +57,7 @@ fillPath :: forall eff a. Context2D ->
                           Eff (canvas :: CANVAS | eff) a
 ```
 
-`fillPath` takes a graphics context, and another action which builds the path to render. To build a path, we can use the `rect` action. `rect` takes a graphics context, and a record which provides the position and size of the rectangle:
+`fillPath` toma un contexto gráfico y otra acción que construye la trayectoria a dibujar. Para construir una trayectoria podemos usar la acción `rect`. `rect` toma un contexto gráfico y un registro que proporciona la posición y tamaño del rectángulo. 
 
 ```haskell
   fillPath ctx $ rect ctx
@@ -68,22 +68,22 @@ fillPath :: forall eff a. Context2D ->
     }
 ```
 
-Build the rectangle example, providing `Example.Rectangle` as the name of the main module:
+Construye el ejemplo del rectángulo proporcionando `Example.Rectangle` como nombre del módulo principal:
 
 ```text
 $ mkdir dist/
 $ pulp build -O --main Example.Rectangle --to dist/Main.js
 ```
 
-Now, open the `html/index.html` file and verify that this code renders a blue rectangle in the center of the canvas.
+Ahora abre el fichero `html/index.html` y verifica que este código dibuja un rectángulo azul en el centro del lienzo.
 
-## Putting Row Polymorphism to Work
+## Haciendo uso del polimorfismo de fila
 
-There are other ways to render paths. The `arc` function renders an arc segment, and the `moveTo`, `lineTo` and `closePath` functions can be used to render piecewise-linear paths.
+Hay otras formas de representar trayectorias. La función `arc` dibuja un segmento de arco, y las funciones `moveTo`, `lineTo` y `closePath` se pueden usar para dibujar trayectorias lineales por tramos.
 
-The `Shapes.purs` file renders three shapes: a rectangle, an arc segment and a triangle.
+El fichero `Shapes.purs` dibuja tres formas: un rectángulo, un segmento de arco y un triángulo.
 
-We have seen that the `rect` function takes a record as its argument. In fact, the properties of the rectangle are defined in a type synonym:
+Hemos visto que la función `rect` toma un registro como argumento. De hecho, las propiedades del rectángulo se definen en un sinónimo de tipo:
 
 ```haskell
 type Rectangle =
@@ -94,9 +94,9 @@ type Rectangle =
   }
 ```
 
-The `x` and `y` properties represent the location of the top-left corner, while the `w` and `h` properties represent the width and height respectively.
+Las propiedades `x` e `y` representan la ubicación de la esquina superior izquierda, mientras que las propiedades `w` y `h` representan el ancho y alto respectivamente.
 
-To render an arc segment, we can use the `arc` function, passing a record with the following type:
+Para dibujar un segmento de arco podemos usar la función `arc` pasando un registro con el siguiente tipo:
 
 ```haskell
 type Arc =
@@ -108,9 +108,9 @@ type Arc =
   }
 ```
 
-Here, the `x` and `y` properties represent the center point, `r` is the radius, and `start` and `end` represent the endpoints of the arc in radians.
+Aquí, las propiedades `x` e `y` representan el punto central, `r` es el radio, y `start` y `end` representan los extremos del arco en radianes.
 
-For example, this code fills an arc segment centered at `(300, 300)` with radius `50`:
+Por ejemplo, este código rellena un segmento de arco centrado en `(300, 300)` con radio `50`:
 
 ```haskell
   fillPath ctx $ arc ctx
@@ -122,9 +122,9 @@ For example, this code fills an arc segment centered at `(300, 300)` with radius
     }
 ```
 
-Notice that both the `Rectangle` and `Arc` record types contain `x` and `y` properties of type `Number`. In both cases, this pair represents a point. This means that we can write row-polymorphic functions which can act on either type of record.
+Date cuenta de que tanto `Rectangle` como `Arc` contienen propiedades `x` e `y` de tipo `Number`. En ambos casos, este par representa un punto. Significa que podemos escribir funciones polimórficas por fila que actúan en cualquier tipo de registro.
 
-For example, the `Shapes` module defines a `translate` function which translates a shape by modifying its `x` and `y` properties:
+Por ejemplo, el módulo `Shapes` define una función `translate` que traslada una forma modificando sus propiedades `x` e `y`:
 
 ```haskell
 translate
@@ -139,13 +139,13 @@ translate dx dy shape = shape
   }
 ```
 
-Notice the row-polymorphic type. It says that `translate` accepts any record with `x` and `y` properties _and any other properties_, and returns the same type of record. The `x` and `y` fields are updated, but the rest of the fields remain unchanged.
+Fíjate en el tipo polimórfico por fila. Dice que `translate` acepta cualquier registro con propiedades `x` e `y` _y otras propiedades cualesquiera_, y devuelve el mismo tipo de registro. Los campos `x` e `y` se actualizan, pero el resto de campos permanecen intactos.
 
-This is an example of _record update syntax_. The expression `shape { ... }` creates a new record based on the `shape` record, with the fields inside the braces updated to the specified values. Note that the expressions inside the braces are separated from their labels by equals symbols, not colons like in record literals.
+Esto es un ejemplo de _sintaxis de actualización de registro_ (record update syntax). La expresión `shape { ... }` crea un nuevo registro basado en el registro `shape`, actualizando los campos entre llaves a los valores especificados. Date cuenta de que las expresiones entre llaves se separan de sus etiquetas por símbolos igual, no con dos puntos como en los registros literales.
 
-The `translate` function can be used with both the `Rectangle` and `Arc` records, as can be seen in the `Shapes` example.
+La función `translate` se puede usar tanto con `Rectangle` como con `Arc`, como veremos en el ejemplo `Shapes`.
 
-The third type of path rendered in the `Shapes` example is a piecewise-linear path. Here is the corresponding code:
+El tercer tipo de trayectoria dibujada en el ejemplo `Shapes` es una trayectoria lineal por tramos. Aquí está el código correspondiente:
 
 ```haskell
   setFillStyle "#FF0000" ctx
@@ -157,33 +157,33 @@ The third type of path rendered in the `Shapes` example is a piecewise-linear pa
     closePath ctx
 ```
 
-There are three functions in use here:
+Usamos tres funciones aquí:
 
-- `moveTo` moves the current location of the path to the specified coordinates,
-- `lineTo` renders a line segment between the current location and the specified coordinates, and updates the current location,
-- `closePath` completes the path by rendering a line segment joining the current location to the start position.
+- `moveTo` mueve la posición actual de la trayectoria a las coordenadas especificadas
+- `lineTo` dibuja un segmento de línea entre la posición actual y las coordenadas especificadas, y actualiza la posición actual
+- `closePath` completa la trayectoria dibujando un segmento de línea uniendo la posición actual y la posición inicial
 
-The result of this code snippet is to fill an isosceles triangle.
+El resultado de este fragmento de código es rellenar un triángulo isosceles.
 
-Build the example by specifying `Example.Shapes` as the main module:
+Construye el ejemplo especificando `Example.Shapes` como módulo principal:
 
 ```text
 $ pulp build -O --main Example.Shapes --to dist/Main.js
 ```
 
-and open `html/index.html` again to see the result. You should see the three different types of shapes rendered to the canvas.
+y abre `html/index.html` de nuevo para ver el resultado. Debes ver tres tipos de formas dibujadas en el lienzo.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Experiment with the `strokePath` and `setStrokeStyle` functions in each of the examples so far.
-X> 1. (Easy) The `fillPath` and `strokePath` functions can be used to render complex paths with a common style by using a do notation block inside the function argument. Try changing the `Rectangle` example to render two rectangles side-by-side using the same call to `fillPath`. Try rendering a sector of a circle by using a combination of a piecewise-linear path and an arc segment.
-X> 1. (Medium) Given the following record type:
+X> 1. (Fácil) Experimenta con las funciones `strokePath` y `setStrokeStyle` en cada uno de los ejemplos vistos hasta ahora.
+X> 1. (Fácil) Las funciones `fillPath` y `strokePath` se pueden usar para representar trayectorias complejas con un estilo común usando un bloque de notación do dentro del argumento a la función. Intenta cambiar el ejemplo `Rectangle` para que dibuje dos rectángulos, uno al lado del otro, usando la misma llamada a `fillPath`. Intenta dibujar un sector de un círculo usando una combinación de trayectoria lineal por tramos y un segmento de arco.
+X> 1. (Medio) Dado el siguiente tipo de registro:
 X>
 X>     ```haskell
 X>     type Point = { x :: Number, y :: Number }
 X>     ```
 X>
-X>     which represents a 2D point, write a function `renderPath` which strokes a closed path constructed from a number of points:
+X>     que representa un punto 2D, escribe una función `renderPath` que traza una trayectoria cerrada construida a partir de un número de puntos:
 X>
 X>     ```haskell
 X>     renderPath
@@ -193,34 +193,34 @@ X>       -> Array Point
 X>       -> Eff (canvas :: Canvas | eff) Unit
 X>     ```
 X>
-X>     Given a function
+X>     Dada una función
 X>
 X>     ```haskell
 X>     f :: Number -> Point
 X>     ```
 X>
-X>     which takes a `Number` between `0` and `1` as its argument and returns a `Point`, write an action which plots `f` by using your `renderPath` function. Your action should approximate the path by sampling `f` at a finite set of points.
+X>     que toma un `Number` entre `0` y `1` como argumento y devuelve un `Point`, escribe una acción que dibuja `f` usando tu función `renderPath`. Tu acción debe aproximar la trayectoria muestreando `f` en un conjunto finito de puntos.
 X>
-X>     Experiment by rendering different paths by varying the function `f`.
+X>     Experimenta dibujando diferentes trayectorias alterando la función `f`.
 
-## Drawing Random Circles
+## Dibujando círculos aleatorios
 
-The `Example/Random.purs` file contains an example which uses the `Eff` monad to interleave two different types of side-effect: random number generation, and canvas manipulation. The example renders one hundred randomly generated circles onto the canvas.
+El fichero `Example/Random.purs` contiene un ejemplo que usa la mónada `Eff` para intercalar dos tipos diferentes de efectos secundarios: generación de números aleatorios y manipulación del lienzo. El ejemplo dibuja cien círculos generados aleatoriamente en el lienzo.
 
-The `main` action obtains a reference to the graphics context as before, and then sets the stroke and fill styles:
+La acción `main` obtiene una referencia al contexto gráfico como antes, y fija los estilos de trazo y relleno:
 
 ```haskell
   setFillStyle "#FF0000" ctx
   setStrokeStyle "#000000" ctx
 ```
 
-Next, the code uses the `for_` function to loop over the integers between `0` and `100`:
+A continuación, el código usa la función `for_` para iterar por los enteros entre `0` y `100`:
 
 ```haskell
   for_ (1 .. 100) \_ -> do
 ```
 
-On each iteration, the do notation block starts by generating three random numbers:
+En cada interación, el bloque de notación do comienza generando tres números aleatorios:
 
 ```haskell
     x <- random
@@ -228,9 +228,9 @@ On each iteration, the do notation block starts by generating three random numbe
     r <- random
 ```
 
-These numbers are randomly distributed between `0` and `1`. They represent the `x` and `y` coordinates, and the radius, respectively.
+Estos números están aleatoriamente distribuidos entre `0` y `1`. Representan las coordenadas `x` e `y` y el radio respectivamente.
 
-Next, the code creates an `Arc` based on these parameters:
+Después, el código crea un `Arc` basándose en estos parámetros:
 
 ```haskell
     let path = arc ctx
@@ -242,26 +242,26 @@ Next, the code creates an `Arc` based on these parameters:
          }
 ```
 
-and finally fills and strokes the arc with the current styles:
+y finalmente rellena y traza el arco con los estilos actuales:
 
 ```haskell
     fillPath ctx path
     strokePath ctx path
 ```
 
-Build this example by specifying the `Example.Random` module as the main module:
+Construye este ejemplo especificando el módulo `Example.Random` como módulo principal:
 
 ```text
 $ pulp build -O --main Example.Random --to dist/Main.js
 ```
 
-and view the result by opening `html/index.html`.
+y mira el resultado abriendo `html/index.html`.
 
-## Transformations
+## Transformaciones
 
-There is more to the canvas than just rendering simple shapes. Every canvas maintains a transformation which is used to transform shapes before rendering. Shapes can be translated, rotated, scaled, and skewed.
+Podemos hacer más cosas en el lienzo que dibujar formas simples. Todos los lienzos mantienen una transformación que se usa para transformar las formas antes de dibujarse. Las formas pueden ser trasladadas, rotadas, escaladas y distorsionadas.
 
-The `purescript-canvas` library supports these transformations using the following functions:
+La biblioteca `purescript-canvas` soporta estas transformaciones usando las siguientes funciones:
 
 ```haskell
 translate :: forall eff
@@ -285,17 +285,17 @@ transform :: forall eff
           -> Eff (canvas :: CANVAS | eff) Context2D
 ```
 
-The `translate` action performs a translation whose components are specified by the properties of the `TranslateTransform` record.
+La acción `translate` realiza una traslación cuyas componentes se especifican en las propiedades del registro `TranslateTransform`.
 
-The `rotate` action performs a rotation around the origin, through some number of radians specified by the first argument.
+La acción `rotate` realiza una rotación respecto al origen de un número de radianes especificado como primer argumento.
 
-The `scale` action performs a scaling, with the origin as the center. The `ScaleTransform` record specifies the scale factors along the `x` and `y` axes.
+La acción `scale` realiza un escalado con origen en el centro. El registro `ScaleTransform` especifica los factores de escala junto a los ejes `x` e `y`.
 
-Finally, `transform` is the most general action of the four here. It performs an affine transformation specified by a matrix.
+Finalmente, `transform` es la acción más general de las cuatro. Realiza una transformación afín especificada por una matriz.
 
-Any shapes rendered after these actions have been invoked will automatically have the appropriate transformation applied.
+Cualquier forma dibujada tras invocar a estas acciones recibirá automáticamente la transformación apropiada.
 
-In fact, the effect of each of these functions is to _post-multiply_ the transformation with the context's current transformation. The result is that if multiple transformations applied after one another, then their effects are actually applied in reverse:
+De hecho, el efecto de cada una de estas funciones es _postmultiplicar_ la transformación por la transformación actual del contexto. El resultado es que si se aplican múltiples transformaciones una tras otra, sus efectos se aplican en orden inverso:
 
 ```haskell
 transformations ctx = do
@@ -306,13 +306,13 @@ transformations ctx = do
   renderScene
 ```
 
-The effect of this sequence of actions is that the scene is rotated, then scaled, and finally translated.
+El efecto de esta secuencia de acciones es que la escena se rota, se escala, y finalmente se traslada.
 
-## Preserving the Context
+## Preservando el contexto
 
-A common use case is to render some subset of the scene using a transformation, and then to reset the transformation afterwards.
+Un caso de uso común es representar un subconjunto de la escena usando una transformación y restablecer la transformación a continuación.
 
-The Canvas API provides the `save` and `restore` methods, which manipulate a _stack_ of states associated with the canvas. `purescript-canvas` wraps this functionality into the following functions:
+La API de Canvas proporciona los métodos `save` y `restore` que manipulan una _pila_ de estados asociados con el lienzo. `purescript-canvas` envuelve esta funcionalidad en las siguientes funciones:
 
 ```haskell
 save
@@ -326,9 +326,9 @@ restore
   -> Eff (canvas :: CANVAS | eff) Context2D
 ```
 
-The `save` action pushes the current state of the context (including the current transformation and any styles) onto the stack, and the `restore` action pops the top state from the stack and restores it.
+La acción `save` apila el estado actual del contexto (incluyendo la transformación actual y cualquier estilo) en la pila, y la acción `restore` desapila el estado superior de la pila y lo restaura.
 
-This allows us to save the current state, apply some styles and transformations, render some primitives, and finally restore the original transformation and state. For example, the following function performs some canvas action, but applies a rotation before doing so, and restores the transformation afterwards:
+Esto permite salvar el estado actual, aplicar algunos estilos y transformaciones, dibujar primitivas, y finalmente restaurar la transformación y estado originales. Por ejemplo, la siguiente función dibuja algo en el canvas, pero aplica una rotación antes de hacerlo y restaura la transformación a continuación:
 
 ```haskell
 rotated ctx render = do
@@ -338,7 +338,7 @@ rotated ctx render = do
   restore ctx
 ```
 
-In the interest of abstracting over common use cases using higher-order functions, the `purescript-canvas` library provides the `withContext` function, which performs some canvas action while preserving the original context state:
+Para abstraer casos de uso comunes usando funciones de orden mayor, la biblioteca `purescript-canvas` proporciona la función `withContext`, que realiza una acción sobre el lienzo al tiempo que preserva el estado original del contexto:
 
 ```haskell
 withContext
@@ -348,7 +348,7 @@ withContext
   -> Eff (canvas :: CANVAS | eff) a          
 ```
 
-We could rewrite the `rotated` function above using `withContext` as follows:
+Podríamos reescribir la función `rotated` anterior usando `withContext` como sigue:
 
 ```haskell
 rotated ctx render =
@@ -357,11 +357,11 @@ rotated ctx render =
     render
 ```
 
-## Global Mutable State
+## Estado mutable global
 
-In this section, we'll use the `purescript-refs` package to demonstrate another effect in the `Eff` monad.
+En esta sección usaremos el paquete `purescript-refs` para demostrar otro efecto en la mónada `Eff`.
 
-The `Control.Monad.Eff.Ref` module provides a type constructor for global mutable references, and an associated effect:
+El módulo `Control.Monad.Eff.Ref` proporciona un constructor de tipo para referencias a estado global mutable y un efecto asociado:
 
 ```text
 > import Control.Monad.Eff.Ref
@@ -373,29 +373,29 @@ The `Control.Monad.Eff.Ref` module provides a type constructor for global mutabl
 !
 ```
 
-A value of type `Ref a` is a mutable reference cell containing a value of type `a`, much like an `STRef h a`, which we saw in the previous chapter. The difference is that, while the `ST` effect can be removed by using `runST`, the `Ref` effect does not provide a handler. Where `ST` is used to track safe, local mutation, `Ref` is used to track global mutation. As such, it should be used sparingly.
+Un valor de tipo `Ref a` es una referencia a una celda mutable que contiene un valor de tipo `a`, bastante parecido a `STRef h a` que vimos en el capítulo anterior. La diferencia es que, mientras que el efecto `ST` se puede eliminar usando `runST`, el efecto `Ref` no proporciona un gestor. Mientras que `ST` se usa para seguir la pista a la mutación local segura, `Ref` se usa para mutaciones globales. Por lo tanto se debe usar escasamente.
 
-The `Example/Refs.purs` file contains an example which uses the `REF` effect to track mouse clicks on the `canvas` element.
+El fichero `Example/Refs.purs` contiene un ejemplo que usa el efecto `REF` para detectar pulsaciones de ratón en el elemento `canvas`.
 
-The code starts by creating a new reference containing the value `0`, by using the `newRef` action:
+El código comienza creando una nueva referencia conteniendo el valor `0` mediante la acción `newRef`:
 
 ```haskell
   clickCount <- newRef 0
 ```
 
-Inside the click event handler, the `modifyRef` action is used to update the click count:
+Dentro del gestor de pulsación de ratón, la acción `modifyRef` se usa para actualizar la cuenta de pulsaciones:
 
 ```haskell
     modifyRef clickCount (\count -> count + 1)
 ```
 
-The `readRef` action is used to read the new click count:
+La acción `readRef` se usa para leer la nueva cuenta de pulsaciones:
 
 ```haskell
     count <- readRef clickCount
 ```
 
-In the `render` function, the click count is used to determine the transformation applied to a rectangle:
+En la función `render`, usamos el contador de pulsaciones para determinar qué transformación aplicar a un rectángulo:
 
 ```haskell
     withContext ctx do
@@ -415,36 +415,36 @@ In the `render` function, the click count is used to determine the transformatio
         }
 ```
 
-This action uses `withContext` to preserve the original transformation, and then applies the following sequence of transformations (remember that transformations are applied bottom-to-top):
+Esta acción usa `withContext` para preservar la transformación original, y aplica la siguiente secuencia de transformaciones (recuerda que las transformaciones se aplican de abajo hacia arriba):
 
-- The rectangle is translated through `(-100, -100)` so that its center lies at the origin.
-- The rectangle is scaled around the origin.
-- The rectangle is rotated through some multiple of `10` degrees around the origin.
-- The rectangle is translated through `(300, 300)` so that it center lies at the center of the canvas.
+- El rectángulo se traslada a `(-100, -100)` de manera que su centro descanse en el origen
+- Escalamos el rectángulo con respecto al origen
+- Rotamos el rectángulo un múltiplo de `10` grados respecto al origen
+- Trasladamos el rectángulo a `(300, 300)` de manera que su centro quede en el centro del lienzo
 
-Build the example:
+Construye el ejemplo:
 
 ```text
 $ pulp build -O --main Example.Refs --to dist/Main.js
 ```
 
-and open the `html/index.html` file. If you click the canvas repeatedly, you should see a green rectangle rotating around the center of the canvas.
+y abre el fichero `html/index.html`. Si pulsas sobre el lienzo repetidas veces verás un rectángulo verde rotando sobre el centro del lienzo.
 
-X> ## Examples
+X> ## Ejemplos
 X>
-X> 1. (Easy) Write a higher-order function which strokes and fills a path simultaneously. Rewrite the `Random.purs` example using your function.
-X> 1. (Medium) Use the `RANDOM` and `DOM` effects to create an application which renders a circle with random position, color and radius to the canvas when the mouse is clicked.
-X> 1. (Medium) Write a function which transforms the scene by rotating it around a point with specified coordinates. _Hint_: use a translation to first translate the scene to the origin.
+X> 1. (Fácil) Escribe una función de orden mayor que traza y rellena una trayectoria simultáneamente. Reescribe el ejemplo `Random.purs` usando tu función.
+X> 1. (Medio) Usa los efectos `RANDOM` y `DOM` para crear una aplicación que dibuja en el lienzo un círculo con posición, color y radio aleatorios cuando se pulsa el botón del ratón.
+X> 1. (Medio) Escribe una función que transforme la escena rotándola alrededor de un punto dado. _Pista_: usa una traslación en primer lugar para llevar la escena al origen.
 
-## L-Systems
+## Sistemas-L
 
-In this final example, we will use the `purescript-canvas` package to write a function for rendering _L-systems_ (or _Lindenmayer systems_).
+En este último ejemplo, usaremos el paquete `purescript-canvas` para escribir una función que represente _sistemas-L_ (o _sistemas de Lindenmayer_).
 
-An L-system is defined by an _alphabet_, an initial sequence of letters from the alphabet, and a set of _production rules_. Each production rule takes a letter of the alphabet and returns a sequence of replacement letters. This process is iterated some number of times starting with the initial sequence of letters.
+Un sistema-L se define mediante un _alfabeto_, una secuencia inicial de letras del alfabeto y un conjunto de _reglas de producción_. Cada regla de producción toma una letra del alfabeto y devuelve una secuencia de letras de reemplazo. Este proceso se itera un cierto número de veces comenzando con la secuencia inicial de letras.
 
-If each letter of the alphabet is associated with some instruction to perform on the canvas, the L-system can be rendered by following the instructions in order.
+Si cada letra del alfabeto se asocia con alguna instrucción a realizar en el lienzo, el sistema-L se puede dibujar siguiendo las instrucciones por orden.
 
-For example, suppose the alphabet consists of the letters `L` (turn left), `R` (turn right) and `F` (move forward). We might define the following production rules:
+Por ejemplo, supongamos que el alfabeto consta de las letras `L` (gira a la izquierda), `R` (gira a la derecha) y `F` (avanza). Podemos definir la siguiente regla de producción:
 
 ```text
 L -> L
@@ -452,7 +452,7 @@ R -> R
 F -> FLFRRFLF
 ```
 
-If we start with the initial sequence "FRRFRRFRR" and iterate, we obtain the following sequence:
+Si comenzamos con la secuencia inicial "FRRFRRFRR" e iteramos, obtenemos la siguiente secuencia:
 
 ```text
 FRRFRRFRR
@@ -460,19 +460,19 @@ FLFRRFLFRRFLFRRFLFRRFLFRRFLFRR
 FLFRRFLFLFLFRRFLFRRFLFRRFLFLFLFRRFLFRRFLFRRFLF...
 ```
 
-and so on. Plotting a piecewise-linear path corresponding to this set of instruction approximates a curve called the _Koch curve_. Increasing the number of iterations increases the resolution of the curve.
+y así sucesivamente. Dibujar una trayectoria lineal por tramos correspondiente a este conjunto de instrucciones aproxima una curva llamada la _curva de Koch_. Incrementar el número de iteraciones incrementa la resolución de la curva.
 
-Let's translate this into the language of types and functions.
+Traduzcamos esto al lenguaje de los tipos y funciones.
 
-We can represent our choice of alphabet by a choice of type. For our example, we can choose the following type:
+Podemos representar nuestro alfabeto mediante un tipo algebraico. Para nuestro ejemplo podemos usar el siguiente tipo:
 
 ```haskell
 data Alphabet = L | R | F
 ```
 
-This data type defines one data constructor for each letter in our alphabet.
+Este tipo de datos define un constructor de datos para cada letra de nuestro alfabeto.
 
-How can we represent the initial sequence of letters? Well, that's just an array of letters from our alphabet, which we will call a `Sentence`:
+¿Cómo podemos representar la secuencia inicial de letras? Es simplemente un array de letras de nuestro alfabeto que llamaremos frase (`Sentence`):
 
 ```haskell
 type Sentence = Array Alphabet
@@ -481,7 +481,7 @@ initial :: Sentence
 initial = [F, R, R, F, R, R, F, R, R]
 ```
 
-Our production rules can be represented as a function from `Alphabet` to `Sentence` as follows:
+Nuestras reglas de producción se pueden expresar como una función de `Alphabet` a `Sentence` como sigue:
 
 ```haskell
 productions :: Alphabet -> Sentence
@@ -490,11 +490,11 @@ productions R = [R]
 productions F = [F, L, F, R, R, F, L, F]
 ```
 
-This is just copied straight from the specification above.
+Esto es una copia directa de la especificación de arriba.
 
-Now we can implement a function `lsystem` which will take a specification in this form, and render it to the canvas. What type should `lsystem` have? Well, it needs to take values like `initial` and `productions` as arguments, as well as a function which can render a letter of the alphabet to the canvas.
+Ahora podemos implementar una función `lsystem` que toma una especificación de esta forma y la dibuja en el lienzo. ¿Qué tipo debe tener `lsystem`? Bien, necesita tomar valores como `initial` y `productions` como argumentos, así como una función para dibujar una letra del alfabeto en el canvas.
 
-Here is a first approximation to the type of `lsystem`:
+Aquí tenemos una primera aproximación al tipo de `lsystem`:
 
 ```haskell
 forall eff. Sentence
@@ -504,13 +504,13 @@ forall eff. Sentence
          -> Eff (canvas :: CANVAS | eff) Unit
 ```
 
-The first two argument types correspond to the values `initial` and `productions`.
+Los dos primeros argumentos corresponden a los valores `initial` y `productions`.
 
-The third argument represents a function which takes a letter of the alphabet and _interprets_ it by performing some actions on the canvas. In our example, this would mean turning left in the case of the letter `L`, turning right in the case of the letter `R`, and moving forward in the case of a letter `F`.
+El tercer argumento representa una función que toma una letra del alfabeto y la _interpreta_ realizando algunas acciones sobre el lienzo. En nuestro ejemplo, esto significaría girar a la izquierda en el caso de la letra `L`, girar a la derecha en el caso de la letra `R`, y avanzar en el caso de la letra `F`.
 
-The final argument is a number representing the number of iterations of the production rules we would like to perform.
+El argumento final es un número que representa el número de iteraciones de las reglas de producción que queremos realizar.
 
-The first observation is that the `lsystem` function should work for only one type of `Alphabet`, but for any type, so we should generalize our type accordingly. Let's replace `Alphabet` and `Sentence` with `a` and `Array a` for some quantified type variable `a`:
+La primera observación es que la función `lsystem` no debe funcionar sólo para un único tipo `Alphabet`, sino para cualquier tipo, de manera que debemos generalizar nuestro tipo. Cambiemos `Alphabet` y `Sentence` por `a` y `Array a` para alguna variable de tipo cuantificada `a`:
 
 ```haskell
 forall a eff. Array a
@@ -520,9 +520,9 @@ forall a eff. Array a
            -> Eff (canvas :: CANVAS | eff) Unit
 ```
 
-The second observation is that, in order to implement instructions like "turn left" and "turn right", we will need to maintain some state, namely the direction in which the path is moving at any time. We need to modify our function to pass the state through the computation. Again, the `lsystem` function should work for any type of state, so we will represent it using the type variable `s`.
+La segunda observación es que para implementar instrucciones como "gira a la izquierda" y "gira a la derecha" necesitamos mantener algún estado, esto es, la dirección en que la trayectoria se está moviendo en todo momento. Necesitamos modificar nuestra función para pasar el estado durante el cálculo. De nuevo, la función `lsystem` debe funcionar para cualquier tipo de estado, así que lo representaremos usando la variable de tipo `s`.
 
-We need to add the type `s` in three places:
+Necesitamos añadir el tipo `s` en tres sitios:
 
 ```haskell
 forall a s eff. Array a
@@ -533,11 +533,11 @@ forall a s eff. Array a
              -> Eff (canvas :: CANVAS | eff) s
 ```
 
-Firstly, the type `s` was added as the type of an additional argument to `lsystem`. This argument will represent the initial state of the L-system.
+En primer lugar, el tipo `s` ha sido añadido como el tipo de un argumento adicional a `lsystem`. Este argumento representará el estado inicial del sistema-L.
 
-The type `s` also appears as an argument to, and as the return type of the interpretation function (the third argument to `lsystem`). The interpretation function will now receive the current state of the L-system as an argument, and will return a new, updated state as its return value.
+El tipo `s` también aparece como argumento y tipo de retorno de la función de interpretación (el tercer argumento a `lsystem`). La función de interpretación recibirá ahora el estado actual del sistema-L como argumento y devolverá un nuevo estado actualizado.
 
-In the case of our example, we can define use following type to represent the state:
+En el caso de nuestro ejemplo, podemos usar el siguiente tipo para representar el estado:
 
 ```haskell
 type State =
@@ -547,18 +547,18 @@ type State =
   }
 ```
 
-The properties `x` and `y` represent the current position of the path, and the `theta` property represents the current direction of the path, specified as the angle between the path direction and the horizontal axis, in radians.
+Las propiedades `x` e `y` representan la posición actual de la trayectoria, y la propiedad `theta` representa la dirección actual de la trayectoria especificada como el ángulo entre la dirección de la trayectoria y el eje horizontal en radianes.
 
-The initial state of the system might be specified as follows:
+El estado inicial del sistema se puede especificar como sigue:
 
 ```haskell
 initialState :: State
 initialState = { x: 120.0, y: 200.0, theta: 0.0 }
 ```
 
-Now let's try to implement the `lsystem` function. We will find that its definition is remarkably simple.
+Ahora intentemos implementar la función `lsystem`. Veremos que su definición es notablemente simple.
 
-It seems reasonable that `lsystem` should recurse on its fourth argument (of type `Int`). On each step of the recursion, the current sentence will change, having been updated by using the production rules. With that in mind, let's begin by introducing names for the function arguments, and delegating to a helper function:
+Parece razonable que `lsystem` recurra sobre su cuarto argumento (de tipo `Int`). En cada paso de la recursividad, la frase actual cambiará siendo actualizada mediante las reglas de producción. Teniendo en cuesta esto, asignemos nombres a los argumentos de la función y deleguemos en una función auxiliar:
 
 ```haskell
 lsystem :: forall a s eff
@@ -572,25 +572,25 @@ lsystem init prod interpret n state = go init n
   where
 ```
 
-The `go` function works by recursion on its second argument. There are two cases: when `n` is zero, and when `n` is non-zero.
+La función `go` trabaja recursivamente sobre su segundo argumento. Hay dos casos: cuando `n` es cero y cuando no lo es.
 
-In the first case, the recursion is complete, and we simply need to interpret the current sentence according to the interpretation function. We have a sentence of type `Array a`, a state of type `s`, and a function of type `s -> a -> Eff (canvas :: CANVAS | eff) s`. This sounds like a job for the `foldM` function which we defined earlier, and which is available from the `purescript-control` package:
+En el primer caso, la recursividad finaliza y simplemente necesitamos interpretar la frase actual de acuerdo a la función de interpretación. Tenemos una frase de tipo `Array a`, un estado de tipo `s` y una función de tipo `s -> a -> Eff (canvas :: CANVAS | eff) s`. Parece un trabajo para la función `foldM` que definimos antes y que está disponible en el paquete `purescript-control`:
 
 ```haskell
   go s 0 = foldM interpret state s
 ```
 
-What about in the non-zero case? In that case, we can simply apply the production rules to each letter of the current sentence, concatenate the results, and repeat by calling `go` recursively:
+¿Que pasa en el caso en que no es cero? En ese caso, podemos simplemente aplicar las reglas de producción a cada letra de la frase actual, concatenando los resultados, y repetir llamando a `go` recursivamente:
 
 ```haskell
   go s n = go (concatMap prod s) (n - 1)
 ```
 
-That's it! Note how the use of higher order functions like `foldM` and `concatMap` allowed us to communicate our ideas concisely.
+¡Eso es todo! Fíjate en cómo el uso de funciones de orden mayor como `foldM` y `concatMap` nos ha permitido comunicar nuestras ideas de manera concisa.
 
-However, we're not quite done. The type we have given is actually still too specific. Note that we don't use any canvas operations anywhere in our implementation. Nor do we make use of the structure of the `Eff` monad at all. In fact, our function works for _any_ monad `m`!
+Sin embargo aún no hemos terminado. El tipo que hemos dado todavía es demasiado específico. Fíjate en que no usamos ninguna operación de canvas en ningún sitio de nuestra implementación. Tampoco usamos la estructura de la mónada `Eff` para nada. De hecho, ¡nuestra función es válida para _cualquier_ mónada `m`!
 
-Here is the more general type of `lsystem`, as specified in the accompanying source code for this chapter:
+Aquí tenemos el tipo más general de `lsystem` de la manera en que se especifica en el código fuente que acompaña este capítulo:
 
 ```haskell
 lsystem :: forall a m s
@@ -603,24 +603,24 @@ lsystem :: forall a m s
         -> m s
 ```
 
-We can understand this type as saying that our interpretation function is free to have any side-effects at all, captured by the monad `m`. It might render to the canvas, or print information to the console, or support failure or multiple return values. The reader is encouraged to try writing L-systems which use these various types of side-effect.
+Podemos entender este tipo como si dijese que nuestra función de interpretación es libre de tener efectos secundarios, capturados por la mónada `m`. Puede dibujar en el lienzo, o imprimir información a la consola, o soportar fallos o múltiples valores de retorno. Animamos al lector a que intente escribir sistemas-L que usen estos tipos de efectos secundarios.
 
-This function is a good example of the power of separating data from implementation. The advantage of this approach is that we gain the freedom to interpret our data in multiple different ways. We might even factor `lsystem` into two smaller functions: the first would build the sentence using repeated application of `concatMap`, and the second would interpret the sentence using `foldM`. This is also left as an exercise for the reader.
+Esta función es un buen ejemplo de la potencia de separar los datos de la implementación. La ventaja de este enfoque es que ganamos la libertad de interpretar nuestros datos de varias maneras distintas. Podemos incluso factorizar `lsystem` en dos funciones más pequeñas: la primera construiría una frase usando aplicación repetida de `concatMap`, y la segunda interpretaría la frase usando `foldM`. Dejamos esto también como un ejercicio para el lector.
 
-Let's complete our example by implementing its interpretation function. The type of `lsystem` tells us that its type signature must be `s -> a -> m s` for some types `a` and `s` and a type constructor `m`. We know that we want `a` to be `Alphabet` and `s` to be `State`, and for the monad `m` we can choose `Eff (canvas :: CANVAS)`. This gives us the following type:
+Completemos nuestro ejemplo implementando la función de interpretación. El tipo de `lsystem` nos dice que su firma debe ser `s -> a -> m s` para algunos tipos `a` y `s` y un constructor de tipo `m`. Sabemos que queremos que `a` sea `Alphabet` y `s` sea `State`, y para la mónada `m` podemos elegir `Eff (canvas :: CANVAS)`. Esto nos da el siguiente tipo:
 
 ```haskell
 interpret :: State -> Alphabet -> Eff (canvas :: CANVAS) State
 ```
 
-To implement this function, we need to handle the three data constructors of the `Alphabet` type. To interpret the letters `L` (move left) and `R` (move right), we simply have to update the state to change the angle `theta` appropriately:
+Para implementar esta función necesitamos gestionar los tres constructores del tipo `Alphabet`. Para interpretar las letras `L` (girar a la izquierda), y `R` (girar a la derecha), simplemente tenemos que actualizar el estado para cambiar el ángulo `theta` de manera apropiada:
 
 ```haskell
 interpret state L = pure $ state { theta = state.theta - Math.pi / 3 }
 interpret state R = pure $ state { theta = state.theta + Math.pi / 3 }
 ```
 
-To interpret the letter `F` (move forward), we can calculate the new position of the path, render a line segment, and update the state, as follows:
+Para interpretar la letra `F` (avanzar), podemos calcular la nueva posición de la trayectoria, dibujar un segmento y actualizar el estado como sigue:
 
 ```haskell
 interpret state F = do
@@ -631,29 +631,29 @@ interpret state F = do
   pure { x, y, theta: state.theta }
 ```
 
-Note that in the source code for this chapter, the `interpret` function is defined using a `let` binding inside the `main` function, so that the name `ctx` is in scope. It would also be possible to move the context into the `State` type, but this would be inappropriate because it is not a changing part of the state of the system.
+Date cuenta de que en el código fuente de este capítulo, la función `interpret` se define usando una ligadura `let` dentro de la función `main`, de manera que el nombre `ctx` esté en ámbito. Sería posible también mover el contexto al tipo `State`, pero esto no sería apropiado porque no es una parte cambiante del estado del sistema.
 
-To render this L-system, we can simply use the `strokePath` action:
+Para representar este sistema-L podemos simplemente usar la acción `strokePath`:
 
 ```haskell
 strokePath ctx $ lsystem initial productions interpret 5 initialState
 ```
 
-Compile the L-system example using
+Compila el ejemplo del sistema-L usando
 
 ```text
 $ pulp build -O --main Example.LSystem --to dist/Main.js
 ```
 
-and open `html/index.html`. You should see the Koch curve rendered to the canvas.
+y abre `html/index.html`. Debes ver la curva de Koch dibujada en el lienzo.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Modify the L-system example above to use `fillPath` instead of `strokePath`. _Hint_: you will need to include a call to `closePath`, and move the call to `moveTo` outside of the `interpret` function.
-X> 1. (Easy) Try changing the various numerical constants in the code, to understand their effect on the rendered system.
-X> 1. (Medium) Break the `lsystem` function into two smaller functions. The first should build the final sentence using repeated application of `concatMap`, and the second should use `foldM` to interpret the result.
-X> 1. (Medium) Add a drop shadow to the filled shape, by using the `setShadowOffsetX`, `setShadowOffsetY`, `setShadowBlur` and `setShadowColor` actions. _Hint_: use PSCi to find the types of these functions.
-X> 1. (Medium) The angle of the corners is currently a constant (`pi/3`). Instead, it can be moved into the `Alphabet` data type, which allows it to be changed by the production rules:
+X> 1. (Fácil) Modifica el ejemplo del sistema-L anterior para que use `fillPath` en lugar de `strokePath`. _Pista_: necesitarás incluir una llamada a `closePath` y mover la llamada a `moveTo` fuera de la función `interpret`.
+X> 1. (Fácil) Intenta cambiar las distintas constantes numéricas del código para comprender su efecto en el sistema representado.
+X> 1. (Medio) Descompón la función `lsystem` en dos funciones más pequeñas. La primera debe construir la frase final usando aplicación repetida de `concatMap` y la segunda debe usar `foldM` para interpretar el resultado.
+X> 1. (Medio) Añade una sombra a la forma rellena usando las acciones `setShadowOffsetX`, `setShadowOffsetY`, `setShadowBlur` y `setShadowColor`. _Pista_: usa PSCi para averiguar los tipos de estas funciones.
+X> 1. (Medio) El ángulo de las esquinas es actualmente una constante (`pi/3`). Podemos moverlo al tipo de datos del alfabeto, lo que permite que sea alterado por las reglas de producción:
 X>
 X>     ```haskell
 X>     type Angle = Number
@@ -661,12 +661,12 @@ X>
 X>     data Alphabet = L Angle | R Angle | F
 X>     ```
 X>     
-X>     How can this new information be used in the production rules to create interesting shapes?
-X> 1. (Difficult) An L-system is given by an alphabet with four letters: `L` (turn left through 60 degrees), `R` (turn right through 60 degrees), `F` (move forward) and `M` (also move forward).
+X>     ¿Cómo se puede usar esta nueva información en las reglas de producción para crear formas interesantes?
+X> 1. (Difícil) Un sistema-L viene dado por un alfabeto con cuatro letras: `L` (gira a la izquierda 60 grados), `R` (gira a la derecha 60 grados), `F` (avanza) y `M` (avanza también).
 X>
-X>     The initial sentence of the system is the single letter `M`.
+X>     La frase inicial del sistema es una única letra `M`.
 X>
-X>     The production rules are specified as follows:
+X>     Las reglas de producción son como sigue:
 X>
 X>     ```text
 X>     L -> L
@@ -675,22 +675,22 @@ X>     F -> FLMLFRMRFRMRFLMLF
 X>     M -> MRFRMLFLMLFLMRFRM
 X>     ```
 X>
-X>     Render this L-system. _Note_: you will need to decrease the number of iterations of the production rules, since the size of the final sentence grows exponentially with the number of iterations.
+X>     Representa este sistema-L. _Nota_: necesitarás decrementar el número de iteraciones de las reglas de producción, ya que el tamaño de la frase final crece exponencialmente con el número de iteraciones.
 X>
-X>     Now, notice the symmetry between `L` and `M` in the production rules. The two "move forward" instructions can be differentiated using a `Boolean` value using the following alphabet type:
+X>     Ahora fíjate en la simetría entre `F` y `M` en las reglas de producción. Las dos instrucciones de avance pueden ser diferenciadas mediante un valor `Boolean` usando el siguiente tipo de alfabeto:
 X>
 X>     ```haskell
 X>     data Alphabet = L | R | F Boolean
 X>     ```
 X>
-X>     Implement this L-system again using this representation of the alphabet.
-X> 1. (Difficult) Use a different monad `m` in the interpretation function. You might try using the `CONSOLE` effect to write the L-system onto the console, or using the `RANDOM` effect to apply random "mutations" to the state type.
+X>     Implementa de nuevo este sistema-L usando esta representación para el alfabeto.
+X> 1. (Difícil) Usa una mónada diferente `m` para la función de interpretación. Puedes intentar usar el efecto `CONSOLE` para escribir el sistema-L a la consola, o usar el efecto `RANDOM` para aplicar mutaciones aleatorias al tipo de estado.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we learned how to use the HTML5 Canvas API from PureScript by using the `purescript-canvas` library. We also saw a practical demonstration of many of the techniques we have learned already: maps and folds, records and row polymorphism, and the `Eff` monad for handling side-effects.
+En este capítulo hemos aprendido cómo usar la API Canvas de HTML5 desde PureScript usando la biblioteca `purescript-canvas`. Vimos también una demostración práctica de muchas de las técnicas que ya habíamos aprendido: asociaciones y pliegues, registros y polimorfismo de fila, y la mónada `Eff` para gestionar efectos secundarios.
 
-The examples also demonstrated the power of higher-order functions and _separating data from implementation_. It would be possible to extend these ideas to completely separate the representation of a scene from its rendering function, using an algebraic data type, for example:
+Los ejemplos demuestran también la potencia de las funciones de orden mayor y la _separación de datos de la implementación_. Sería posible extender estas ideas para separar por completo la representación de una escena de su función de dibujado usando un tipo de datos algebraico, por ejemplo:
 
 ```haskell
 data Scene
@@ -702,6 +702,6 @@ data Scene
   | ...
 ```
 
-This approach is taken in the `purescript-drawing` package, and it brings the flexibility of being able to manipulate the scene as data in various ways before rendering.
+Este es el enfoque tomado por el paquete `purescript-drawing` y aporta la flexibilidad de ser capaz de manipular la escena como datos de varias maneras antes de dibujar.
 
-In the next chapter, we will see how to implement libraries like `purescript-canvas` which wrap existing JavaScript functionality, by using PureScript's _foreign function interface_.
+En el siguiente capítulo veremos cómo implementar bibliotecas como `purescript-canvas` que envuelven funcionalidad JavaScript existente, usando la _interfaz para funciones externas_ de PureScript.

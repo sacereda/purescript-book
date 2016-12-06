@@ -1,30 +1,30 @@
-# Monadic Adventures
+# Aventuras monádicas
 
-## Chapter Goals
+## Objetivos del capítulo
 
-The goal of this chapter will be to learn about _monad transformers_, which provide a way to combine side-effects provided by different monads. The motivating example will be a text adventure game which can be played on the console in NodeJS. The various side-effects of the game (logging, state, and configuration) will all be provided by a monad transformer stack.
+El objetivo de este capítulo será aprender sobre los _transformadores de mónadas_, que ofrecen una manera de combinar efectos secundarios proporcionados por diferentes mónadas. El ejemplo motivador será una juego de aventuras textual que se puede jugar en la consola de NodeJS. Los diferentes efectos secundarios del juego (registro de mensajes, estado y configuración) se proporcionarán por medio de una pila de transformadores de mónadas.
 
-## Project Setup
+## Preparación del proyecto
 
-This module's project introduces the following new Bower dependencies:
+El módulo de este proyecto añade las siguientes dependencias Bower nuevas:
 
-- `purescript-maps`, which provides a data type for immutable maps
-- `purescript-sets`, which provides a data type for immutable sets
-- `purescript-transformers`, which provides implementations of standard monad transformers
-- `purescript-node-readline`, which provides FFI bindings to the [`readline`](http://nodejs.org/api/readline.html) interface provided by NodeJS
-- `purescript-yargs`, which provides an applicative interface to the [`yargs`](https://www.npmjs.org/package/yargs) command line argument processing library
+- `purescript-maps`, que proporciona un tipo de datos para asociaciones inmutables
+- `purescript-sets`, que proporciona un tipo de datos para conjuntos inmutables
+- `purescript-transformers`, que proporciona implementaciones de transformadores de mónadas estándar
+- `purescript-node-readline`, que proporciona ligaduras FFI a la interfaz [`readline`](http://nodejs.org/api/readline.html) de NodeJS
+- `purescript-yargs`, que proporciona una interfaz aplicativa a la biblioteca de procesamiento de argumentos de línea de comandos [`yargs`](https://www.npmjs.org/package/yargs)
 
-It is also necessary to install the `yargs` module using NPM:
+También es necesario instalar el módulo `yargs` usando NPM:
 
 ```text
 npm install
 ```
 
-## How To Play The Game
+## Cómo jugar
 
-To run the project, use `pulp run`
+Para ejecutar el proyecto, usa `pulp run`.
 
-By default you will see a usage message:
+Por defecto verás un mensaje de uso:
 
 ```text
 node ./dist/Main.js -p <player name>
@@ -37,18 +37,18 @@ Missing required arguments: p
 The player name is required
 ```
 
-Provide the player name using the `-p` option:
+Proporciona el nombre del jugador usando la opción `-p`:
 
 ```text
 pulp run -p Phil
 >
 ```
 
-From the prompt, you can enter commands like `look`, `inventory`, `take`, `use`, `north`, `south`, `east`, and `west`. There is also a `debug` command, which can be used to print the game state when the `--debug` command line option is provided.
+Desde el símbolo de espera de órdenes puedes introducir comandos como `look`, `inventory`, `take`, `use`, `north`, `south`, `east`, y `west`. Hay también un comando `debug` que se puede usar para imprimir el estado del juego cuando se proporciona la opción de línea de comandos `--debug`.
 
-The game is played on a two-dimensional grid, and the player moves by issuing commands `north`, `south`, `east`, and `west`. The game contains a collection of items which can either be in the player's possession (in the user's _inventory_), or on the game grid at some location. Items can be picked up by the player, using the `take` command.
+El juego se desarrolla en una rejilla bidimensional, y el jugador se mueve mandando comandos `north`, `south`, `east`, and `west`. El juego contiene una colección de objetos que pueden estar en posesión del jugador (en el _inventario_ del usuario), o en la rejilla del juego en alguna posición. Los objetos pueden ser recogidos por el jugador usando el comando `take`.
 
-For reference, here is a complete walkthrough of the game:
+Para referencia, aquí hay un recorrido completo del juego:
 
 ```text
 $ pulp run -p Phil
@@ -80,17 +80,17 @@ Congratulations, Phil!
 You win!
 ```
 
-The game is very simple, but the aim of the chapter is to use the `purescript-transformers` package to build a library which will enable rapid development of this type of game.
+El juego es muy simple, pero el objetivo del capítulo es usar el paquete `purescript-transformers` para construir una biblioteca que permita desarrollo rápido de este tipo de juegos.
 
-## The State Monad
+## La mónada State
 
-We will start by looking at some of the monads provided by the `purescript-transformers` package.
+Comenzaremos viendo algunas de las mónadas suministradas por el paquete `purescript-transformers`.
 
-The first example is the `State` monad, which provides a way to model _mutable state_ in pure code. We have already seen two approaches to mutable state provided by the `Eff` monad, namely the `REF` and `ST` effects. `State` provides a third alternative, but it is not implemented using the `Eff` monad.
+El primer ejemplo es la mónada `State`, que proporciona una forma de modelar _estado mutable_ en código puro. Hemos visto ya dos enfoques al estado mutable proporcionados por la mónada `Eff`, a saber, los efectos `REF` y `ST`. `State` proporciona una tercera alternativa que no está implementada usando la mónada `Eff`.
 
-The `State` type constructor takes two type parameters: the type `s` of the state, and the return type `a`. Even though we speak of the "`State` monad", the instance of the `Monad` type class is actually provided for the `State s` type constructor, for any type `s`.
+El constructor de tipo `State` toma dos parámetros de tipo: el tipo `s` del estado y un tipo de retorno `a`. Aunque hablamos de la "mónada `State`", la instancia de la clase de tipos `Monad` está de hecho proporcionada para el constructor de tipo `State s`, para cualquier tipo `s`.
 
-The `Control.Monad.State` module provides the following API:
+El módulo `Control.Monad.State` proporciona la siguiente API:
 
 ```haskell
 get    :: forall s.             State s s
@@ -98,10 +98,10 @@ put    :: forall s. s        -> State s Unit
 modify :: forall s. (s -> s) -> State s Unit
 ```
 
-This looks very similar to the API provided by the `REF` and `ST` effects. However, notice that we do not pass a mutable reference cell such as a `Ref` or `STRef` to the actions. The difference between `State` and the solutions provided by the `Eff` monad is that the `State` monad only supports a single piece of state which is implicit - the state is implemented as a function argument hidden by the `State` monad's data constructor, so there is no explicit reference to pass around.
+Esto parece muy similar a la API proporcionada por los efectos `REF` y `ST`. Sin embargo, fíjate en que no pasamos una referencia a celda mutable como `Ref` o `STRef` a las acciones. La diferencia entre `State` y las soluciones provistas por la mónada `Eff` es que la mónada `State` sólo soporta un único fragmento de estado que está implícito; el estado se implementa como un argumento de función oculto en el constructor de datos de la mónada `State`, de manera que no hay que pasar una referencia explícita.
 
-Let's see an example. One use of the `State` monad might be to add the values in an array of numbers to the current state. We could do that by choosing `Number` as the state type `s`, and using `traverse_` to traverse the array, with a call to `modify` for each array element:
-
+Veamos un ejemplo. Un uso de la mónada `State` puede ser sumar los valores de un array de números sobre el estado actual. Podríamos hacerlo eligiendo `Number` como el tipo de estado `s` y usar `traverse_` para recorrer el array, con una llamada a `modify` para cada elemento del array:
+	
 ```haskell
 import Data.Foldable (traverse_)
 import Control.Monad.State
@@ -111,7 +111,7 @@ sumArray :: Array Number -> State Number Unit
 sumArray = traverse_ \n -> modify \sum -> sum + n
 ```
 
-The `Control.Monad.State` module provides three functions for running a computation in the `State` monad:
+El módulo `Control.Monad.State` proporciona tres funciones para ejecutar un cálculo en la mónada `State`:
 
 ```haskell
 evalState :: forall s a. State s a -> s -> a
@@ -119,9 +119,9 @@ execState :: forall s a. State s a -> s -> s
 runState  :: forall s a. State s a -> s -> Tuple a s
 ```
 
-Each of these functions takes an initial state of type `s` and a computation of type `State s a`. `evalState` only returns the return value, `execState` only returns the final state, and `runState` returns both, expressed as a value of type `Tuple a s`.
+Cada una de estas funciones toma un estado inicial de tipo `s` y un cálculo de tipo `State s a`. `evalState` sólo devuelve el valor de retorno, `execState` sólo devuelve el estado final, y `runState` devuelve ambos expresados como un valor de tipo `Tuple a s`.
 
-Given the `sumArray` function above, we could use `execState` in PSCi to sum the numbers in several arrays as follows:
+Dada la función `sumArray` de arriba, podemos usar `execState` en PSCi para sumar los números de varios arrays como sigue:
 
 ```text
 > execState (do
@@ -132,20 +132,18 @@ Given the `sumArray` function above, we could use `execState` in PSCi to sum the
 21
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) What is the result of replacing `execState` with `runState` or `evalState` in our example above?
-X> 1. (Medium) A string of parentheses is _balanced_ if it is obtained by either concatenating zero-or-more shorter balanced
-X>     strings, or by wrapping a shorter balanced string in a pair of parentheses.
+X> 1. (Fácil) ¿Cuál es el resultado de reemplazar `execState` con `runState` o `evalState` en nuestro ejemplo anterior?
+X> 1. (Medio) Una cadena de paréntesis está _equilibrada_ si se obtiene o bien concatenando cero o más cadenas equilibradas, o envolviendo una cadena equilibrada más corta en un par de paréntesis.
 X>     
-X>     Use the `State` monad and the `traverse_` function to write a function
+X>     Usa la mónada `State` y la función `traverse_` para escribir una función
 X>
 X>     ```haskell
 X>     testParens :: String -> Boolean
 X>     ```
 X>
-X>     which tests whether or not a `String` of parentheses is balanced, by keeping track of the number of opening parentheses
-X>     which have not been closed. Your function should work as follows:
+X>     que comprueba si una `String` de paréntesis está equilibrada, llevando la cuenta del número de paréntesis abiertos que no han sido cerrados. Tu función debe funcionar como sigue:
 X>
 X>     ```text
 X>     > testParens ""
@@ -161,31 +159,31 @@ X>     > testParens "(()()"
 X>     false
 X>     ```
 X>
-X>     _Hint_: you may like to use the `toCharArray` function from the `Data.String` module to turn the input string into an array of characters.
+X>     _Pista_: puedes querer usar la función `toCharArray` del módulo `Data.String` para convertir la cadena de entrada en un array de caracteres.
 
-## The Reader Monad
+## La mónada Reader
 
-Another monad provided by the `purescript-transformers` package is the `Reader` monad. This monad provides the ability to read from a global configuration. Whereas the `State` monad provides the ability to read and write a single piece of mutable state, the `Reader` monad only provides the ability to read a single piece of data.
+Otra mónada suministrada por el paquete `purescript-transformers` es la mónada `Reader`. Esta mónada proporciona la capacidad de leer de una configuración global. Mientras que la mónada `State` proporciona la capacidad de leer y escribir un único fragmento de estado mutable, la mónada `Reader` sólo proporciona la capacidad de leer un único fragmento de datos.
 
-The `Reader` type constructor takes two type arguments: a type `r` which represents the configuration type, and the return type `a`.
+El constructor de tipo `Reader` toma dos argumentos de tipo: un tipo `r` que representa el tipo de configuración y el tipo de retorno `a`.
 
-The `Control.Monad.Reader` module provides the following API:
+El módulo `Control.Monad.Reader` provee la siguiente API:
 
 ```haskell
 ask   :: forall r. Reader r r
 local :: forall r a. (r -> r) -> Reader r a -> Reader r a
 ```
 
-The `ask` action can be used to read the current configuration, and the `local` action can be used to run a computation with a modified configuration.
+La acción `ask` se puede usar para leer la configuración actual, y la acción `local` se puede usar para ejecutar un cálculo con una configuración modificada.
 
-For example, suppose we were developing an application controlled by permissions, and we wanted to use the `Reader` monad to hold the current user's permissions object. We might choose the type `r` to be some type `Permissions` with the following API:
+Por ejemplo, supongamos que estamos desarrollando una aplicación controlada por permisos y queremos usar la mónada `Reader` para mantener el objeto con los permisos del usuario actual. Podemos elegir que el tipo `r` sea un tipo `Permissions` con la siguiente API:
 
 ```haskell
 hasPermission :: String -> Permissions -> Boolean
 addPermission :: String -> Permissions -> Permissions
 ```
 
-Whenever we wanted to check if the user had a particular permission, we could use `ask` to retrieve the current permissions object. For example, only administrators might be allowed to create new users:
+Cuando queramos comprobar si el usuario tiene un permiso concreto, podemos usar `ask` para extraer el objeto de permisos actual. Por ejemplo, podemos querer que sólo los administradores puedan crear usuarios nuevos:
 
 ```haskell
 createUser :: Reader Permissions (Maybe User)
@@ -196,29 +194,29 @@ createUser = do
     else pure Nothing
 ```
 
-To elevate the user's permissions, we might use the `local` action to modify the `Permissions` object during the execution of some computation:
+Para elevar los permisos de usuario, podemos usar la acción `local` para modificar el objeto `Permissions` durante la ejecución de algún cálculo:
 
 ```haskell
 runAsAdmin :: forall a. Reader Permissions a -> Reader Permissions a
 runAsAdmin = local (addPermission "admin")
 ```
 
-Then we could write a function to create a new user, even if the user did not have the `admin` permission:
+Podemos entonces escribir una función para crear un nuevo usuario incluso si el usuario no tiene los permisos `admin`:
 
 ```haskell
 createUserAsAdmin :: Reader Permissions (Maybe User)
 createUserAsAdmin = runAsAdmin createUser
 ```
 
-To run a computation in the `Reader` monad, the `runReader` function can be used to provide the global configuration:
+Para ejecutar un cálculo en la mónada `Reader` se puede usar la función `runReader` para suministrar la configuración global:
 
 ```haskell
 runReader :: forall r a. Reader r a -> r -> a
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> In these exercises, we will use the `Reader` monad to build a small library for rendering documents with indentation. The "global configuration" will be a number indicating the current indentation level:
+X> En estos ejercicios, usaremos la mónada `Reader` para construir una pequeña biblioteca para representar documentos con sangría. La "configuración global" será un número indicando el nivel de sangría actual:
 X>
 X>    ```haskell
 X>    type Level = Int
@@ -226,36 +224,36 @@ X>
 X>    type Doc = Reader Level String
 X>    ```
 X>
-X> 1. (Easy) Write a function `line` which renders a function at the current indentation level. Your function should have the following type:
+X> 1. (Fácil) Escribe una función `line` que representa una línea con el nivel de sangría actual. Tu función debe tener el siguiente tipo:
 X>
 X>     ```haskell
 X>     line :: String -> Doc
 X>     ```
 X>
-X>     _Hint_: use the `ask` function to read the current indentation level.
-X> 1. (Easy) Use the `local` function to write a function
+X>     _Pista_: usa la función `ask` para leer el nivel de sangría actual.
+X> 1. (Fácil) Usa la función `local` para escribir una función
 X>
 X>     ```haskell
 X>     indent :: Doc -> Doc
 X>     ```
 X>
-X>     which increases the indentation level for a block of code.
-X> 1. (Medium) Use the `sequence` function defined in `Data.Traversable` to write a function
+X>     que incrementa el nivel de sangría para un bloque de código.
+X> 1. (Medio) Usa la función `sequence` definida en `Data.Traversable` para escribir una función
 X>
 X>     ```haskell
 X>     cat :: Array Doc -> Doc
 X>     ```
 X>
-X>     which concatenates a collection of documents, separating them with new lines.
-X> 1. (Medium) Use the `runReader` function to write a function
+X>     que concatena una colección de documentos, separándolos con nuevas líneas.
+X> 1. (Medio) Usa la función `runReader` para escribir una función
 X>
 X>     ```haskell
 X>     render :: Doc -> String
 X>     ```
 X>
-X>     which renders a document as a String.
+X>     que representa un documento como una `String`.
 X>
-X> You should now be able to use your library to write simple documents, as follows:
+X> Debes ahora ser capaz de usar tu biblioteca para escribir documentos simples como sigue:
 X>
 X> ```haskell
 X> render $ cat
@@ -268,23 +266,23 @@ X>       ]
 X>   ]
 X> ```
 
-## The Writer Monad
+## La mónada Writer
 
-The `Writer` monad provides the ability to accumulate a secondary value in addition to the return value of a computation.
+La mónada `Writer` proporciona la capacidad de acumular un valor secundario además del valor de retorno de un cálculo.
 
-A common use case is to accumulate a log of type `String` or `Array String`, but the `Writer` monad is more general than this. It can actually be used to accumulate a value in any monoid, so it might be used to keep track of an integer total using the `Additive Int` monoid, or to track whether any of several intermediate `Boolean` values were true, using the `Disj Boolean` monoid.
+Un caso de uso común es acumular un registro de mensajes de tipo `String` o `Array String`, pero la mónada `Writer` es más general que esto. Puede de hecho ser usada para acumular un valor en cualquier monoide, de manera que se puede usar para llevar registro de un total entero usando el monoide `Additive Int`, o registrar si alguno de varios valores `Boolean` intermedios era `true` usando el monoide `Disj Boolean`.
 
-The `Writer` type constructor takes two type arguments: a type `w` which should be an instance of the `Monoid` type class, and the return type `a`.
+El constructor de tipo `Writer` toma dos argumentos de tipo. Un tipo `w` que debe ser una instancia de la clase de tipos `Monoid`, y el tipo de retorno `a`.
 
-The key element of the `Writer` API is the `tell` function:
+El elemento clave de la API `Writer` es la función `tell`:
 
 ```haskell
 tell :: forall w a. Monoid w => w -> Writer w Unit
 ```
 
-The `tell` action appends the provided value to the current accumulated result.
+La acción `tell` añade el valor proporcionado al resultado acumulado actual.
 
-As an example, let's add a log to an existing function by using the `Array String` monoid. Consider our previous implementation of the _greatest common divisor_ function:
+Como ejemplo, añadamos un registro de mensajes a una función existente usando el monoide `Array String`. Considera nuestra implementación previa de la función _máximo común divisor_:
 
 ```haskell
 gcd :: Int -> Int -> Int
@@ -295,7 +293,7 @@ gcd n m = if n > m
             else gcd n (m - n)
 ```
 
-We could add a log to this function by changing the return type to `Writer (Array String) Int`:
+Podemos añadir registro de mensajes a esta función cambiando el tipo de retorno a `Writer (Array String) Int`:
 
 ```haskell
 import Control.Monad.Writer
@@ -304,7 +302,7 @@ import Control.Monad.Writer.Class
 gcdLog :: Int -> Int -> Writer (Array String) Int
 ```
 
-We only have to change our function slightly to log the two inputs at each step:
+Sólo tenemos que cambiar ligeramente nuestra función para que registre ambas entradas en cada paso:
 
 ```haskell
 gcd n 0 = pure n
@@ -316,16 +314,16 @@ gcd n m = do
     else gcd n (m - n)
 ```
 
-We can run a computation in the `Writer` monad by using either of the `execWriter` or `runWriter` functions:
+Podemos ejecutar un cálculo en la mónada `Writer` usando las funciones `execWriter` o `runWriter`:
 
 ```haskell
 execWriter :: forall w a. Writer w a -> w
 runWriter  :: forall w a. Writer w a -> Tuple a w
 ```
 
-Just like in the case of the `State` monad, `execWriter` only returns the accumulated log, whereas `runWriter` returns both the log and the result.
+Como en el caso de la mónada `State`, `execWriter` sólo devuelve el registro de mensajes acumulado, mientras que `runWriter` devuelve tanto el registro de mensajes como el resultado.
 
-We can test our modified function in PSCi:
+Podemos probar nuestra función modificada en PSCi:
 
 ```text
 > import Data.Tuple
@@ -338,32 +336,32 @@ We can test our modified function in PSCi:
 Tuple 3 ["gcd 21 15","gcd 6 15","gcd 6 9","gcd 6 3","gcd 3 3"]
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Rewrite the `sumArray` function above using the `Writer` monad and the `Additive Int` monoid from the `purescript-monoid` package.
-X> 1. (Medium) The _Collatz_ function is defined on natural numbers `n` as `n / 2` when `n` is even, and `3 * n + 1` when `n` is odd. For example, the iterated Collatz sequence starting at `10` is as follows:
+X> 1. (Medio) Reescribe la función `sumArray` de antes usando la mónada `Writer` y el monoide `Additive Int` del paquete `purescript-monoid`.
+X> 1. (Medio) La función _Collatz_ está definida en los números naturales `n` como `n / 2` cuando `n` is par, y `3 * n + 1` cuando `n` es impar. Por ejemplo, la secuencia de Collatz iterada comenzando en 10 es como sigue:
 X>
 X>     ```text
 X>     10, 5, 16, 8, 4, 2, 1, ...
 X>     ```
 X>
-X>     It is conjectured that the iterated Collatz sequence always reaches `1` after some finite number of applications of the Collatz function.
+X>     Se conjetura que la función de Collatz iterada siempre llega a `1` después de un número finito de aplicaciones.
 X>
-X>     Write a function which uses recursion to calculate how many iterations of the Collatz function are required before the sequence reaches `1`.
+X>     Escribe una función que usa recursividad para calcular cuántas iteraciones de la función Collatz son necesarias antes de que la secuencia llegue a `1`.
 X>
-X>     Modify your function to use the `Writer` monad to log each application of the Collatz function.
+X>     Modifica tu función para que use la mónada `Writer` para registrar mensajes en cada aplicación de la función Collatz.
 
-## Monad Transformers
+## Transformadores de mónada (monad transformers)
 
-Each of the three monads above: `State`, `Reader` and `Writer`, are also examples of so-called _monad transformers_. The equivalent monad transformers are called `StateT`, `ReaderT`, and `WriterT` respectively.
+Cada una de las tres mónadas anteriores, `State`, `Reader` y `Writer`, son también ejemplos de los llamados _transformadores de mónada_. Los transformadores de mónada equivalentes se llaman `StateT`, `ReaderT`, y `WriterT` respectivamente.
 
-What is a monad transformer? Well, as we have seen, a monad augments PureScript code with some type of side effect, which can be interpreted in PureScript by using the appropriate handler (`runState`, `runReader`, `runWriter`, etc.) This is fine if we only need to use _one_ side-effect. However, it is often useful to use more than one side-effect at once. For example, we might want to use `Reader` together with `Maybe` to express _optional results_ in the context of some global configuration. Or we might want the mutable state provided by the `State` monad together with the pure error tracking capability of the `Either` monad. This is the problem solved by _monad transformers_.
+¿Qué es un transformador de mónada? Como hemos visto, una mónada aumenta el código PureScript con algún tipo de efecto secundario, que se puede interpretar en PureScript usando el gestor apropiado (`runState`, `runReader`, `runWriter`, etc.) Esto está bien si sólo necesitamos usar _un_ efecto secundario. Sin embargo, a menudo es útil usar más de un efecto secundario a la vez. Por ejemplo, podemos querer usar `Reader` junto a `Maybe` para expresar un _resultado opcional_ en el contexto de alguna configuración global. O podemos querer el estado mutable proporcionado por la mónada `State` junto a la capacidad pura de registrar errores de la mónada `Either`. Este es el problema resuelto por los _trasformadores de mónada_.
 
-Note that we have already seen that the `Eff` monad provides a partial solution to this problem, since native effects can be interleaved using the approach of _extensible effects_. Monad transformers provide another solution, and each approach has its own benefits and limitations.
+Fíjate en que ya hemos visto que lo mónada `Eff` proporciona una solución parcial a este problema, ya que les efectos nativos se pueden intercalar usando la estrategia de los _efectos extensibles_. Los transformadores de mónada proporcionan otra solución y cada aproximación tiene sus beneficios y limitaciones.
 
-A monad transformer is a type constructor which is parameterized not only by a type, but by another type constructor. It takes one monad and turns it into another monad, adding its own variety of side-effects.
+Un transformador de mónada es un constructor de tipo que está parametrizado no sólo por un tipo, sino también por un constructor de otro tipo. Toma una mónada y la convierte en otra mónada añadiendo su propia variedad de efectos secundarios.
 
-Let's see an example. The monad transformer version of the `State` monad is `StateT`, defined in the `Control.Monad.State.Trans` module. We can find the kind of `StateT` using PSCi:
+Veamos un ejemplo. La version transformadora de mónada de la mónada `State` es `StateT`, definida en el módulo `Control.Monad.State.Trans`. Podemos averiguar la familia de `StateT` usando PSCi:
 
 ```text
 > import Control.Monad.State.Trans
@@ -371,43 +369,43 @@ Let's see an example. The monad transformer version of the `State` monad is `Sta
 * -> (* -> *) -> * -> *
 ```
 
-This looks quite confusing, but we can apply `StateT` one argument at a time to understand how to use it.
+Esto parece bastante confuso, pero podemos aplicar a `StateT` un argumento cada vez para entender cómo usarlo.
 
-The first type argument is the type of the state we wish to use, as was the case for `State`. Let's use a state of type `String`:
+El primer argumento de tipo es el tipo de estado que queremos usar, como en el caso de `State`. Intentemos usar un estado de tipo `String`:
 
 ```text
 > :kind StateT String
 (* -> *) -> * -> *
 ```
 
-The next argument is a type constructor of kind `* -> *`. It represents the underlying monad, which we want to add the effects of `StateT` to. For the sake of an example, let's choose the `Either String` monad:
+El siguiente argumento es un constructor de tipo con familia `* -> *`. Representa la mónada subyacente a la que queremos añadir los efectos de `StateT`. Como ejemplo elijamos la mónada `Either String`:
 
 ```text
 > :kind StateT String (Either String)
 * -> *
 ```
 
-We are left with a type constructor. The final argument represents the return type, and we might instantiate it to `Number` for example:
+Nos queda un constructor de tipo. El argumento final representa el tipo de retorno, y podemos instanciarlo a `Number` por ejemplo:
 
 ```text
 > :kind StateT String (Either String) Number
 *
 ```
 
-Finally we are left with something of kind `*`, which means we can try to find values of this type.
+Finalmente nos queda algo con familia `*`, que significa que ya podemos intentar buscar valores de este tipo.
 
-The monad we have constructed - `StateT String (Either String)` - represents computations which can fail with an error, and which can use mutable state.
+La mónada que hemos construido (`StateT String (Either String)`) representa cálculos que pueden fallar con un error y que pueden usar estado mutable.
 
-We can use the actions of the outer `StateT String` monad (`get`, `put`, and `modify`) directly, but in order to use the effects of the wrapped monad (`Either String`), we need to "lift" them over the monad transformer. The `Control.Monad.Trans` module defines the `MonadTrans` type class, which captures those type constructors which are monad transformers, as follows:
+Podemos usar las acciones de la mónada externa `StateT String` (`get`, `put`, y `modify`) directamente, pero para usar los efectos de la mónada envuelta (`Either String`) necesitamos "elevarlas" sobre el transformador de mónada. El módulo `Control.Monad.Trans` define la clase de tipos `MonadTrans` que captura los constructores de tipo que son transformadores de mónada como sigue:
 
 ```haskell
 class MonadTrans t where
   lift :: forall m a. Monad m => m a -> t m a
 ```
 
-This class contains a single member, `lift`, which takes computations in any underlying monad `m` and lifts them into the wrapped monad `t m`. In our case, the type constructor `t` is `StateT String`, and `m` is the `Either String` monad, so `lift` provides a way to lift computations of type `Either String a` to computations of type `StateT String (Either String) a`. This means that we can use the effects of `StateT String` and `Either String` side-by-side, as long as we use `lift` every time we use a computation of type `Either String a`.
+Esta clase contiene un único miembro, `lift`, que toma cálculos en cualquier mónada subyacente `m` y los eleva a la mónada envuelta `t m`. En nuestro caso, el constructor de tipo `t` es `StateT String`, y `m` es la mónada `Either String`, de manera que `lift` proporciona una manera de elevar cálculos de tipo `Either String a` a cálculos de tipo `StateT String (Either String) a`. Esto significa que podemos usar los efectos de `StateT String` y `Either String` uno al lado del otro, siempre y cuando usemos `lift` cada vez que usamos un cálculo de tipo `Either String a`.
 
-For example, the following computation reads the underlying state, and then throws an error if the state is the empty string:
+Por ejemplo, el siguiente cálculo lee el estado subyacente y devuelve un error si el estado es la cadena vacía:
 
 ```haskell
 import Data.String (drop, take)
@@ -422,9 +420,9 @@ split = do
       pure (take 1 s)
 ```
 
-If the state is not empty, the computation uses `put` to update the state to `drop 1 s` (that is, `s` with the first character removed), and returns `take 1 s` (that is, the first character of `s`).
+Si el estado no está vacío, el cálculo usa `put` para actualizar el estado a `drop 1 s` (esto es, `s` quitando el primer carácter), y devuelve `take 1 s` (esto es, el primer carácter de `s`).
 
-Let's try this in PSCi:
+Probémoslo en PSCi:
 
 ```text
 > runStateT split "test"
@@ -434,18 +432,18 @@ Right (Tuple "t" "est")
 Left "Empty string"
 ```
 
-This is not very remarkable, since we could have implemented this without `StateT`. However, since we are working in a monad, we can use do notation or applicative combinators to build larger computations from smaller ones. For example, we can apply `split` twice to read the first two characters from a string:
+Esto no es muy destacable, ya que podríamos haberlo implementado sin `StateT`. Sin embargo, como estamos trabajando en una mónada, podemos usar notación do o combinadores aplicativos para construir cálculos más grandes a partir de cálculos más pequeños. Por ejemplo, podemos aplicar `split` dos veces para leer los dos primeros caracteres de una cadena:
 
 ```text
 > runStateT ((<>) <$> split <*> split) "test"
 (Right (Tuple "te" "st"))
 ```
 
-We can use the `split` function with a handful of other actions to build a basic parsing library. In fact, this is the approach taken by the `purescript-parsing` library. This is the power of monad transformers - we can create custom-built monads for a variety of problems, choosing the side-effects that we need, and keeping the expressiveness of do notation and applicative combinators.
+Podemos usar la función `split` junto a otras cuantas acciones para construir una biblioteca de análisis básica. De hecho, este es el método usado por la biblioteca `purescript-parsing`. Esta es la potencia de los transformadores de mónadas; podemos crear mónadas a medida para una variedad de problemas, elegiendo los efectos secundarios que necesitamos y manteniendo la expresividad de la notación do y los combinadores aplicativos.
 
-## The ExceptT Monad Transformer
+## El transformador de mónada ExceptT
 
-The `purescript-transformers` package also defines the `ExceptT e` monad transformer, which is the transformer corresponding to the `Either e` monad. It provides the following API:
+El paquete `purescript-transformers` define también el transformador de mónada `ExceptT e`, que es el transformador correspondiente a la mónada `Either e`. Proporciona la siguiente API:
 
 ```haskell
 class MonadError e m where
@@ -457,16 +455,16 @@ instance monadErrorExceptT :: Monad m => MonadError e (ExceptT e m)
 runExceptT :: forall e m a. ExceptT e m a -> m (Either e a)
 ```
 
-The `MonadError` class captures those monads which support throwing and catching of errors of some type `e`, and an instance is provided for the `ExceptT e` monad transformer. The `throwError` action can be used to indicate failure, just like `Left` in the `Either e` monad. The `catchError` action allows us to continue after an error is thrown using `throwError`.
+La clase `MonadError` captura aquellas mónadas que soportan lanzar y cazar errores de algún tipo `e`, y proporciona una instancia para el transformador de mónada `ExceptT e`. La acción `throwError` se puede usar para indicar fallo, igual que `Left` en la mónada `Either e`. La acción `catchError` nos permite continuar tras lanzar un error usando `throwError`.
 
-The `runExceptT` handler is used to run a computation of type `ExceptT e m a`.
+El gestor `runExceptT` se usa para ejecutar cálculos de tipo `ExceptT e m a`.
 
-This API is similar to that provided by the `purescript-exceptions` package and the `Exception` effect. However, there are some important differences:
+Esta API es similar a la proporcionada por el paquete `purescript-exceptions` y el efecto `Exception`. Sin embargo hay diferencias importantes:
 
-- `Exception` uses actual JavaScript exceptions, whereas `ExceptT` models errors as a pure data structure.
-- The `Exception` effect only supports exceptions of one type, namely JavaScript's `Error` type, whereas `ExceptT` supports errors of type. In particular, we are free to define new error types.
+- `Exception` usa excepciones JavaScript mientras que `ExceptT` modela los errores como una estructura de datos pura
+- El efecto `Exception` sólo soporta excepciones de un tipo, el tipo `Error` de JavaScript, mientras que `ExceptT` soporta errores de cualquier tipo. En particular, somos libres de definir nuevos tipos de error.
 
-Let's try out `ExceptT` by using it to wrap the `Writer` monad. Again, we are free to use actions from the monad transformer `ExceptT e` directly, but computations in the `Writer` monad should be lifted using `lift`:
+Probemos `ExceptT` usándolo para envolver la mónada `Writer`. De nuevo, somos libres de usar acciones del transformador de mónada `ExceptT e` directamente, pero los cálculos en la mónada `Writer` deben elevarse usando `lift`:
 
 ```haskell
 import Control.Monad.Trans
@@ -483,24 +481,24 @@ writerAndExceptT = do
   pure "Return value"
 ```
 
-If we test this function in PSCi, we can see how the two effects of accumulating a log and throwing an error interact. First, we can run the outer `ExceptT` computation of type by using `runExceptT`, leaving a result of type `Writer String (Either String String)`. We can then use `runWriter` to run the inner `Writer` computation:
+Si probamos esta función en PSCi, podemos ver cómo los dos efectos de acumular un registro de mensajes y lanzar errores interactúan. Primero, podemos ejecutar el cálculo externo `ExceptT` usando `runExceptT`, devolviendo un resultado de tipo `Writer String (Either String String)`. Podemos entonces usar `runWriter` para ejecutar el cálculo interno `Writer`:
 
 ```text
 > runWriter $ runExceptT writerAndExceptT
 Tuple (Left "Error!") ["Before the error"]
 ```
 
-Note that only those log messages which were written before the error was thrown actually get appended to the log.
+Fíjate en que sólo los mensajes escritos antes de que se lanzase el error han sido añadidos al registro.
 
-## Monad Transformer Stacks
+## Pilas de transformadores de mónada (monad transformer stacks)
 
-As we have seen, monad transformers can be used to build new monads on top of existing monads. For some monad transformer `t1` and some monad `m`, the application `t1 m` is also a monad. That means that we can apply a _second_ monad transformer `t2` to the result `t1 m` to construct a third monad `t2 (t1 m)`. In this way, we can construct a _stack_ of monad transformers, which combine the side-effects provided by their constituent monads.
+Como hemos visto, los transformadores de mónada se pueden usar para construir nuevas mónadas sobre mónadas existentes. Para algún transformador de mónada `t1` y alguna mónada `m`, la aplicación `t1 m` es también una mónada. Esto significa que podemos aplicar un _segundo_ transformador de mónada `t2` al resultado `t1 m` para construir una tercera mónada `t2 (t1 m)`. De esta forma, podemos construir una _pila_ de transformadores de mónada que pueden combinar los efectos secundarios proporcionados por sus mónadas constituyentes.
 
-In practice, the underlying monad `m` is either the `Eff` monad, if native side-effects are required, or the `Identity` monad, defined in the `Data.Identity` module. The `Identity` monad adds no new side-effects, so transforming the `Identity` monad only provides the effects of the monad transformer. In fact, the `State`, `Reader` and `Writer` monads are implemented by transforming the `Identity` monad with `StateT`, `ReaderT` and `WriterT` respectively.
+En la práctica, la mónada subyacente `m` es o bien la mónada `Eff` si se requieren efectos secundarios nativos, o la mónada `Identity` definida en el módulo `Data.Identity`. La mónada `Identity` no añade efectos secundarios nuevos, de manera que transformar la mónada `Identity` sólo proporciona los efectos del transformador de mónada. De hecho, las mónadas `State`, `Reader` y `Writer` se implementan transformando la mónada `Identity` con `StateT`, `ReaderT` y `WriterT` respectivamente.
 
-Let's see an example in which three side effects are combined. We will use the `StateT`, `WriterT` and `ExceptT` effects, with the `Identity` monad on the bottom of the stack. This monad transformer stack will provide the side effects of mutable state, accumulating a log, and pure errors.
+Veamos un ejemplo en el que combinamos tres efectos secundarios. Usaremos los efectos `StateT`, `WriterT` y `ExceptT`, con la mónada `Identity` en la base de la pila. Esta pila de transformadores de mónada proporcionará los efectos secundarios de estado mutable, llevar un registro de mensajes y errores puros.
 
-We can use this monad transformer stack to reproduce our `split` action with the added feature of logging.
+Podemos usar esta pila de transformadores de mónada para reproducir nuestra acción `split` con la capacidad añadida de registrar mensajes.
 
 ```haskell
 type Errors = Array String
@@ -520,9 +518,9 @@ split = do
       pure (take 1 s)
 ```
 
-If we test this computation in PSCi, we see that the state is appended to the log for every invocation of `split`.
+Si probamos este cálculo en PSCi vemos que el estado se añade al registro de mensajes para cada invocación de `split`.
 
-Note that we have to remove the side-effects in the order in which they appear in the monad transformer stack: first we use `runStateT` to remove the `StateT` type constructor, then `runWriterT`, then `runExceptT`. Finally, we run the computation in the `Identity` monad by using `runIdentity`.
+Date cuenta de que tenemos que eliminar los efectos secundarios en el orden en que aparecen en la pila de transformadores de mónada: primero usamos `runStateT` para quitar el constructor de tipo `StateT`, luego `runWriterT`, y a continuación `runExceptT`. Finalmente, ejecutamos el cálculo en la mónada `Identity` usando `runIdentity`.
 
 ```text
 > let runParser p s = runIdentity $ runExceptT $ runWriterT $ runStateT p s
@@ -534,45 +532,45 @@ Note that we have to remove the side-effects in the order in which they appear i
 (Right (Tuple (Tuple "te" "st") ["The state is test", "The state is est"]))
 ```
 
-However, if the parse is unsuccessful because the state is empty, then no log is printed at all:
+Sin embargo, si el análisis no tiene éxito porque el estado está vacío no se registra ningún mensaje:
 
 ```text
 > runParser split ""
 (Left ["Empty string"])
 ```
 
-This is because of the way in which the side-effects provided by the `ExceptT` monad transformer interact with the side-effects provided by the `WriterT` monad transformer. We can address this by changing the order in which the monad transformer stack is composed. If we move the `ExceptT` transformer to the top of the stack, then the log will contain all messages written up until the first error, as we saw earlier when we transformed `Writer` with `ExceptT`.
+Esto se debe a la forma en que los efectos secundarios suministrados por el transformador de mónada `ExceptT` interactúa con los efectos secundarios proporcionados por el transformador de mónada `WriterT`. Podemos abordar esto cambiando el orden en que componemos la pila de transformadores de mónada. Si movemos el transformador `ExceptT` al tope de la pila, el registro de mensajes contendrá todos los mensajes escritos hasta el primer error, como vimos previamente cuando transformamos `Writer` con `ExceptT`.
 
-One problem with this code is that we have to use the `lift` function multiple times to lift computations over multiple monad transformers: for example, the call to `throwError` has to be lifted twice, once over `WriterT` and a second time over `StateT`. This is fine for small monad transformer stacks, but quickly becomes inconvenient.
+Un problema con este código es que tenemos que usar la función `lift` múltiples veces para elevar cálculos sobre múltiples transformadores de mónada: por ejemplo, la llamada a `throwError` tiene que elevarse dos veces, una vez sobre `WriterT` y una segunda vez sobre `StateT`. Esto está bien para pequeñas pilas de transformadores de mónada, pero se vuelve molesto rápidamente.
 
-Fortunately, as we will see, we can use the automatic code generation provided by type class inference to do most of this "heavy lifting" for us.
+Afortunadamente, como veremos, podemos usar la generación automática de código proporcionada por la inferencia de clases de tipo para hacer la mayor parte de este "levantamiento pesado" por nosotros.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use the `ExceptT` monad transformer over the `Identity` functor to write a function `safeDivide` which divides two numbers, throwing an error if the denominator is zero.
-X> 1. (Medium) Write a parser
+X> 1. (Fácil) Usa el transformador de mónada `ExceptT` sobre el funtor `Identity` para escribir una función `safeDivide` que divide dos números, lanzando un error si el denominador es cero.
+X> 1. (Medio) Escribe un analizador
 X>
 X>     ```haskell
 X>     string :: String -> Parser String
 X>     ```
 X>
-X>     which matches a string as a prefix of the current state, or fails with an error message.
+X>     que se ajuste a una cadena como prefijo del estado actual o falle con un mensaje de error.
 X>
-X>     Your parser should work as follows:
+X>     Tu analizador debe funcionar como sigue:
 X>
 X>     ```text
 X>     > runParser (string "abc") "abcdef"
 X>     (Right (Tuple (Tuple "abc" "def") ["The state is abcdef"]))
 X>     ```
 X>
-X>     _Hint_: you can use the implementation of `split` as a starting point. You might find the `stripPrefix` function useful.
-X> 1. (Difficult) Use the `ReaderT` and `WriterT` monad transformers to reimplement the document printing library which we wrote earlier using the `Reader` monad.
+X>     _Pista_: puedes usar la implementación de `split` como punto de partida. Puede que encuentres útil la función `stripPrefix`.
+X> 1. (Difícil) Usa los transformadores de mónada `ReaderT` y `WriterT` para reimplementar la biblioteca de impresión de documentos que escribimos previamente usando la mónada `Reader`.
 X>
-X>     Instead of using `line` to emit strings and `cat` to concatenate strings, use the `Array String` monoid with the `WriterT` monad transformer, and `tell` to append a line to the result.
+X>     En lugar de usar `line` para emitir cadenas y `cat` para concatenar cadenas, usa el monoide `Array String` con el transformador de mónada `WriterT`, y usa `tell` para añadir una línea al resultado.
 
-## Type Classes to the Rescue!
+## ¡Clases de tipos al rescate!
 
-When we looked at the `State` monad at the start of this chapter, I gave the following types for the actions of the `State` monad:
+Cuando vimos la mónada `State` al comienzo del capítulo, di los siguientes tipos a las acciones de la mónada `State`:
 
 ```haskell
 get    :: forall s.             State s s
@@ -580,7 +578,7 @@ put    :: forall s. s        -> State s Unit
 modify :: forall s. (s -> s) -> State s Unit
 ```
 
-In reality, the types given in the `Control.Monad.State.Class` module are more general than this:
+En realidad, los tipos dados en el módulo `Control.Monad.State.Class` son más generales que eso:
 
 ```haskell
 get    :: forall m s. (MonadState s m) =>             m s
@@ -588,13 +586,13 @@ put    :: forall m s. (MonadState s m) => s        -> m Unit
 modify :: forall m s. (MonadState s m) => (s -> s) -> m Unit
 ```
 
-The `Control.Monad.State.Class` module defines the `MonadState` (multi-parameter) type class, which allows us to abstract over "monads which support pure mutable state". As one would expect, the `State s` type constructor is an instance of the `MonadState s` type class, but there are many more interesting instances of this class.
+El módulo `Control.Monad.State.Class` define la clase de tipos (multiparámetro) `MonadState`, que nos permite abstraer sobre "mónadas que soportan estado puro mutable". Como cabe esperar, el constructor de tipo `State s` es una instancia de la clase de tipos `MonadState s`, pero hay más instancias interesantes de esta clase.
 
-In particular, there are instances of `MonadState` for the `WriterT`, `ReaderT` and `ExceptT` monad transformers, provided in the `purescript-transformers` package. Each of these monad transformers has an instance for `MonadState` whenever the underlying `Monad` does. In practice, this means that as long as `StateT` appears _somewhere_ in the monad transformer stack, and everything above `StateT` is an instance of `MonadState`, then we are free to use `get`, `put` and `modify` directly, without the need to use `lift`.
+En particular, hay instancias de `MonadState` para los transformadores de mónada `WriterT`, `ReaderT` y `ExceptT` proporcionados en el paquete `purescript-transformers`. Cada uno de estos transformadores de mónada tiene una instancia de `MonadState` cuando la `Monad` subyacente la tenga. En la práctica, esto significa que siempre y cuando `StateT` aparezca _en algún sitio_ de la pila de transformadores de mónada, y todo lo que haya por encima de `StateT` sea una instancia de `MonadState`, somos libres de usar `get`, `put` y `modify` directamente sin usar `lift`.
 
-Indeed, the same is true of the actions we covered for the `ReaderT`, `WriterT`, and `ExceptT` transformers. `purescript-transformers` defines a type class for each of the major transformers, allowing us to abstract over monads which support their operations.
+De hecho, lo mismo es cierto para las acciones que hemos visto para los transformadores `ReaderT`, `WriterT` y `ExceptT`. `purescript-transformers` define una clase de tipos para cada uno de los transformadores principales, permitiéndonos abstraer sobre mónadas que soportan sus operaciones.
 
-In the case of the `split` function above, the monad stack we constructed is an instance of each of the `MonadState`, `MonadWriter` and `MonadError` type classes. This means that we don't need to call `lift` at all! We can just use the actions `get`, `put`, `tell` and `throwError` as if they were defined on the monad stack itself:
+En el caso de la función `split` de arriba, la pila de mónadas que construimos es una instancia de cada una de las clases de tipos `MonadState`, `MonadWriter` y `MonadError`. ¡Esto significa que no necesitamos llamar a `lift` para nada! Podemos simplemente usar las acciones `get`, `put`, `tell` y `throwError` como si estuviesen definidas en la misma pila de mónadas:
 
 ```haskell
 split :: Parser String
@@ -608,11 +606,11 @@ split = do
       pure (take 1 s)
 ```
 
-This computation really looks like we have extended our programming language to support the three new side-effects of mutable state, logging and error handling. However, everything is still implemented using pure functions and immutable data under the hood.
+Parece como si realmente hubiésemos extendido nuestro lenguaje de programación para soportar los tres efectos secundarios de estado mutable, registro de mensajes y gestión de errores. Sin embargo, todo está implementado usando funciones puras y estado inmutable bajo el capó.
 
-## Alternatives
+## Alternativas
 
-The `purescript-control` package defines a number of abstractions for working with computations which can fail. One of these is the `Alternative` type class:
+El paquete `purescript-control` define un número de abstracciones para trabajar con cálculos que pueden fallar. Una de estas es la clase de tipos `Alternative`:
 
 ```haskell
 class Functor f <= Alt f where
@@ -624,18 +622,18 @@ class Alt f <= Plus f where
 class (Applicative f, Plus f) <= Alternative f
 ```
 
-`Alternative` provides two new combinators: the `empty` value, which provides a prototype for a failing computation, and the `alt` function (and its alias, `<|>`) which provides the ability to fall back to an _alternative_ computation in the case of an error.
+`Alternative` proporciona dos nuevos combinadores: el valor `empty` que proporciona un prototipo para un cálculo fallido, y la función `alt` (y su sinónimo `<|>`) que proporciona la capacidad de recurrir a un cálculo _alternativo_ en caso de error.
 
-The `Data.List` module provides two useful functions for working with type constructors in the `Alternative` type class:
+El módulo `Data.List` proporciona dos funciones útiles para trabajar con constructores de tipo de la clase de tipos `Alternative`:
 
 ```haskell
 many :: forall f a. (Alternative f, Lazy (f (List a))) => f a -> f (List a)
 some :: forall f a. (Alternative f, Lazy (f (List a))) => f a -> f (List a)
 ```
 
-The `many` combinator uses the `Alternative` type class to repeatedly run a computation _zero-or-more_ times. The `some` combinator is similar, but requires at least the first computation to succeed.
+El combinador `many` usa la clase de tipos `Alternative` para ejecutar repetidamente un cálculo _cero o más_ veces. El combinador `some` es similar, pero requiere que al menos el primer cálculo tenga éxito.
 
-In the case of our `Parser` monad transformer stack, there is an instance of `Alternative` induced by the `ExceptT` component, which supports failure by composing errors in different branches using a `Monoid` instance (this is why we chose `Array String` for our `Errors` type). This means that we can use the `many` and `some` functions to run a parser multiple times:
+En el caso de nuestra pila de transformadores de mónada `Parser`, hay una instancia de `Alternative` inducida por la componente `ExceptT`, que soporta fallo mediante composición de errores en diferentes ramas usando una instancia `Monoid` (esto es por lo que elegimos `Array String` para nuestro tipo `Errors`). Esto significa que podemos usar las funciones `many` y `some` para ejecutar un analizador múltiples veces:
 
 ```text
 > import Split
@@ -650,13 +648,13 @@ In the case of our `Parser` monad transformer stack, there is an instance of `Al
               ]))
 ```
 
-Here, the input string `"test"` has been repeatedly split to return an array of four single-character strings, the leftover state is empty, and the log shows that we applied the `split` combinator four times.
+Aquí, la cadena de entrada `"test"` se ha partido repetidamente para devolver un array de cuatro cadenas con un único carácter, el estado resultante está vacío, y el registro muestra que hemos aplicado el combinador `split` cuatro veces.
 
-Other examples of `Alternative` type constructors are `Maybe` and `Array`.
+Otros ejemplos de constructores de tipo `Alternative` son `Maybe` y `Array`.
 
-## Monad Comprehensions
+## Mónadas por comprensión
 
-The `Control.MonadPlus` module defines a subclass of the `Alternative` type class, called `MonadPlus`. `MonadPlus` captures those type constructors which are both monads and instances of `Alternative`:
+El módulo `Control.MonadPlus` define una subclase de la clase de tipos `Alternative` llamada `MonadPlus`. `MonadPlus` captura los constructores de tipo que son mónadas e instancias de `Alternative`:
 
 ```haskell
 class (Monad m, Alternative m) <= MonadZero m
@@ -664,15 +662,15 @@ class (Monad m, Alternative m) <= MonadZero m
 class MonadZero m <= MonadPlus m
 ```
 
-In particular, our `Parser` monad is an instance of `MonadPlus`.
+En particular, nuestra mónada `Parser` es instancia de `MonadPlus`.
 
-When we covered array comprehensions earlier in the book, we introduced the `guard` function, which could be used to filter out unwanted results. In fact, the `guard` function is more general, and can be used for any monad which is an instance of `MonadPlus`:
+Cuando vimos los arrays por comprensión presentamos la función `guard`, que se puede usar para eliminar resultados no deseados. De hecho, la función `guard` es más general y se puede usar para cualquier mónada que sea una instancia de `MonadPlus`:
 
 ```haskell
 guard :: forall m. MonadZero m => Boolean -> m Unit
 ```
 
-The `<|>` operator allows us to backtrack in case of failure. To see how this is useful, let's define a variant of the `split` combinator which only matches upper case characters:
+El operador `<|>` nos permite volver hacia atrás en caso de fallo. Para ver cómo es útil esto, definamos una variante del combinador `split` que sólo detecta mayúsculas:
 
 ```haskell
 upper :: Parser String
@@ -682,11 +680,11 @@ upper = do
   pure s
 ```
 
-Here, we use a `guard` to fail if the string is not upper case. Note that this code looks very similar to the array comprehensions we saw earlier - using `MonadPlus` in this way, we sometimes refer to constructing _monad comprehensions_.
+Aquí hemos usado `guard` para fallar si la cadena no está en mayúsculas. Fíjate en que este código es muy similar a los arrays por comprensión que vimos antes. Cuando usamos `MonadPlus` de esta forma, decimos que estamos construyendo _mónadas por comprensión_.
 
-## Backtracking
+## Retroceso (backtracking)
 
-We can use the `<|>` operator to backtrack to another alternative in case of failure. To demonstrate this, let's define one more parser, which matches lower case characters:
+Podemos usar el operador `<|>` para retroceder a otra alternativa en caso de fallo. Para demostrarlo, definamos otro analizador que busca caracteres minúsculos:
 
 ```haskell
 lower :: Parser String
@@ -696,13 +694,13 @@ lower = do
   pure s
 ```
 
-With this, we can define a parser which eagerly matches many upper case characters if the first character is upper case, or many lower case character if the first character is lower case:
+Con esto, podemos definir un analizador que ajusta ávidamente muchas mayúsculas si el primer carácter es mayúscula, o muchas minúsculas si el primer carácter es minúscula:
 
 ```text
 > let upperOrLower = some upper <|> some lower
 ```
 
-This parser will match characters until the case changes:
+Este analizador encontrará coincidencias hasta que cambiemos de mayúsculas a minúsculas o viceversa:
 
 ```text
 > runParser upperOrLower "abcDEF"
@@ -713,7 +711,7 @@ This parser will match characters until the case changes:
               ]))
 ```
 
-We can even use `many` to fully split a string into its lower and upper case components:
+Podemos incluso usar `many` para partir una cadena por completo en sus componentes mayúsculas y minúsculas:
 
 ```text
 > let components = many upperOrLower
@@ -731,38 +729,38 @@ We can even use `many` to fully split a string into its lower and upper case com
               ]))
 ```
 
-Again, this illustrates the power of reusability that monad transformers bring - we were able to write a backtracking parser in a declarative style with only a few lines of code, by reusing standard abstractions!
+De nuevo, esto ilustra la potencia de reutilización que proporcionan los transformadores de mónada. ¡Hemos sido capaces de escribir un analizador con retroceso en estilo declarativo con sólo unas pocas líneas de código reutilizando abstracciones estándar!
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Remove the calls to the `lift` function from your implementation of the `string` parser. Verify that the new implementation type checks, and convince yourself that it should.
-X> 1. (Medium) Use your `string` parser with the `many` combinator to write a parser which recognizes strings consisting of several copies of the string `"a"` followed by several copies of the string `"b"`.
-X> 1. (Medium) Use the `<|>` operator to write a parser which recognizes strings of the letters `a` or `b` in any order.
-X> 1. (Difficult) The `Parser` monad might also be defined as follows:
+X> 1. (Fácil) Elimina las llamadas a `lift` de tu implementación del analizador `string`. Verifica que la nueva implementación pasa la comprobación de tipos y convéncete de que debe.
+X> 1. (Medio) Usa tu analizador `string` con el combinador `many` para escribir un analizador que reconozca cadenas consistentes en varias copias de la cadena `"a"` seguidas de varias copias de la cadena `"b"`.
+X> 1. (Medio) Usa el operador `<|>` para escribir un analizador que reconozca cadenas con las letras `a` o `b` en cualquier orden.
+X> 1. (Difícil) La mónada `Parser` se puede definir también como sigue:
 X>
 X>     ```haskell
 X>     type Parser = ExceptT Errors (StateT String (WriterT Log Identity))
 X>     ```
 X>
-X>     What effect does this change have on our parsing functions?
+X>     ¿Qué efecto tiene este cambio en nuestras funciones analizadoras?
 
-## The RWS Monad
+## La mónada RWS
 
-One particular combination of monad transformers is so common that it is provided as a single monad transformer in the `purescript-transformers` package. The `Reader`, `Writer` and `State` monads are combined into the _reader-writer-state_ monad, or more simply the `RWS` monad. This monad has a corresponding monad transformer called the `RWST` monad transformer.
+Hay una combinación concreta de transformadores de mónada tan común que se proporciona como un transformador único en el paquete `purescript-transformers`. Las mónadas `Reader`, `Writer` y `State` se combinan para formar la mónada _reader-writer-state_, o simplemente la mónada `RWS`. Esta mónada tiene un transformador de mónada correspondiente llamado transformador de mónada `RWST`.
 
-We will use the `RWS` monad to model the game logic for our text adventure game.
+Usaremos la mónada `RWS` para modelar la lógica del juego de nuestro juego de aventuras textual.
 
-The `RWS` monad is defined in terms of three type parameters (in addition to its return type):
+La mónada `RWS` está definida por tres parámetros de tipo (además de su valor de retorno):
 
 ```haskell
 type RWS r w s = RWST r w s Identity
 ```
 
-Notice that the `RWS` monad is defined in terms of its own monad transformer, by setting the base monad to `Identity` which provides no side-effects.
+Fíjate en que la mónada `RWS` está definida en términos de su propio transformador de mónada, fijando la mónada base a `Identity` que no tiene efectos secundarios.
 
-The first type parameter, `r`, represents the global configuration type. The second, `w`, represents the monoid which we will use to accumulate a log, and the third, `s` is the type of our mutable state.
+El primer parámetro de tipo, `r`, representa el tipo de la configuración global. El segundo, `w`, representa el monoide que usaremos para acumular un registro de mensajes, y el tercero, `s`, es el tipo de nuestro estado mutable.
 
-In the case of our game, our global configuration is defined in a type called `GameEnvironment` in the `Data.GameEnvironment` module:
+En el caso de nuestro juego, nuestra configuración global está definida en un tipo llamada `GameEnvironment` en el módulo `Data.GameEnvironment`:
 
 ```haskell
 type PlayerName = String
@@ -773,9 +771,9 @@ newtype GameEnvironment = GameEnvironment
   }
 ```
 
-It defines the player name, and a flag which indicates whether or not the game is running in debug mode. These options will be set from the command line when we come to run our monad transformer.
+Define el nombre del jugador y un indicador de si estamos ejecutando el juego en modo de depuración. Estas opciones se fijarán desde la línea de comandos cuando vayamos a ejecutar nuestro transformador de mónada.
 
-The mutable state is defined in a type called `GameState` in the `Data.GameState` module:
+El estado mutable está definido en un tipo llamado `GameState` del módulo `Data.GameState`:
 
 ```haskell
 import qualified Data.Map as M
@@ -788,19 +786,19 @@ newtype GameState = GameState
   }
 ```
 
-The `Coords` data type represents points on a two-dimensional grid, and the `GameItem` data type is an enumeration of the items in the game:
+El tipo de datos `Coords` representa puntos en una rejilla bidimensional, y el tipo de datos `GameItem` es una enumeración de los objetos del juego:
 
 ```haskell
 data GameItem = Candle | Matches
 ```
 
-The `GameState` type uses two new data structures: `Map` and `Set`, which represent sorted maps and sorted sets respectively. The `items` property is a mapping from coordinates of the game grid to sets of game items at that location. The `player` property stores the current coordinates of the player, and the `inventory` property stores a set of game items currently held by the player.
+El tipo `GameState` usa dos nuevas estructuras de datos: `Map` y `Set`, que representan asociaciones ordenadas y conjuntos ordenados respectivamente. La propiedad `items` es un mapeo de coordenadas en la rejilla del juego a conjuntos de objetos del juego en esa ubicación. La propiedad `player` almacena la ubicación actual del jugador, y la propiedad `inventory` almacena el conjunto de objetos del juego acarreados por el jugador.
 
-The `Map` and `Set` data structures are sorted by their keys, can be used with any key type in the `Ord` type class. This means that the keys in our data structures should be totally ordered.
+Las estructuras de datos `Map` y `Set` están ordenadas por sus claves, que pueden ser cualquier tipo en la clase de tipos `Ord`. Esto significa que las claves de nuestras estructuras de datos deben estar completamente ordenadas.
 
-We will see how the `Map` and `Set` structures are used as we write the actions for our game.
+Veremos cómo las estructuras `Map` y `Set` se usan para escribir las acciones de nuestro juego.
 
-For our log, we will use the `List String` monoid. We can define a type synonym for our `Game` monad, implemented using `RWS`:
+Para nuestro registro de mensajes usaremos el monoide `List String`. Podemos definir un sinónimo de tipo para nuestra mónada `Game` implementada mediante `RWS`:
 
 ```haskell
 type Log = L.List String
@@ -808,11 +806,11 @@ type Log = L.List String
 type Game = RWS GameEnvironment Log GameState
 ```
 
-## Implementing Game Logic
+## Implementando la lógica del juego
 
-Our game is going to be built from simple actions defined in the `Game` monad, by reusing the actions from the `Reader`, `Writer` and `State` monads. At the top level of our application, we will run the pure computations in the `Game` monad, and use the `Eff` monad to turn the results into observable side-effects, such as printing text to the console.
+Vamos a construir nuestro juego a partir de acciones simples definidas en la mónada `Game`, reutilizando acciones de las mónadas `Reader`, `Writer` y `State`. En el nivel superior de nuestra aplicación, ejecutaremos los cálculos puros en la mónada `Game` y usaremos la mónada `Eff` para convertir los resultados en efectos secundarios observables como imprimir texto en la consola.
 
-One of the simplest actions in our game is the `has` action. This action tests whether the player's inventory contains a particular game item. It is defined as follows:
+Una de las acciones más simples de nuestro juego es la acción `has`. Esta acción comprueba si el inventario del jugador contiene un objeto del juego concreto. Se define como sigue:
 
 ```haskell
 has :: GameItem -> Game Boolean
@@ -821,9 +819,9 @@ has item = do
   pure $ item `S.member` state.inventory
 ```
 
-This function uses the `get` action defined in the `MonadState` type class to read the current game state, and then uses the `member` function defined in `Data.Set` to test whether the specified `GameItem` appears in the `Set` of inventory items.
+La función usa la acción `get` de la clase de tipos `MonadState` para leer el estado actual del juego y luego usa la función `member` definida en `Data.Set` para comprobar si el `GameItem` especificado aparece en el `Set` de objetos del inventario.
 
-Another action is the `pickUp` action. It adds a game item to the player's inventory if it appears in the current room. It uses actions from the `MonadWriter` and `MonadState` type classes. First of all, it reads the current game state:
+Otra acción es `pickUp`. Añade un objeto del juego al inventario del jugador si está en la habitación actual. Usa acciones de las clases de tipos `MonadWriter` y `MonadState`. Primero lee el estado actual del juego:
 
 ```haskell
 pickUp :: GameItem -> Game Unit
@@ -831,21 +829,21 @@ pickUp item = do
   GameState state <- get
 ```
 
-Next, `pickUp` looks up the set of items in the current room. It does this by using the `lookup` function defined in `Data.Map`:
+A continuación, `pickUp` busca el conjunto de objetos en la habitación actual. Lo hace usando la función `lookup` definida en `Data.Map`:
 
 ```haskell
   case state.player `M.lookup` state.items of
 ```
 
-The `lookup` function returns an optional result indicated by the `Maybe` type constructor. If the key does not appear in the map, the `lookup` function returns `Nothing`, otherwise it returns the corresponding value in the `Just` constructor.
+La función `lookup` devuelve un resultado opcional indicado por el constructor de tipo `Maybe`. Si la clave no aparece en el mapa, la función `lookup` devuelve `Nothing`, en caso contrario devuelve el valor correspondiente envuelto en el constructor `Just`.
 
-We are interested in the case where the corresponding item set contains the specified game item. Again we can test this using the `member` function:
+Estamos interesados en el caso en que el conjunto de objetos correspondiente contiene el objeto del juego especificado. De nuevo, podemos comprobar esto usando la función `member`:
 
 ```haskell
     Just items | item `S.member` items -> do
 ```
 
-In this case, we can use `put` to update the game state, and `tell` to add a message to the log:
+En este caso, podemos usar `put` para actualizar el estado del juego y `tell` para añadir un mensaje al registro:
 
 ```haskell
       let newItems = M.update (Just <<< S.delete item) state.player state.items
@@ -856,17 +854,17 @@ In this case, we can use `put` to update the game state, and `tell` to add a mes
       tell (L.singleton "You now have the " <> show item)
 ```
 
-Note that there is no need to `lift` either of the two computations here, because there are appropriate instances for both `MonadState` and `MonadWriter` for our `Game` monad transformer stack.
+Fíjate en que no necesitamos usar `lift` en ninguno de los dos cálculos aquí porque hay instancias apropiadas de `MonadState` y `MonadWriter` en nuestra pila de transformadores de mónada `Game`.
 
-The argument to `put` uses a record update to modify the game state's `items` and `inventory` fields. We use the `update` function from `Data.Map` which modifies a value at a particular key. In this case, we modify the set of items at the player's current location, using the `delete` function to remove the specified item from the set. `inventory` is also updated, using `insert` to add the new item to the player's inventory set.
+El argumento a `put` usa una actualización de registro para modificar los campos `items` e `inventory` del estado del juego. Usamos la función `update` de `Data.Map` que modifica un valor en una clave particular. En este caso, modificamos el conjunto de objetos en la ubicación actual del jugador, usando la función `delete` para eliminar el elemento especificado del conjunto. Actualizamos también `inventory` usando `insert` para añadir el nuevo objeto al conjunto de inventario del jugador.
 
-Finally, the `pickUp` function handles the remaining cases, by notifying the user using `tell`:
+Finalmente, la función `pickUp` gestiona el resto de casos notificando al usuario mediante `tell`:
 
 ```haskell
     _ -> tell (L.singleton "I don't see that item here.")
 ```
 
-As an example of using the `Reader` monad, we can look at the code for the `debug` command. This command allows the user to inspect the game state at runtime if the game is running in debug mode:
+Como ejemplo de uso de la mónada `Reader`, podemos mirar el código del comando `debug`. Este comando permite al usuario inspeccionar el estado del juego en tiempo de ejecución si el juego está ejecutándose en modo de depuración:
 
 ```haskell
   GameEnvironment env <- ask
@@ -877,25 +875,25 @@ As an example of using the `Reader` monad, we can look at the code for the `debu
     else tell (L.singleton "Not running in debug mode.")
 ```
 
-Here, we use the `ask` action to read the game configuration. Again, note that we don't need to `lift` any computation, and we can use actions defined in the `MonadState`, `MonadReader` and `MonadWriter` type classes in the same do notation block.
+Aquí usamos la acción `ask` para leer la configuración del juego. De nuevo, fíjate en que no hemos necesitado usar `lift` en ningún cálculo, y que podemos usar acciones definidas en las clases de tipos `MonadState`, `MonadReader` y `MonadWriter` en el mismo bloque en notación do.
 
-If the `debugMode` flag is set, then the `tell` action is used to write the state to the log. Otherwise, an error message is added.
+Si el indicador `debugMode` está activo se usa la acción `tell` para escribir el estado en el registro de mensajes. En otro caso, añadimos un mensaje de error.
 
-The remainder of the `Game` module defines a set of similar actions, each using only the actions defined by the `MonadState`, `MonadReader` and `MonadWriter` type classes.
+El resto del módulo `Game` define un conjunto similar de acciones, usando cada una únicamente las acciones definidas por las clases de tipos `MonadState`, `MonadReader` y `MonadWriter`.
 
-## Running the Computation
+## Ejecutando el cálculo
 
-Since our game logic runs in the `RWS` monad, it is necessary to run the computation in order to respond to the user's commands.
+Como nuestra lógica de juego se ejecuta en la mónada `RWS`, es necesario ejecutar el cálculo para responder a los comandos del usuario.
 
-The front-end of our game is built using two packages: `purescript-yargs`, which provides an applicative interface to the `yargs` command line parsing library, and `purescript-node-readline`, which wraps NodeJS' `readline` module, allowing us to write interactive console-based applications.
+La interfaz de usuario de nuestro juego se construye usando dos paquetes: `purescript-yargs`, que proporciona una interfaz aplicativa a la biblioteca de análisis de línea de comandos `yargs`, y `purescript-node-readline`, que envuelve el módulo NodeJS `readline`, permitiéndonos escribir aplicaciones interactivas basadas en consola.
 
-The interface to our game logic is provided by the function `game` in the `Game` module:
+La interfaz para la lógica de juego está proporcionada por la función `game` del módulo `Game`:
 
 ```haskell
 game :: Array String -> Game Unit
 ```
 
-To run this computation, we pass a list of words entered by the user as an array of strings, and run the resulting `RWS` computation using `runRWS`:
+Para ejecutar este cálculo, pasamos una lista de palabras introducidas por el usuario como un array de cadenas, y ejecutamos el cálculo `RWS` resultante usando `runRWS`:
 
 ```haskell
 data RWSResult state result writer = RWSResult state result writer
@@ -903,9 +901,9 @@ data RWSResult state result writer = RWSResult state result writer
 runRWS :: forall r w s a. RWS r w s a -> r -> s -> RWSResult s a w
 ```
 
-`runRWS` looks like a combination of `runReader`, `runWriter` and `runState`. It takes a global configuration and an initial state as an argument, and returns a data structure containing the log, the result and the final state.
+`runRWS` parece una combinación de `runReader`, `runWriter` y `runState`. Toma una configuración global y un estado inicial como argumentos y devuelve una estructura de datos que contiene el registro de mensajes, el resultado y el estado final.
 
-The front-end of our application is defined by a function `runGame`, with the following type signature:
+La interfaz de usuario de nuestra aplicación está definida por una función `runGame` con la siguiente firma de tipo:
 
 ```haskell
 runGame
@@ -918,9 +916,9 @@ runGame
          ) Unit
 ```
 
-The `CONSOLE` effect indicates that this function interacts with the user via the console (using the `purescript-node-readline` and `purescript-console` packages). `runGame` takes the game configuration as a function argument.
+El efecto `CONSOLE` indica que esta función interactúa con el usuario mediante la consola (usando los paquetes `purescript-node-readline` y `purescript-console`). `runGame` toma la configuración del juego como argumento a la función.
 
-The `purescript-node-readline` package provides the `LineHandler` type, which represents actions in the `Eff` monad which handle user input from the terminal. Here is the corresponding API:
+El paquete `purescript-node-readline` proporciona el tipo `LineHandler`, que representa acciones en la mónada `Eff` que gestionan entrada de usuario de la terminal. Aquí esta la API correspondiente:
 
 ```haskell
 type LineHandler eff a = String -> Eff eff a
@@ -932,20 +930,20 @@ setLineHandler
   -> Eff (readline :: READLINE | eff) Unit
 ```
 
-The `Interface` type represents a handle for the console, and is passed as an argument to the functions which interact with it. An `Interface` can be created using the `createConsoleInterface` function:
+El tipo `Interface` representa un descriptor de la consola, y se pasa como argumento a la función que interactúa con ella. Se puede crear un `Interface` usando la función`createConsoleInterface`:
 
 ```haskell
 runGame env = do
   interface <- createConsoleInterface noCompletion
 ```
 
-The first step is to set the prompt at the console. We pass the `interface` handle, and provide the prompt string and indentation level:
+El primer paso es establecer el símbolo de espera de comandos de la consola. Pasamos el descriptor `interface` y proporcionamos la cadena de espera y el nivel de sangría:
 
 ```haskell
   setPrompt "> " 2 interface
 ```
 
-In our case, we are interested in implementing the line handler function. Our line handler is defined using a helper function in a `let` declaration, as follows:
+En nuestro caso, estamos interesados en implementar la función gestora de línea. Nuestro gestor de línea se define usando una función auxiliar en una declaración `let` como sigue:
 
 ```haskell
 lineHandler
@@ -965,33 +963,33 @@ lineHandler currentState input = do
   pure unit
 ```
 
-The let binding is closed over both the game configuration, named `env`, and the console handle, named `interface`.
+La ligadura let está cerrada tanto sobre la configuración del juego, llamada `env`, como sobre el descriptor de consola, llamado `interface`.
 
-Our handler takes an additional first argument, the game state. This is required since we need to pass the game state to `runRWS` to run the game's logic.
+Nuestro gestor toma un primer argumento adicional, el estado del juego. Esto es necesario porque necesitamos pasar el estado del juego a `runRWS` para ejecutar la lógica del juego.
 
-The first thing this action does is to break the user input into words using the `split` function from the `Data.String` module. It then uses `runRWS` to run the `game` action (in the `RWS` monad), passing the game environment and current game state.
+Lo primero que hace esta acción es partir la entrada del usuario en palabras usando la función `split` del módulo `Data.String`. Usa entonces `runRWS` para ejecutar la acción del juego `game` (en la mónada `RWS`), pasando el entorno y estado actual del juego.
 
-Having run the game logic, which is a pure computation, we need to print any log messages to the screen and show the user a prompt for the next command. The `for_` action is used to traverse the log (of type `List String`) and print its entries to the console. Finally, `setLineHandler` is used to update the line handler function to use the updated game state, and the prompt is displayed again using the `prompt` action.
+Habiendo ejecutado la lógica del juego, que es un cálculo puro, necesitamos imprimir cualquier mensaje registrado a la pantalla y mostrar al usuario la cadena de espera para el siguiente comando. La acción `for_` se usa para recorrer el registro de mensajes (de tipo `List String`) e imprimir sus entradas por consola. Finalmente, `setLineHandler` se usa para actualizar la función gestora de línea para que use el estado actualizado del juego, y se muestra la cadena de espera de nuevo usando la acción `prompt`.
 
-The `runGame` function finally attaches the initial line handler to the console interface, and displays the initial prompt:
+La función `runGame` finalmente engancha el gestor de línea inicial a la interfaz de consola y muestra la cadena de espera inicial:
 
 ```haskell
   setLineHandler interface $ lineHandler initialGameState
   prompt interface
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Implement a new command `cheat`, which moves all game items from the game grid into the user's inventory.
-X> 1. (Difficult) The `Writer` component of the `RWS` monad is currently used for two types of messages: error messages and informational messages. Because of this, several parts of the code use case statements to handle error cases.
+X> 1. (Medio) Implementa un nuevo comando `cheat` que mueve todos los objetos de la rejilla de juego al inventario del usuario.
+X> 1. (Difícil) La componente `Writer` de la mónada `RWS` se usa actualmente para dos tipos de mensajes: mensajes de error y mensajes informativos. Por esto, varias partes del código usan sentencias case para gestionar casos de error.
 X>
-X>     Refactor the code to use the `ExceptT` monad transformer to handle the error messages, and `RWS` to handle informational messages.
+X>     Refactoriza el código para usar el transformador de mónada `ExceptT` para gestionar mensajes de error, y `RWS` para gestionar mensajes informativos.
 
-## Handling Command Line Options
+## Gestionando opciones de línea de comandos
 
-The final piece of the application is responsible for parsing command line options and creating the `GameEnvironment` configuration record. For this, we use the `purescript-yargs` package.
+La última parte de la aplicación es responsable de analizar las opciones de línea de comandos y crear el registro de configuración `GameEnvironment`. Para esto usamos el paquete `purescript-yargs`.
 
-`purescript-yargs` is an example of _applicative command line option parsing_. Recall that an applicative functor allows us to lift functions of arbitrary arity over a type constructor representing some type of side-effect. In the case of the `purescript-yargs` package, the functor we are interested in is the `Y` functor, which adds the side-effect of reading from command line options. It provides the following handler:
+`purescript-yargs` es un ejemplo de _análisis de línea de comandos aplicativo_. Recuerda que un funtor aplicativo nos permite elevar funciones de aridad arbitraria sobre un constructor de tipo que representa algunos efectos secundarios. En el caso del paquete `purescript-yargs`, el funtor en que estamos interesados es el funtor `Y`, que añade los efectos secundarios de leer de las opciones de línea de comandos. Proporciona el siguiente gestor:
 
 ```haskell
 runY :: forall a eff.
@@ -1000,15 +998,15 @@ runY :: forall a eff.
              Eff (err :: EXCEPTION, console :: CONSOLE | eff) a
 ```
 
-This is best illustrated by example. The application's `main` function is defined using `runY` as follows:
+Esto se ilustra mejor con un ejemplo. La función `main` de la aplicación se define usando `runY` como sigue:
 
 ```haskell
 main = runY (usage "$0 -p <player name>") $ map runGame env
 ```
 
-The first argument is used to configure the `yargs` library. In our case, we simply provide a usage message, but the `Node.Yargs.Setup` module provides several other options.
+El primer argumento se usa para configurar la biblioteca `yargs`. En nuestro caso simplemente proporcionamos un mensaje de uso, pero el módulo `Node.Yargs.Setup` tiene varias opciones más.
 
-The second argument uses the `map` function to lift the `runGame` function over the `Y` type constructor. The argument `env` is constructed in a `where` declaration using the applicative operators `<$>` and `<*>`:
+El segundo ejemplo usa la función `map` para elevar la función `runGame` sobre el constructor de tipo `Y`. El argumento `env` se construye en una declaración `where` usando los operadores aplicativos `<$>` y `<*>`:
 
 ```haskell
   where
@@ -1022,24 +1020,24 @@ The second argument uses the `map` function to lift the `runGame` function over 
                    (Just "Use debug mode")
 ```
 
-Here, the `gameEnvironment` function, which has the type `PlayerName -> Boolean -> GameEnvironment`, is lifted over `Y`. The two arguments specify how to read the player name and debug flag from the command line options. The first argument describes the player name option, which is specified by the `-p` or `--player` options, and the second describes the debug mode flag, which is turned on using the `-d` or `--debug` options.
+Aquí, la función `gameEnvironment`, que tiene el tipo `PlayerName -> Boolean -> GameEnvironment`, se eleva sobre `Y`. Los dos argumentos especifican cómo leer el nombre de usuario y el indicador de depuración de la línea de comandos. El primer argumento describe la opción del nombre de jugador, que se especifica mediante las opciones `p` o `--player`, y el segundo describe el indicador de depuración, que se activa usando las opciones `-d` o `--debug`.
 
-This demonstrates two basic functions defined in the `Node.Yargs.Applicative` module: `yarg`, which defines a command line option which takes an optional argument (of type `String`, `Number` or `Boolean`), and `flag` which defines a command line flag of type `Boolean`.
+Esto demuestra dos funciones básicas definidas en el módulo `Node.Yargs.Applicative`: `yarg`, que define una opción de línea de comandos que toma un argumento opcional (de tipo `String`, `Number` o `Boolean`) y `flag`, que define un indicador de línea de comando de tipo `Boolean`.
 
-Notice how we were able to use the notation afforded by the applicative operators to give a compact, declarative specification of our command line interface. In addition, it is simple to add new command line arguments, simply by adding a new function argument to `runGame`, and then using `<*>` to lift `runGame` over an additional argument in the definition of `env`.
+Fíjate en que hemos podido usar la notación otorgada por los operadores aplicativos para dar una especificación compacta y declarativa de nuestra interfaz de línea de comandos. Además, es simple añadir nuevos argumentos de línea de comando añadiendo un nuevo argumento de función a `runGame` y usando `<*>` para elevar `runGame` sobre un argumento adicional en la definición de `env`.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Add a new Boolean-valued property `cheatMode` to the `GameEnvironment` record. Add a new command line flag `-c` to the `yargs` configuration which enables cheat mode. The `cheat` command from the previous exercise should be disallowed if cheat mode is not enabled.
+X> 1. (Medio) Añade una nueva propiedad `cheatMode` con valor Boolean al registro `GameEnvironment`. Añade una nueva posibilidad `-c` a la configuración de `yargs` que habilite el modo trampa. El comando `cheat` del ejercicio anterior debe estar deshabilitado si el modo trampa no está habilitado.
 
-## Conclusion
+## Conclusión
 
-This chapter was a practical demonstration of the techniques we've learned so far, using monad transformers to build a pure specification of our game, and the `Eff` monad to build a front-end using the console.
+Este capítulo ha sido una demostración práctica de las técnicas que hemos aprendido hasta ahora, usando transformadores de mónadas para construir una especificación pura de nuestro juego, y la mónada `Eff` para construir una interfaz de usuario usando la consola.
 
-Because we separated our implementation from the user interface, it would be possible to create other front-ends for our game. For example, we could use the `Eff` monad to render the game in the browser using the Canvas API or the DOM.
+Como hemos separado nuestra implementación de la interfaz de usuario, debería ser posible crear otras interfaces para nuestro juego. Por ejemplo, podríamos usar la mónada `Eff` para representar nuestro juego en el navegador usando la API Canvas o el DOM.
 
-We have seen how monad transformers allow us to write safe code in an imperative style, where effects are tracked by the type system. In addition, type classes provide a powerful way to abstract over the actions provided by a monad, enabling code reuse. We were able to use standard abstractions like `Alternative` and `MonadPlus` to build useful monads by combining standard monad transformers.
+Hemos visto cómo los transformadores de mónadas nos permiten escribir código seguro en un estilo imperativo, donde los efectos están registrados en el sistema de tipos. Además, las clases de tipos proporcionan una manera potente de abstraer sobre las acciones proporcionadas por una mónada, permitiendo la reutilización de código. Hemos podido usar abstracciones estándar como `Alternative` y `MonadPlus` para construir mónadas útiles combinando transformadores de mónadas estándar.
 
-Monad transformers are an excellent demonstration of the sort of expressive code that can be written by relying on advanced type system features such as higher-kinded polymorphism and multi-parameter type classes.
+Los transformadores de mónadas son una demostración excelente de la clase de código expresivo que se puede escribir basándose en capacidades avanzadas del sistema de tipos como polimorfismo de orden mayor y clases de tipos multiparamétricas.
 
-In the next chapter, we will see how monad transformers can be used to give an elegant solution to a common complaint when working with asynchronous JavaScript code - the problem of _callback hell_.
+En el siguiente capítulo veremos como los transformadores de mónadas se pueden usar para dar una solución a una queja común cuando se trabaja con código JavaScript asíncrono; el problema del _infierno de retrollamadas_.

@@ -1,28 +1,28 @@
-# Domain-Specific Languages
+# Lenguajes específicos del dominio (domain-specific languages)
 
-## Chapter Goals
+## Objetivos del capítulo
 
-In this chapter, we will explore the implementation of _domain-specific languages_ (or _DSLs_) in PureScript, using a number of standard techniques.
+En este capítulo exploraremos la implementación de _lenguajes específicos del dominio_ (o _DSLs_) en PureScript, usando un número de técnicas estándar.
 
-A domain-specific language is a language which is well-suited to development in a particular problem domain. Its syntax and functions are chosen to maximize readability of code used to express ideas in that domain. We have already seen a number of examples of domain-specific languages in this book:
+Un lenguaje específico del dominio es un lenguaje que es particularmente apropiado para desarrollar en un dominio de problemas concreto. Su sintaxis y funciones se eligen para maximizar la legibilidad del código usado para expresar ideas en ese dominio. Hemos visto varios ejemplos de lenguajes específicos del dominio en este libro:
 
-- The `Game` monad and its associated actions, developed in chapter 11, constitute a domain-specific language for the domain of _text adventure game development_.
-- The library of combinators which we wrote for the `Async` and `Parallel` functors in chapter 12 could be considered an example of a domain-specific language for the domain of _asynchronous programming_.
-- The `purescript-quickcheck` package, covered in chapter 13, is a domain-specific language for the domain of _generative testing_. Its combinators enable a particularly expressive notation for test properties.
+- La mónada `Game` y sus acciones asociadas, desarrolladas en el capítulo 11, constituyen un lenguaje específico del dominio para el dominio del _desarrollo de juegos de aventuras textuales_.
+- La biblioteca de combinadores que escribimos para los funtores `Async` y `Parallel` del capítulo 12 se pueden considerar un ejemplo de lenguaje específico del dominio para el dominio de la _programación asíncrona_.
+- El paquete `purescript-quickcheck` cubierto en el capítulo 13 es un lenguaje específico del dominio para el dominio de _verificación generativa_. Sus combinadores permiten una notación particularmente expresiva para escribir propiedades de verificación.
 
-This chapter will take a more structured approach to some of standard techniques in the implementation of domain-specific languages. It is by no means a complete exposition of the subject, but should provide you with enough knowledge to build some practical DSLs for your own tasks.
+Este capítulo tomará una aproximación más estructurada a algunas de las técnicas estándar para la implementación de lenguajes específicos del dominio. No es de ninguna manera una exposición completa del tema, pero debe proporcionarte suficiente conocimiento para construir algunos DSLs prácticos para tus tareas.
 
-Our running example will be a domain-specific language for creating HTML documents. Our aim will be to develop a type-safe language for describing correct HTML documents, and we will work by improving a naive implementation in small steps.
+Nuestro ejemplo será un lenguaje específico del dominio para crear documentos HTML. Nuestro objetivo será desarrollar un lenguaje de tipos seguros para describir documentos HTML correctos, y trabajaremos mejorando en pequeños pasos una implementación ingenua.
 
-## Project Setup
+## Preparación del proyecto
 
-The project accompanying this chapter adds one new Bower dependency - the `purescript-free` library, which defines the _free monad_, one of the tools which we will be using.
+El proyecto que acompaña este capítulo añade una nueva dependencia Bower; la biblioteca `purescript-free` que define la _mónada libre_ (free monad), una de las herramientas que usaremos.
 
-We will test this chapter's project in PSCi. You will need to either create a test module to paste code snippets, or use multi-line mode with the `-m` flag.
+Probaremos el proyecto de este capítulo en PSCi. Necesitarás o bien crear un módulo de prueba para pegar fragmentos de código, o usar el modo multilínea con el indicador `-m`.
 
-## A HTML Data Type
+## Un tipo de datos HTML
 
-The most basic version of our HTML library is defined in the `Data.DOM.Simple` module. The module contains the following type definitions:
+La versión más básica de nuestra biblioteca HTML está definida el módulo `Data.DOM.Simple`. El módulo contiene las siguientes definiciones de tipos:
 
 ```haskell
 newtype Element = Element
@@ -41,15 +41,15 @@ newtype Attribute = Attribute
   }
 ```
 
-The `Element` type represents HTML elements. Each element consists of an element name, an array of attribute pairs and some content. The content property uses the `Maybe` type to indicate that an element might be open (containing other elements and text) or closed.
+El tipo `Element` representa elementos HTML. Cada elemento consiste en un nombre de elemento, un array de pares de atributos y algún contenido. La propiedad de contenido usa el tipo `Maybe` para indicar si un elemento puede estar abierto (contiene otros elementos y texto) o cerrado.
 
-The key function of our library is a function
+La función clave de nuestra biblioteca es una función
 
 ```haskell
 render :: Element -> String
 ```
 
-which renders HTML elements as HTML strings. We can try out this version of the library by constructing values of the appropriate types explicitly in PSCi:
+que representa elementos HTML como cadenas HTML. Podemos probar esta versión de la biblioteca construyendo valores de los tipos apropiados explícitamente en PSCi:
 
 ```text
 $ pulp psci -m
@@ -76,21 +76,21 @@ $ pulp psci -m
 unit
 ```
 
-As it stands, there are several problems with this library:
+Esta biblioteca tiene varios problemas tal cual está:
 
-- Creating HTML documents is difficult - every new element requires at least one record and one data constructor.
-- It is possible to represent invalid documents:
-    - The developer might mistype the element name
-    - The developer can associate an attribute with the wrong type of element
-    - The developer can use a closed element when an open element is correct
+- Crear documentos HTML es difícil; cada nuevo elemento requiere al menos un registro y un constructor de datos.
+- Es posible representar documentos inválidos:
+    - El desarrollador puede escribir mal el nombre del elemento
+    - El desarrollador puede asociar un atributo con el tipo de elemento erróneo
+    - El desarrollador puede usar un elemento cerrado cuando lo correcto es un elemento abierto
 
-In the remainder of the chapter, we will apply certain techniques to solve these problems and turn our library into a usable domain-specific language for creating HTML documents.
+En el resto del capítulo, aplicaremos ciertas técnicas para resolver estos problemas y convertir nuestra biblioteca en un lenguaje específico del dominio para crear documentos HTML.
 
-## Smart Constructors
+## Constructores inteligentes (smart constructors)
 
-The first technique we will apply is simple but can be very effective. Instead of exposing the representation of the data to the module's users, we can use the module exports list to hide the `Element`, `Content` and `Attribute` data constructors, and only export so-called _smart constructors_, which construct data which is known to be correct.
+La primera técnica que aplicaremos es simple pero puede ser muy efectiva. En lugar de exponer la representación de los datos a los usuarios del módulo, podemos usar la lista de exportaciones del módulo para ocultar los constructores de datos `Element`, `Content` y `Attribute`, y exportar únicamente los llamados _constructores inteligentes_, que construyen datos que se saben correctos.
 
-Here is an example. First, we provide a convenience function for creating HTML elements:
+Aquí tenemos un ejemplo. Primero proporcionamos una función de conveniencia para crear elementos HTML:
 
 ```haskell
 element :: String -> Array Attribute -> Maybe (Array Content) -> Element
@@ -101,7 +101,7 @@ element name attribs content = Element
   }
 ```
 
-Next, we create smart constructors for those HTML elements we want our users to be able to create, by applying the `element` function:
+A continuación, creamos constructores inteligentes para aquellos elementos HTML que queremos que puedan crear nuestros usuarios, aplicando la función `element`:
 
 ```haskell
 a :: Array Attribute -> Array Content -> Element
@@ -114,7 +114,7 @@ img :: Array Attribute -> Element
 img attribs = element "img" attribs Nothing
 ```
 
-Finally, we update the module exports list to only export those functions which are known to construct correct data structures:
+Finalmente, actualizamos la lista de exportaciones del módulo para que exporte sólo las funciones que sabemos que construyen estructuras de datos correctas:
 
 ```haskell
 module Data.DOM.Smart
@@ -130,22 +130,22 @@ module Data.DOM.Smart
   ) where
 ```
 
-The module exports list is provided immediately after the module name inside parentheses. Each module export can be one of three types:
+La lista de exportaciones del módulo se proporciona entre paréntesis inmediatamente después del nombre de módulo. Cada exportación del módulo puede ser de tres tipos:
 
-- A value (or function), indicated by the name of the value,
-- A type class, indicated by the name of the class,
-- A type constructor and any associated data constructors, indicated by the name of the type followed by a parenthesized list of exported data constructors.
+- Un valor (o función) indicado/a por su nombre.
+- Una clase de tipos indicada por el nombre de la clase.
+- Un constructor de tipo y cualquier constructor de datos asociado, indicado por el nombre del tipo seguido por una lista entre paréntesis de constructores de datos exportados.
 
-Here, we export the `Element` _type_, but we do not export its data constructors. If we did, the user would be able to construct invalid HTML elements.
+Aquí exportamos el _tipo_ `Element`, pero no exportamos sus constructores de datos. Si lo hiciésemos, el usuario sería capaz de construir elementos HTML inválidos.
 
-In the case of the `Attribute` and `Content` types, we still export all of the data constructors (indicated by the symbol `..` in the exports list). We will apply the technique of smart constructors to these types shortly.
+En el caso de los tipos `Attribute` y `Content`, seguimos exportando todos los constructores de datos (usando el símbolo `..` en la lista de exportación). Aplicaremos la técnica de los constructores inteligentes a estos tipos en breve.
 
-Notice that we have already made some big improvements to our library:
+Fíjate en que ya hemos hecho grandes mejoras a nuestra biblioteca:
 
-- It is impossible to represent HTML elements with invalid names (of course, we are restricted to the set of element names provided by the library).
-- Closed elements cannot contain content by construction.
+- Es imposible representar elementos HTML con nombres inválidos (por supuesto, estamos restringidos al conjunto de nombres de elemento proporcionados por la biblioteca).
+- Los elementos cerrados no pueden tener contenido por construcción.
 
-We can apply this technique to the `Content` type very easily. We simply remove the data constructors for the `Content` type from the exports list, and provide the following smart constructors:
+Podemos aplicar esta técnica al tipo `Content` muy fácilmente. Simplemente quitamos los constructores de datos del tipo `Content` de la lista de exportación y proporcionamos los siguientes constructores inteligentes:
 
 ```haskell
 text :: String -> Content
@@ -155,7 +155,7 @@ elem :: Element -> Content
 elem = ElementContent
 ```
 
-Let's apply the same technique to the `Attribute` type. First, we provide a general-purpose smart constructor for attributes. Here is a first attempt:
+Apliquemos la misma técnica al tipo `Attribute`. Primero proporcionamos un constructor inteligente de propósito general para los atributos. Aquí hay un primer intento:
 
 ```haskell
 attribute :: String -> String -> Attribute
@@ -167,13 +167,13 @@ attribute key value = Attribute
 infix 4 attribute as :=
 ```
 
-This representation suffers from the same problem as the original `Element` type - it is possible to represent attributes which do not exist or whose names were entered incorrectly. To solve this problem, we can create a newtype which represents attribute names:
+Esta representación sufre del mismo problema que el tipo `Element` original; es posible representar atributos que no existen o cuyos nombres se han escrito mal. Para resolver este problema, podemos crear un newtype que representa nombres de atributo:
 
 ```haskell
 newtype AttributeKey = AttributeKey String
 ```
 
-With that, we can modify our operator as follows:
+Con eso, podemos modificar nuestro operador como sigue:
 
 ```haskell
 attribute :: AttributeKey -> String -> Attribute
@@ -183,7 +183,7 @@ attribute (AttributeKey key) value = Attribute
   }
 ```
 
-If we do not export the `AttributeKey` data constructor, then the user has no way to construct values of type `AttributeKey` other than by using functions we explicitly export. Here are some examples:
+Si no exportamos el constructor de datos `AttributeKey`, el usuario no tiene manera de construir valores de tipo `AttributeKey` que no sea usando las funciones que exportamos explícitamente. Aquí hay algunos ejemplos:
 
 ```haskell
 href :: AttributeKey
@@ -202,7 +202,7 @@ height :: AttributeKey
 height = AttributeKey "height"
 ```
 
-Here is the final exports list for our new module. Note that we no longer export any data constructors directly:
+Aquí tenemos la lista final de exportaciones de nuestro nuevo módulo. Date cuenta de que ya no exportamos ningún constructor de datos directamente:
 
 ```haskell
 module Data.DOM.Smart
@@ -229,7 +229,7 @@ module Data.DOM.Smart
   ) where
 ```
 
-If we try this new module in PSCi, we can already see massive improvements in the conciseness of the user code:
+Si probamos este nuevo módulo en PSCi, podemos ver grandes mejoras en la concisión del código de usuario:
 
 ```text
 $ pulp psci
@@ -243,22 +243,22 @@ $ pulp psci
 unit
 ```
 
-Note, however, that no changes had to be made to the `render` function, because the underlying data representation never changed. This is one of the benefits of the smart constructors approach - it allows us to separate the internal data representation for a module from the representation which is perceived by users of its external API.
+Fíjate sin embargo en que no tuvimos que hacer cambios a la función `render`, ya que la representación de los datos subyacentes no ha cambiado. Este es uno de los beneficios de la aproximación de los constructores inteligentes: nos permite separar la representación interna de los datos de un módulo y la representación percibida por los usuarios de su API externa.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use the `Data.DOM.Smart` module to experiment by creating new HTML documents using `render`.
-X> 1. (Medium) Some HTML attributes such as `checked` and `disabled` do not require values, and may be rendered as _empty attributes_:
+X> 1. (Fácil) Usa el módulo `Data.DOM.Smart` para experimentar creando nuevos documentos HTML usando `render`.
+X> 1. (Medio) Algunos atributos HTML como `checked` y `disabled` no requieren valores, y pueden representarse como _atributos vacíos_:
 X>
 X>     ```html
 X>     <input disabled>
 X>     ```
 X>
-X>     Modify the representation of an `Attribute` to take empty attributes into account. Write a function which can be used in place of `attribute` or `:=` to add an empty attribute to an element.
+X>     Modifica la representación de un `Attribute` para considerar los atributos vacíos. Escribe una función que se pueda usar en lugar de `attribute` o `:=` para añadir un atributo vacío a un elemento.
 
-## Phantom Types
+## Tipos fantasma (phantom types)
 
-To motivate the next technique, consider the following code:
+Para motivar la siguiente técnica, considera el siguiente código:
 
 ```text
 > log $ render $ img
@@ -271,17 +271,17 @@ To motivate the next technique, consider the following code:
 unit
 ```
 
-The problem here is that we have provided string values for the `width` and `height` attributes, where we should only be allowed to provide numeric values in units of pixels or percentage points.
+El problema aquí es que hemos proporcionado valores cadena para los atributos `width` y `height`, donde se esperaban valores numéricos en unidades de píxeles o porcentajes.
 
-To solve this problem, we can introduce a so-called _phantom type_ argument to our `AttributeKey` type:
+Para resolver este problema, podemos introducir un argumento de _tipo fantasma_ a nuestro tipo `AttributeKey`:
 
 ```haskell
 newtype AttributeKey a = AttributeKey String
 ```
 
-The type variable `a` is called a _phantom type_ because there are no values of type `a` involved in the right-hand side of the definition. The type `a` only exists to provide more information at compile-time. Any value of type `AttributeKey a` is simply a string at runtime, but at compile-time, the type of the value tells us the desired type of the values associated with this key.
+La variable de tipo `a` se llama _tipo fantasma_ porque no hay valores de tipo `a` involucrados en la parte derecha de la definición. El tipo `a` sólo existe para proporcionar más información en tiempo de compilación. Cualquier valor de tipo `AttributeKey a` es simplemente una cadena en tiempo de ejecución, pero en tiempo de compilación, el tipo del valor nos dice el tipo deseado para los valores asociados con esta clave.
 
-We can modify the type of our `attribute` function to take the new form of `AttributeKey` into account:
+Podemos modificar el tipo de nuestra función `attribute` para que tome en consideración la nueva forma de `AttributeKey`:
 
 ```haskell
 attribute :: forall a. IsValue a => AttributeKey a -> a -> Attribute
@@ -291,16 +291,16 @@ attribute (AttributeKey key) value = Attribute
   }
 ```
 
-Here, the phantom type argument `a` is used to ensure that the attribute key and attribute value have compatible types. Since the user cannot create values of type `AttributeKey a` directly (only via the constants we provide in the library), every attribute will be correct by construction.
+Aquí, el argumento de tipo fantasma `a` se usa para asegurarnos de que la clave y valor del atributo tienen tipos compatibles. Como el usuario no puede crear valores de tipo `AttributeKey a` directamente (sólo mediante las constantes que proporcionamos en la biblioteca), todos los atributos serán correctos por construcción.
 
-Note that the `IsValue` constraint ensures that whatever value type we associate to a key, its values can be converted to strings and displayed in the generated HTML. The `IsValue` type class is defined as follows:
+Fíjate en que la restricción `IsValue` nos asegura que asociemos el tipo de valor que asociemos a una clave, sus valores se pueden convertir en cadenas para mostrarse en el HTML generado. La clase de tipos `IsValue` se define como sigue:
 
 ```haskell
 class IsValue a where
   toValue :: a -> String
 ```
 
-We also provide type class instances for the `String` and `Int` types:
+Proporcionamos instancias de la clase de tipos para los tipos `String` e `Int`:
 
 ```haskell
 instance stringIsValue :: IsValue String where
@@ -310,7 +310,7 @@ instance intIsValue :: IsValue Int where
   toValue = show
 ```
 
-We also have to update our `AttributeKey` constants so that their types reflect the new type parameter:
+Tenemos también que actualizar nuestras constantes `AttributeKey` de manera que sus tipos reflejen el nuevo parámetro de tipo:
 
 ```haskell
 href :: AttributeKey String
@@ -329,7 +329,7 @@ height :: AttributeKey Int
 height = AttributeKey "height"
 ```
 
-Now we find it is impossible to represent these invalid HTML documents, and we are forced to use numbers to represent the `width` and `height` attributes instead:
+Ahora nos encontramos con que es imposible representar estos documentos HTML inválidos, y que estamos obligados a usar números para representar los atributos `width` y `height`:
 
 ```text
 > import Prelude
@@ -346,21 +346,21 @@ Now we find it is impossible to represent these invalid HTML documents, and we a
 unit
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Create a data type which represents either pixel or percentage lengths. Write an instance of `IsValue` for your type. Modify the `width` and `height` attributes to use your new type.
-X> 1. (Difficult) By defining type-level representatives for the Boolean values `true` and `false`, we can use a phantom type to encode whether an `AttributeKey` represents an _empty attribute_ such as `disabled` or `checked`.
+X> 1. (Fácil) Crea un tipo de datos que represente longitudes como píxeles o porcentajes. Escribe una instancia de `IsValue` para tu tipo. Modifica los atributos `width` y `height` para que usen tu nuevo tipo.
+X> 1. (Difícil) Definiendo representantes a nivel de tipos de los valores booleanos `true` y `false`, podemos usar un tipo fantasma para codificar si un `AttributeKey` representa un _atributo vacío_ como `disabled` o `checked`.
 X>
 X>     ```haskell
 X>     data True
 X>     data False
 X>     ```
 X>
-X>     Modify your solution to the previous exercise to use a phantom type to prevent the user from using the `attribute` operator with an empty attribute.
+X>     Modifica tu solución al ejercicio anterior para usar un tipo fantasma con el fin de evitar que el usuario use el operador `attribute` con un atributo vacío.
 
-## The Free Monad
+## La mónada libre (free monad)
 
-In our final set of modifications to our API, we will use a construction called the _free monad_ to turn our `Content` type into a monad, enabling do notation. This will allow us to structure our HTML documents in a form in which the nesting of elements becomes clearer - instead of this:
+En nuestro conjunto final de modificaciones a nuestra API, usaremos un constructor llamado la _mónada libre_ para convertir nuestro tipo `Content` en una mónada, habilitando la notación do. Esto nos permitirá estructurar nuestro documento HTML en una forma en que el anidamiento de elementos se vuelve más claro; en lugar de esto:
 
 ```haskell
 p [ _class := "main" ]
@@ -373,7 +373,7 @@ p [ _class := "main" ]
   ]
 ```
 
-we will be able to write this:
+podremos escribir esto:
 
 ```haskell
 p [ _class := "main" ] $ do
@@ -385,9 +385,9 @@ p [ _class := "main" ] $ do
   text "A cat"
 ```
 
-However, do notation is not the only benefit of a free monad. The free monad allows us to separate the _representation_ of our monadic actions from their _interpretation_, and even support _multiple interpretations_ of the same actions.
+Sin embargo, la notación do no es el único beneficio de una mónada libre. La mónada libre nos permite separar la _representación_ de nuestras acciones monádicas de su _interpretación_, e incluso soportar _múltiples interpretaciones_ de las mismas acciones.
 
-The `Free` monad is defined in the `purescript-free` library, in the `Control.Monad.Free` module. We can find out some basic information about it using PSCi, as follows:
+La mónada `Free` se define en la biblioteca `purescript-free` en el módulo `Control.Monad.Free`. Podemos averiguar alguna información básica sobre ella en PSCi como sigue:
 
 ```text
 > import Control.Monad.Free
@@ -396,9 +396,9 @@ The `Free` monad is defined in the `purescript-free` library, in the `Control.Mo
 (* -> *) -> * -> *
 ```
 
-The kind of `Free` indicates that it takes a type constructor as an argument, and returns another type constructor. In fact, the `Free` monad can be used to turn any `Functor` into a `Monad`!
+La familia de `Free` indica que toma un constructor de tipo como argumento y devuelve otro constructor de tipo. De hecho, ¡la mónada `Free` se puede usar para convertir cualquier `Functor` en una `Monad`!
 
-We begin by defining the _representation_ of our monadic actions. To do this, we need to create a `Functor` with one data constructor for each monadic action we wish to support. In our case, our two monadic actions will be `elem` and `text`. In fact, we can simply modify our `Content` type as follows:
+Comenzamos definiendo la _representación_ de nuestras acciones monádicas. Para hacer esto necesitamos crear un `Functor` con un constructor de datos para cada acción monádica que deseamos soportar. En nuestro caso, nuestras dos acciones monádicas serán `elem` y `text`. De hecho podemos simplemente modificar nuestro tipo `Content` como sigue:
 
 ```haskell
 data ContentF a
@@ -410,19 +410,19 @@ instance functorContentF :: Functor ContentF where
   map f (ElementContent e x) = ElementContent e (f x)
 ```
 
-Here, the `ContentF` type constructor looks just like our old `Content` data type - however, it now takes a type argument `a`, and each data constructor has been modified to take a value of type `a` as an additional argument. The `Functor` instance simply applies the function `f` to the value of type `a` in each data constructor.
+Aquí el constructor de tipo `ContentF` se parece a nuestro viejo tipo de datos `Content`; sin embargo, ahora toma un argumento de tipo `a`, y cada constructor de datos se ha modificado para que tome un valor de tipo `a` como argumento adicional. La instancia `Functor` simplemente aplica la función `f` al valor de tipo `a` en cada constructor de datos.
 
-With that, we can define our new `Content` monad as a type synonym for the `Free` monad, which we construct by using our `ContentF` type constructor as the first type argument:
+Con eso, podemos definir nuestra nueva mónada `Content` como un sinónimo de tipo para la mónada `Free`, que construimos usando nuestro constructor de tipo `ContentF` como primer argumento de tipo:
 
 ```haskell
 type Content = Free ContentF
 ```
 
-Instead of a type synonym, we might use a `newtype` to avoid exposing the internal representation of our library to our users - by hiding the `Content` data constructor, we restrict our users to only using the monadic actions we provide.
+En lugar de un sinónimo de tipo podemos usar un `newtype` para evitar exponer la representación interna de nuestra biblioteca a los usuarios. Ocultando el constructor de datos `Content` restringimos a nuestros usuarios a que usen únicamente las acciones monádicas que suministramos.
 
-Because `ContentF` is a `Functor`, we automatically get a `Monad` instance for `Free ContentF`.
+Como `ContentF` es un `Functor`, obtenemos automáticamente una instancia `Monad` para `Free ContentF`.
 
-We have to modify our `Element` data type slightly to take account of the new type argument on `Content`. We will simply require that the return type of our monadic computations be `Unit`:
+Tenemos que modificar nuestro tipo de datos `Element` ligeramente para tomar en cuenta el nuevo argumento de tipo de `Content`. Simplemente requeriremos que el tipo de retorno de nuestros cálculos monádicos sea `Unit`:
 
 ```haskell
 newtype Element = Element
@@ -432,13 +432,13 @@ newtype Element = Element
   }
 ```
 
-In addition, we have to modify our `elem` and `text` functions, which become our new monadic actions for the `Content` monad. To do this, we can use the `liftF` function, provided by the `Control.Monad.Free` module. Here is its type:
+Además tenemos que modificar nuestras funciones `elem` y `text`, que se convertirán en nuestras nuevas acciones monádicas para la mónada `Content`. Para hacer esto podemos usar la función `liftF` suministrada por el módulo `Control.Monad.Free`. Aquí está su tipo:
 
 ```haskell
 liftF :: forall f a. f a -> Free f a
 ```
 
-`liftF` allows us to construct an action in our free monad from a value of type `f a` for some type `a`. In our case, we can simply use the data constructors of our `ContentF` type constructor directly:
+`liftF` nos permite construir una acción en nuestra mónada libre a partir de un valor de tipo `f a` para algún tipo `a`. En nuestro caso, podemos simplemente usar los constructores de datos de nuestro constructor de tipo `ContentF` directamente:
 
 ```haskell
 text :: String -> Content Unit
@@ -448,11 +448,11 @@ elem :: Element -> Content Unit
 elem e = liftF $ ElementContent e unit
 ```
 
-Some other routine modifications have to be made, but the interesting changes are in the `render` function, where we have to _interpret_ our free monad.
+Hay que hacer otras modificaciones rutinarias, pero los cambios interesantes están en la función `render`, donde tenemos que _interpretar_ nuestra mónada libre.
 
-## Interpreting the Monad
+## Interpretando la mónada
 
-The `Control.Monad.Free` module provides a number of functions for interpreting a computation in a free monad:
+El módulo `Control.Monad.Free` proporciona funciones para interpretar un cálculo en una mónada libre:
 
 ```haskell
 runFree
@@ -470,20 +470,20 @@ runFreeM
   -> m a
 ```
 
-The `runFree` function is used to compute a _pure_ result. The `runFreeM` function allows us to use a monad to interpret the actions of our free monad.
+La función `runFree` se usa para calcular un resultado _puro_. La función `runFreeM` nos permite usar una mónada para interpretar las acciones de nuestra mónada libre.
 
-_Note_: Technically, we are restricted to using monads `m` which satisfy the stronger `MonadRec` constraint. In practice, this means that we don't need to worry about stack overflow, since `m` supports safe _monadic tail recursion_.
+_Nota_: Técnicamente, estamos restringidos a usar monadas `m` que satisfagan la restricción más fuerte `MonadRec`. En la práctica, esto significa que no necesitamos preocuparnos por los desbordamientos de pila, ya que `m` soporta _recursividad final mónadica_ segura.
 
-First, we have to choose a monad in which we can interpret our actions. We will use the `Writer String` monad to accumulate a HTML string as our result.
+Primero tenemos que elegir una mónada en la que podamos interpretar nuestras acciones. Usaremos la mónada `Writer String` para acumular una cadena HTML como resultado.
 
-Our new `render` method starts by delegating to a helper function, `renderElement`, and using `execWriter` to run our computation in the `Writer` monad:
+Nuestro nuevo método `render` comienza delegando en una función auxiliar `renderElement` y usando `execWriter` para ejecutar nuestro cálculo en la mónada `Writer`: 
 
 ```haskell
 render :: Element -> String
 render e = execWriter $ renderElement e
 ```
 
-`renderElement` is defined in a where block:
+`renderElement` se define en un bloque where:
 
 ```haskell
   where
@@ -491,7 +491,7 @@ render e = execWriter $ renderElement e
   renderElement (Element e) = do
 ```
 
-The definition of `renderElement` is straightforward, using the `tell` action from the `Writer` monad to accumulate several small strings:
+La definición de `renderElement` es simple, usa la acción `tell` de la mónada `Writer` para acumular varias cadenas pequeñas:
 
 ```haskell
     tell "<"
@@ -502,7 +502,7 @@ The definition of `renderElement` is straightforward, using the `tell` action fr
     renderContent e.content
 ```
 
-Next, we define the `renderAttribute` function, which is equally simple:
+A continuación definimos la función `renderAttribute` que es igualmente simple:
 
 ```haskell
     where
@@ -514,7 +514,7 @@ Next, we define the `renderAttribute` function, which is equally simple:
       tell "\""
 ```
 
-The `renderContent` function is more interesting. Here, we use the `runFreeM` function to interpret the computation inside the free monad, delegating to a helper function, `renderContentItem`:
+La función `renderContent` es más interesante. Aquí usamos la función `runFreeM` para interpretar el cálculo dentro de la mónada libre, delegando en una función auxiliar `renderContentItem`:
 
 ```haskell
     renderContent :: Maybe (Content Unit) -> Writer String Unit
@@ -527,13 +527,13 @@ The `renderContent` function is more interesting. Here, we use the `runFreeM` fu
       tell ">"
 ```
 
-The type of `renderContentItem` can be deduced from the type signature of `runFreeM`. The functor `f` is our type constructor `ContentF`, and the monad `m` is the monad in which we are interpreting the computation, namely `Writer String`. This gives the following type signature for `renderContentItem`:
+El tipo de `renderContentItem` se puede deducir de la firma de tipo de `runFreeM`. El funtor `f` es nuestro constructor de tipo `ContentF`, y la mónada `m` es la mónada en la que estamos interpretando el cálculo, a saber, `Writer String`. Esto nos da la siguiente firma de tipo para `renderContentItem`:
 
 ```haskell
     renderContentItem :: ContentF (Content Unit) -> Writer String (Content Unit)
 ```
 
-We can implement this function by simply pattern matching on the two data constructors of `ContentF`:
+Podemos implementar esta función simplemente mediante ajuste de patrones sobre los dos constructores de datos de `ContentF`:
 
 ```haskell
     renderContentItem (TextContent s rest) = do
@@ -544,9 +544,9 @@ We can implement this function by simply pattern matching on the two data constr
       pure rest
 ```
 
-In each case, the expression `rest` has the type `Content Unit`, and represents the remainder of the interpreted computation. We can complete each case by returning the `rest` action.
+En cada caso, la expresión `rest` tiene el tipo `Content Unit`, y representa el resto del cálculo interpretado. Podemos completar cada caso devolviendo la acción `rest`.
 
-That's it! We can test our new monadic API in PSCi, as follows:
+¡Eso es todo! Podemos probar nuestra nueva API monádica en PSCi como sigue:
 
 ```text
 > import Prelude
@@ -561,24 +561,24 @@ That's it! We can test our new monadic API in PSCi, as follows:
 unit
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Add a new data constructor to the `ContentF` type to support a new action `comment`, which renders a comment in the generated HTML. Implement the new action using `liftF`. Update the interpretation `renderContentItem` to interpret your new constructor appropriately.
+X> 1. (Medio) Añade un nuevo constructor de datos al tipo `ContentF` para soportar una nueva acción `comment`, que representa un comentario en el HTML generado. Implementa la nueva acción usando `liftF`. Actualiza la interpretación de `renderContentItem` para interpretar tu nuevo constructor de manera apropiada.
 
-## Extending the Language
+## Extendiendo el lenguaje
 
-A monad in which every action returns something of type `Unit` is not particularly interesting. In fact, aside from an arguably nicer syntax, our monad adds no extra functionality over a `Monoid`.
+Una mónada en la que todas las acciones devuelven algo de tipo `Unit` no es particularmente interesante. De hecho, aparte de una sintaxis probablemente más bonita, nuestra mónada no añade funcionalidad extra con respecto a un `Monoid`.
 
-Let's illustrate the power of the free monad construction by extending our language with a new monadic action which returns a non-trivial result.
+Ilustremos la potencia de la construcción de mónada libre extendiendo nuestro lenguaje con una nueva acción monádica que devuelve un resultado no trivial.
 
-Suppose we want to generate HTML documents which contain hyperlinks to different sections of the document using _anchors_. We can accomplish this already, by generating anchor names by hand and including them at least twice in the document: once at the definition of the anchor itself, and once in each hyperlink. However, this approach has some basic issues:
+Supongamos que queremos generar documentos HTML que contienen hipervínculos a diferentes secciones del documento usando _anclas_ (anchors). Podemos conseguir esto actualmente generando nombres de ancla a mano e incluyéndolos al menos dos veces en el documento: una vez en la definición de la propia ancla, y otra en cada hipervínculo. Sin embargo, este enfoque tiene algunos problemas básicos:
 
-- The developer might fail to generate unique anchor names.
-- The developer might mistype one or more instances of the anchor name.
+- El desarrollador puede equivocarse generando nombres de ancla únicos.
+- El desarrollador puede equivocarse al escribir una o más instancias del nombre del ancla.
 
-In the interest of protecting the developer from their own mistakes, we can introduce a new type which represents anchor names, and provide a monadic action for generating new unique names.
+Queriendo proteger al desarrollador de sus propios errores, podemos introducir un nuevo tipo que representa nombres de ancla y proporcionar una acción monádica para generar nuevos nombres únicos.
 
-The first step is to add a new type for names:
+El primer paso es añadir un nuevo tipo para los nombres:
 
 ```haskell
 newtype Name = Name String
@@ -587,16 +587,16 @@ runName :: Name -> String
 runName (Name n) = n
 ```
 
-Again, we define this as a newtype around `String`, but we must be careful not to export the data constructor in the module's export lists.
+De nuevo, definimos esto como un newtype en torno a `String`, pero debemos ser cuidadosos de no exportar el constructor de datos en la lista de exportaciones del módulo.
 
-Next, we define an instance for the `IsValue` type class for our new type, so that we are able to use names in attribute values:
+A continuación definimos una instancia de la clase de tipos `IsValue` para nuestro nuevo tipo, de manera que seamos capaces de usar nombres en valores de atributo:
 
 ```haskell
 instance nameIsValue :: IsValue Name where
   toValue (Name n) = n
 ```
 
-We also define a new data type for hyperlinks which can appear in `a` elements, as follows:
+Definimos también un nuevo tipo de datos para hipervínculos que pueden aparecer en elementos `a` como sigue:
 
 ```haskell
 data Href
@@ -608,7 +608,7 @@ instance hrefIsValue :: IsValue Href where
   toValue (AnchorHref (Name nm)) = "#" ++ nm
 ```
 
-With this new type, we can modify the value type of the `href` attribute, forcing our users to use our new `Href` type. We can also create a new `name` attribute, which can be used to turn an element into an anchor:
+Con este nuevo tipo, podemos modificar el tipo de valor del atributo `href`, forzando a nuestros usuarios a usar nuestro nuevo tipo `Href`. Podemos también crear un nuevo atributo `name` que se puede usar para convertir un elemento en un ancla:
 
 ```haskell
 href :: AttributeKey Href
@@ -618,7 +618,7 @@ name :: AttributeKey Name
 name = AttributeKey "name"
 ```
 
-The remaining problem is that our users currently have no way to generate new names. We can provide this functionality in our `Content` monad. First, we need to add a new data constructor to our `ContentF` type constructor:
+El problema restante es que nuestros usuarios no tienen actualmente manera de generar nombres nuevos. Podemos proporcionar esta funcionalidad en nuestra mónada `Content`. Primero necesitamos añadir un nuevo constructor de datos a nuestro constructor de tipo `ContentF`:
 
 ```haskell
 data ContentF a
@@ -627,9 +627,9 @@ data ContentF a
   | NewName (Name -> a)
 ```
 
-The `NewName` data constructor corresponds to an action which returns a value of type `Name`. Notice that instead of requiring a `Name` as a data constructor argument, we require the user to provide a _function_ of type `Name -> a`. Remembering that the type `a` represents the _rest of the computation_, we can see that this function provides a way to continue computation after a value of type `Name` has been returned.
+El constructor de datos `NewName` corresponde a una acción que devuelve un valor de tipo `Name`. Fíjate en que en lugar de requerir un `Name` como argumento de constructor de datos, requerimos que el usuario proporcione una _función_ de tipo `Name -> a`. Recordando que el tipo `a` representa el _resto del cálculo_, podemos ver que esta función proporciona una manera de continuar el cálculo después de que un valor de tipo `Name` se haya devuelto.
 
-We also need to update the `Functor` instance for `ContentF`, taking into account the new data constructor, as follows:
+Necesitamos también actualizar la instancia `Functor` de `ContentF` para que tenga cuenta el nuevo constructor de datos como sigue:
 
 ```haskell
 instance functorContentF :: Functor ContentF where
@@ -638,31 +638,31 @@ instance functorContentF :: Functor ContentF where
   map f (NewName k) = NewName (f <<< k)
 ```
 
-Now we can build our new action by using the `liftF` function, as before:
+Podemos ahora construir nuestra nueva acción mediante la función `liftF` como antes:
 
 ```haskell
 newName :: Content Name
 newName = liftF $ NewName id
 ```
 
-Notice that we provide the `id` function as our continuation, meaning that we return the result of type `Name` unchanged.
+Date cuenta de que proporcionamos la función `id` como nuestra continuación, lo que significa que devolvemos el resultado de tipo `Name` sin cambiar.
 
-Finally, we need to update our interpretation function, to interpret the new action. We previously used the `Writer String` monad to interpret our computations, but that monad does not have the ability to generate new names, so we must switch to something else. The `WriterT` monad transformer can be used with the `State` monad to combine the effects we need. We can define our interpretation monad as a type synonym to keep our type signatures short:
+Finalmente necesitamos actualizar nuestra función de interpretación para interpretar la nueva acción. Previamente hemos usado la mónada `Writer String` para interpretar nuestros cálculos, pero esa mónada no tiene la capacidad de generar nuevos nombres, de manera que cambiamos a otra cosa. El transformador de mónada `WriterT` se puede usar con la mónada `State` para combinar los efectos que necesitamos. Definimos nuestra mónada de interpretación como un sinónimo de tipo para mantener nuestras firmas de tipo cortas:
 
 ```haskell
 type Interp = WriterT String (State Int)
 ```
 
-Here, the state of type `Int` will act as an incrementing counter, used to generate unique names.
+Aquí, el estado de tipo `Int` actuará como un contador incremental usado para generar nombres únicos.
 
-Because the `Writer` and `WriterT` monads use the same type class members to abstract their actions, we do not need to change any actions - we only need to replace every reference to `Writer String` with `Interp`. We do, however, need to modify the handler used to run our computation. Instead of just `execWriter`, we now need to use `evalState` as well:
+Ya que las mónadas `Writer` y `WriterT` usan los mismos miembros de clase de tipos para abstraer sus acciones, no necesitamos cambiar ninguna acción; sólo tenemos que cambiar todas las referencias a `Writer String` por `Interp`. Sin embargo tenemos que modificar el gestor usado para ejecutar nuestro cálculo. En lugar de usar `execWriter`, tenemos ahora que usar `evalState` y `execWriter`:
 
 ```haskell
 render :: Element -> String
 render e = evalState (execWriterT (renderElement e)) 0
 ```
 
-We also need to add a new case to `renderContentItem`, to interpret the new `NewName` data constructor:
+También necesitamos añadir un nuevo caso a `renderContentItem` para interpretar el constructor de datos `NewName`:
 
 ```haskell
     renderContentItem (NewName k) = do
@@ -672,9 +672,9 @@ We also need to add a new case to `renderContentItem`, to interpret the new `New
       pure (k fresh)
 ```
 
-Here, we are given a continuation `k` of type `Name -> Content a`, and we need to construct an interpretation of type `Content a`. Our interpretation is simple: we use `get` to read the state, use that state to generate a unique name, then use `put` to increment the state. Finally, we pass our new name to the continuation to complete the computation.
+Aquí se nos da una continuación `k` de tipo `Name -> Content a`, y necesitamos construir una interpretación de tipo `Content a`. Nuestra interpretación es simple: usamos `get` para leer el estado, usamos ese estado para generar un nombre único, y usamos `put` para incrementar el estado. Finalmente pasamos nuestro nuevo nombre a la continuación para completar el cálculo.
 
-With that, we can try out our new functionality in PSCi, by generating a unique name inside the `Content` monad, and using it as both the name of an element and the target of a hyperlink:
+Con eso, podemos probar nuestra nueva funcionalidad en PSCi, generando un nombre único dentro de la mónada `Content` y usándolo tanto como nombre de elemento como destino de un hipervínculo:
 
 ```text
 > import Prelude
@@ -692,35 +692,34 @@ With that, we can try out our new functionality in PSCi, by generating a unique 
 unit
 ```
 
-You can verify that multiple calls to `newName` do in fact result in unique names.
+Puedes verificar que múltiples llamadas a `newName` resultan de hecho en nombres únicos.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) We can simplify the API further by hiding the `Element` type from its users. Make these changes in the following steps:
+X> 1. (Medio) Podemos simplificar más la API escondiendo el tipo `Element` de los usuarios. Haz estos cambios siguiendo estos pasos:
 X>     
-X>     - Combine functions like `p` and `img` (with return type `Element`) with the `elem` action to create new actions with return type `Content Unit`.
-X>     - Change the `render` function to accept an argument of type `Content Unit` instead of `Element`.
-X> 1. (Medium) Hide the implementation of the `Content` monad by using a `newtype` instead of a type synonym. You should not export the data
-X>     constructor for your `newtype`.
-X> 1. (Difficult) Modify the `ContentF` type to support a new action
+X>     - Combina funciones como `p` e `img` (con tipo de retorno `Element`) con la acción `elem` para crear nuevas acciones con tipo de retorno `Content Unit`.
+X>     - Cambia la función `render` para que acepte un argumento de tipo `Content Unit` en lugar de `Element`.
+X> 1. (Medio) Esconde la implementación de la mónada `Content` usando un newtype en lugar de un sinónimo de tipo. No debes exportar el constructor de datos para tu newtype.
+X> 1. (Difícil) Modifica el tipo `ContentF` para soportar una nueva acción
 X>
 X>     ```haskell
 X>     isMobile :: Content Boolean
 X>     ```
 X>
-X>     which returns a boolean value indicating whether or not the document is being rendered for display on a mobile device.
+X>     que devuelve un valor booleano indicando si el documento debe o no representarse para ser mostrado en un dispositivo móvil.
 X>
-X>     _Hint_: use the `ask` action and the `ReaderT` monad transformer to interpret this action. Alternatively, you might prefer to use the `RWS` monad.
+X>     _Hint_: usa la acción `ask` y el transformador de mónada `ReaderT` para interpretar esta acción. Alternativamente, puedes preferir usar la mónada `RWS`.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we developed a domain-specific language for creating HTML documents, by incrementally improving a naive implementation using some standard techniques:
+En este capítulo hemos desarrollado un lenguaje específico del dominio para crear documentos HTML, mejorando incrementalmente una implementación ingenua usando algunas técnicas estándar:
 
-- We used _smart constructors_ to hide the details of our data representation, only permitting the user to create documents which were _correct-by-construction_.
-- We used an _user-defined infix binary operator_ to improve the syntax of the language.
-- We used _phantom types_ to encode additional information in the types of our data, preventing the user from providing attribute values of the wrong type.
-- We used the _free monad_ to turn our array representation of a collection of content into a monadic representation supporting do notation. We then extended this representation to support a new monadic action, and interpreted the monadic computations using standard monad transformers.
+- Hemos usado _constructores inteligentes_ para esconder detalles de nuestra representación de datos, permitiendo únicamente al usuario crear documentos que sean _correctos por construcción_.
+- Hemos usado un _operador binario infijo definido por el usuario_ para mejorar la sintaxis del lenguaje.
+- Hemos usado _tipos fantasma_ para codificar información adicional en los tipos de nuestros datos, evitando que el usuario proporcione valores de tipo erróneo.
+- Hemos usado la _mónada libre_ para convertir nuestra representación array del contenido en una representación monádica que soporta notación do. Hemos extendido esta representación para soportar una nueva acción monádica, y hemos interpretado los cálculos monádicos usando transformadores de mónada estándar.
 
-These techniques all leverage PureScript's module and type systems, either to prevent the user from making mistakes or to improve the syntax of the domain-specific language.
+Estas técnicas aprovechan el sistema de tipos y módulos de JavaScript, bien para evitar que el usuario cometa errores, bien para mejorar la sintaxis del lenguaje específico del dominio.
 
-The implementation of domain-specific languages in functional programming languages is an area of active research, but hopefully this provides a useful introduction some simple techniques, and illustrates the power of working in a language with expressive types.
+La implementación de lenguajes específicos del dominio en lenguajes de programación funcional es un área de investigación activa, pero con suerte esto proporciona una introducción útil a algunas técnicas simples e ilustra la potencia de trabajar en un lenguaje con tipos expresivos.

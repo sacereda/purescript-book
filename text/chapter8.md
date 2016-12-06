@@ -1,35 +1,35 @@
-# The Eff Monad
+# La mónada Eff
 
-## Chapter Goals
+## Objetivos del capítulo
 
-In the last chapter, we introduced applicative functors, an abstraction which we used to deal with _side-effects_: optional values, error messages and validation. This chapter will introduce another abstraction for dealing with side-effects in a more expressive way: _monads_.
+En el último capítulo hemos presentado los funtores aplicativos, una abstracción que usamos para tratar con _efectos secundarios_: valores opcionales, mensajes de error y validación. Este capítulo presentará otra abstracción para tratar con efectos secundarios de una manera más expresiva: _mónadas_.
 
-The goal of this chapter is to explain why monads are a useful abstraction, and their connection with _do notation_. We will build upon the address book example of the previous chapters, by using a particular monad to handle the side-effects of building a user interface in the browser. The monad we will use is an important monad in PureScript - the `Eff` monad - used to encapsulate so-called _native_ effects.
+El objetivo de este capítulo es explicar por qué las mónadas son una abstracción útil, y su conexión con la _notación do_. Extenderemos el ejemplo de la agenda de capítulos anteriores, usando una mónada particular para gestionar los efectos secundarios de construir una interfaz de usuario en el navegador. La mónada que usaremos es una mónada importante en PureScript, la mónada `Eff`, usada para encapsular los llamados efectos _nativos_.
 
-## Project Setup
+## Preparación del proyecto
 
-The source code for this project builds on the source for the previous chapter. The modules from the previous project are included in the `src` directory for this project.
+El código fuente para este capítulo se basa en el del capítulo anterior. Los módulos del proyecto anterior se incluyen en el directorio `src` de este proyecto.
 
-The project adds the following Bower dependencies:
+El proyecto añade las siguientes dependencias Bower:
 
-- `purescript-eff`, which defines the `Eff` monad, the subject of the second half of the chapter.
-- `purescript-react`, a set of bindings to the React user interface library, which we will use to build a user interface for our address book application.
+- `purescript-eff`, que define la mónada `Eff`, el tema de la segunda mitad del capítulo.
+- `purescript-react`, un conjunto de vínculos a la biblioteca de interfaz de usuario React, que usaremos para construir una interfaz para nuestra aplicación de agenda.
 
-In addition to the modules from the previous chapter, this chapter's project adds a `Main` module, which provides the entry point to the application, and functions to render the user interface.
+Además de los módulos del capítulo anterior, este proyecto añade un módulo `Main` que proporciona el punto de entrada para la aplicación, y funciones para representar la interfaz de usuario.
 
-To run this project, build and bundle the JavaScript source with `pulp browserify --to dist/Main.js`, and then open the `html/index.html` file in your web browser.
+Para ejecutar este proyecto, construye y empaqueta el código JavaScript con `pulp browserify --to dist/Main.js` y abre el fichero `html/index.html` en tu navegador.
 
-## Monads and Do Notation
+## Mónadas (monads) y notación do
 
-Do notation was first introduced when we covered _array comprehensions_. Array comprehensions provide syntactic sugar for the `concatMap` function from the `Data.Array` module.
+La notación do se presentó cuando vimos los _arrays por comprensión_. Los arrays por comprensión proporcionan azúcar sintáctico (syntactic sugar) para la función `concatMap` del módulo `Data.Array`.
 
-Consider the following example. Suppose we throw two dice and want to count the number of ways in which we can score a total of `n`. We could do this using the following non-deterministic algorithm:
+Considera el siguiente ejemplo. Supongamos que lanzamos dos dados y queremos contar el número de formas en que podemos obtener un total de `n`. Podríamos hacerlo usando el siguiente algoritmo no determinista:
 
-- _Choose_ the value `x` of the first throw.
-- _Choose_ the value `y` of the second throw.
-- If the sum of `x` and `y` is `n` then return the pair `[x, y]`, else fail.
+- _Elegimos_ el valor `x` del primer lanzamiento.
+- _Elegimos_ el valor `y` del segundo lanzamiento.
+- Si la suma de `x` e `y` es `n` entonces devolvemos el par `[x, y]`, en caso contrario fallamos.
 
-Array comprehensions allow us to write this non-deterministic algorithm in a natural way:
+Los arrays por comprensión nos permiten escribir este algoritmo no determinista de una manera natural:
 
 ```haskell
 import Prelude
@@ -46,7 +46,7 @@ countThrows n = do
     else empty
 ```
 
-We can see that this function works in PSCi:
+Podemos ver que esta función es correcta en PSCi:
 
 ```text
 > countThrows 10
@@ -56,19 +56,19 @@ We can see that this function works in PSCi:
 [[6,6]]
 ```
 
-In the last chapter, we formed an intuition for the `Maybe` applicative functor, embedding PureScript functions into a larger programming language supporting _optional values_. In the same way, we can form an intuition for the _array monad_, embedding PureScript functions into a larger programming language supporting _non-deterministic choice_.
+En el último capítulo, formamos una intuición para el funtor aplicativo `Maybe`; las funciones PureScript pueden empotrarse en un lenguaje de programación mayor que soporta _valores opcionales_. De la misma manera, podemos desarrollar la intuición para la _mónada array_; permite empotrar funciones PureScript en un lenguaje de programación mayor que soporta _elección no determinista_.
 
-In general, a _monad_ for some type constructor `m` provides a way to use do notation with values of type `m a`. Note that in the array comprehension above, every line contains a computation of type `Array a` for some type `a`. In general, every line of a do notation block will contain a computation of type `m a` for some type `a` and our monad `m`. The monad `m` must be the same on every line (i.e. we fix the side-effect), but the types `a` can differ (i.e. individual computations can have different result types).
+En general, una _mónada_ para algún constructor de tipo `m` proporciona una manera de usar notación do con valores de tipo `m a`. Date cuenta de que en el array por comprensión anterior, cada línea contiene un cálculo de tipo `Array a` para algún tipo `a`. En general, cada línea de un bloque de notación do contendrá un cálculo de tipo `m a` para algún tipo `a` y nuestra mónada `m`. La mónada `m` debe ser la misma en cada línea (es decir, fijamos los efectos secundarios), pero los tipos `a` pueden ser diferentes (es decir, cálculos individuales pueden tener distintos tipos de resultado).
 
-Here is another example of do notation, this type applied to the type constructor `Maybe`. Suppose we have some type `XML` representing XML nodes, and a function
+Aquí hay otro ejemplo de notación do, esta vez aplicado al constructor de tipo `Maybe`. Supongamos que tenemos un tipo `XML` que representa nodos XML y una función
 
 ```haskell
 child :: XML -> String -> Maybe XML
 ```
 
-which looks for a child element of a node, and returns `Nothing` if no such element exists.
+que busca un elemento hijo de un nodo y devuelve `Nothing` si dicho elemento no existe.
 
-In this case, we can look for a deeply-nested element by using do notation. Suppose we wanted to read a user's city from a user profile which had been encoded as an XML document:
+En este caso, podemos buscar un elemento profundamente anidado usando notación do. Supongamos que queremos leer la ciudad de un usuario en un perfil de usuario codificado como un documento XML:
 
 ```haskell
 userCity :: XML -> Maybe XML
@@ -79,13 +79,13 @@ userCity root = do
   pure city
 ```
 
-The `userCity` function looks for a child element `profile`, an element `address` inside the `profile` element, and finally an element `city` inside the `address` element. If any of these elements are missing, the return value will be `Nothing`. Otherwise, the return value is constructed using `Just` from the `city` node.
+La función `userCity` busca un elemento hijo `profile`, un elemento `address` dentro del elemento `profile`, y finalmente un elemento `city` dentro del elemento `address`. Si cualquiera de estos elementos no existe, el valor de retorno será `Nothing`. En caso contrario, el valor de retorno se construye usando `Just` con el nodo `city`.
 
-Remember, the `pure` function in the last line is defined for every `Applicative` functor. Since `pure` is defined as `Just` for the `Maybe` applicative functor, it would be equally valid to change the last line to `Just city`.
+Recuerda, la función `pure` de la última línea está definida para todo funtor `Applicative`. Como `pure` está definido como `Just` para el funtor aplicativo `Maybe`, sería igualmente válido cambiar la última línea por `Just city`.
 
-## The Monad Type Class
+## La clase de tipos mónada
 
-The `Monad` type class is defined as follows:
+La clase de tipos `Monad` se define como sigue:
 
 ```haskell
 class Apply m <= Bind m where
@@ -94,20 +94,20 @@ class Apply m <= Bind m where
 class (Applicative m, Bind m) <= Monad m
 ```
 
-The key function here is `bind`, defined in the `Bind` type class. Just like for the `<$>` and `<*>` operators in the `Functor` and `Apply` type classes, the Prelude defines an infix alias `>>=` for the `bind` function.
+La función clave aquí es `bind`, definida en la clase de tipos `Bind`. Al igual que los operadores `<$>` y `<*>` de las clases de tipos `Functor` y `Apply`, el Prelude define un alias infijo `>>=` para la función `bind`.
 
-The `Monad` type class extends `Bind` with the operations of the `Applicative` type class that we have already seen.
+La clase de tipos `Monad` extiende `Bind` con las operaciones de la clase de tipos `Applicative` que ya hemos visto.
 
-It will be useful to see some examples of the `Bind` type class. A sensible definition for `Bind` on arrays can be given as follows:
+Será útil ver algunos ejemplos de la clase de tipos `Bind`. Una definición sensata para `Bind` sobre arrays puede ser esta:
 
 ```haskell
 instance bindArray :: Bind Array where
   bind xs f = concatMap f xs
 ```
 
-This explains the connection between array comprehensions and the `concatMap` function that has been alluded to before.
+Esto explica la conexión entre los arrays por comprensión y la función `concatMap` a la que nos hemos referido antes.
 
-Here is an implementation of `Bind` for the `Maybe` type constructor:
+Aquí tenemos una implementación de `Bind` para el constructor de tipo `Maybe`:
 
 ```haskell
 instance bindMaybe :: Bind Maybe where
@@ -115,30 +115,30 @@ instance bindMaybe :: Bind Maybe where
   bind (Just a) f = f a
 ```
 
-This definition confirms the intuition that missing values are propagated through a do notation block.
+Esta definición confirma la intuición de que los valores ausentes se propagan a traves de un bloque en notación do.
 
-Let's see how the `Bind` type class is related to do notation. Consider a simple do notation block which starts by binding a value from the result of some computation:
+Veamos cómo la clase de tipos `Bind` se relaciona con la notación do. Considera un bloque en notación do simple que comienza ligando un valor resultado de algún cálculo.
 
 ```haskell
 do value <- someComputation
    whatToDoNext
 ```
 
-Every time the PureScript compiler sees this pattern, it replaces the code with this:
+Cada vez que el compilador de PureScript ve este patrón, reemplaza el código por esto:
 
 ```haskell
 bind someComputation \value -> whatToDoNext
 ```
 
-or, written infix:
+o, escrito de manera infija:
 
 ```haskell
 someComputation >>= \value -> whatToDoNext
 ```
 
-The computation `whatToDoNext` is allowed to depend on `value`.
+El cálculo `whatToDoNext` puede depender de `value`.
 
-If there are multiple binds involved, this rule is applied multiple times, starting from the top. For example, the `userCity` example that we saw earlier gets desugared as follows:
+Si hay múltiples ligaduras involucradas, esta regla se aplica varias veces, comenzando por arriba. Por ejemplo, el ejemplo `userCity` que vimos antes queda como sigue tras quitarle el azucar:
 
 ```haskell
 userCity :: XML -> Maybe XML
@@ -149,17 +149,17 @@ userCity root =
         pure city
 ```
 
-It is worth noting that code expressed using do notation is often much clearer than the equivalent code using the `>>=` operator. However, writing binds explicitly using `>>=` can often lead to opportunities to write code in _point-free_ form - but the usual warnings about readability apply.
+Merece la pena darse cuenta de que el código expresado usando notación do es a menudo más claro que el código equivalente usando el operador `>>=`. Sin embargo, escribir ligaduras de manera explícita usando `>>=` puede a menudo conducir a oportunidades para escribir código en _forma libre de puntos_, pero hay que tener en cuenta la advertencia habitual sobre la legibilidad. 
 
-## Monad Laws
+## Leyes de la mónada
 
-The `Monad` type class comes equipped with three laws, called the _monad laws_. These tell us what we can expect from sensible implementations of the `Monad` type class.
+La clase de tipos `Monad` viene equipada con tres leyes llamadas las _leyes de la mónada_. Estas nos dicen qué podemos esperar de implementaciones sensatas de la clase de tipos `Monad`. 
 
-It is simplest to explain these laws using do notation.
+Es más fácil explicar estas leyes usando notación do.
 
-### Identity Laws
+### Leyes de identidad
 
-The _right-identity_ law is the simplest of the three laws. It tells us that we can eliminate a call to `pure` if it is the last expression in a do notation block:
+La ley de _elemento neutro por la derecha_ (right-identity) es la más simple de las tres leyes. Nos dice que podemos eliminar una llamada a `pure` si es la última expresión en un bloque de notación do:
 
 ```haskell
 do
@@ -167,9 +167,9 @@ do
   pure x
 ```
 
-The right-identity law says that this is equivalent to just `expr`.
+La ley de elemento neutro por la derecha dice que esto es equivalente a `expr`.
 
-The _left-identity_ law states that we can eliminate a call to `pure` if it is the first expression in a do notation block:
+La ley de _elemento neutro por la izquierda_ dice que podemos eliminar una llamada a `pure` si es la primera expresión de un bloque en notación do:
 
 ```haskell
 do
@@ -177,9 +177,9 @@ do
   next
 ```
 
-This code is equivalent to `next`, after the name `x` has been replaced with the expression `y`.
+Esto código es equivalente a `next`, después de que el nombre `x` haya sido reemplazado por la expresión `y`.
 
-The last law is the _associativity law_. It tells us how to deal with nested do notation blocks. It states that the following piece of code:
+La última ley es la _ley de asociatividad_. Nos dice cómo tratar con bloques anidados en notación do. Dice que el siguiente fragmento de código:
 
 ```haskell
 c1 = do
@@ -189,7 +189,7 @@ c1 = do
   m3
 ```
 
-is equivalent to this code:
+es equivalente a este código:
 
 ```haskell  
 c2 = do
@@ -198,15 +198,15 @@ c2 = do
   m3
 ```
 
-Each of these computations involves three monadic expression `m1`, `m2` and `m3`. In each case, the result of `m1` is eventually bound to the name `x`, and the result of `m2` is bound to the name `y`.
+Cada uno de estos cálculos involucra tres expresiones monádicas `m1`, `m2` y `m3`. En cada caso, el resultado de `m1` se liga al nombre `x`, y el resultado de `m2` se asocia al nombre `y`.
 
-In `c1`, the two expressions `m1` and `m2` are grouped into their own do notation block.
+En `c1`, las dos expresiones `m1` y `m2` se agrupan en su propio bloque en notación do.
 
-In `c2`, all three expressions `m1`, `m2` and `m3` appear in the same do notation block.
+En `c2`, las tres expresiones `m1`, `m2` y `m3` aparecen en el mismo bloque en notación do.
 
-The associativity law tells us that it is safe to simplify nested do notation blocks in this way.
+La ley de asociatividad nos dice que es seguro simplificar los bloques anidados en notación do de esta manera.
 
-_Note_ that by the definition of how do notation gets desugared into calls to `bind`, both of `c1` and `c2` are also equivalent to this code:
+_Fíjate_ en que por la definición de cómo se quita el azúcar de la notación do convirtiéndola en llamadas a `bind`, tanto `c1` como `c2` son equivalentes a este código:
 
 ```haskell  
 c3 = do
@@ -216,11 +216,11 @@ c3 = do
     m3
 ```
 
-## Folding With Monads
+## Plegando con mónadas
 
-As an example of working with monads abstractly, this section will present a function which works with any type constructor in the `Monad` type class. This should serve to solidify the intuition that monadic code corresponds to programming "in a larger language" with side-effects, and also illustrate the generality which programming with monads brings.
+Como ejemplo del modo de trabajar con mónadas de manera abstracta, esta sección presentará una función que es válida para cualquier constructor de tipo de la clase de tipos `Monad`. Esto debe servir para solidificar la intuición de que el código monádico corresponde a programar "en un lenguaje mayor" con efectos secundarios, y también ilustra la generalidad que nos proporciona la programación con mónadas.
 
-The function we will write is called `foldM`. It generalizes the `foldl` function that we met earlier to a monadic context. Here is its type signature:
+La función que vamos a escribir se llama `foldM`. Generaliza la función `foldl` que vimos antes a un contexto monádico. Aquí está su firma de tipo:
 
 ```haskell
 foldM :: forall m a b
@@ -231,7 +231,7 @@ foldM :: forall m a b
       -> m a
 ```
 
-Notice that this is the same as the type of `foldl`, except for the appearance of the monad `m`:
+Fíjate en que esto es lo mismo que el tipo de `foldl`, excepto por la aparición de la mónada `m`:
 
 ```haskell
 foldl :: forall a b
@@ -241,25 +241,25 @@ foldl :: forall a b
       -> a
 ```
 
-Intuitively, `foldM` performs a fold over a list in some context supporting some set of side-effects.
+De forma intuitiva, `foldM` realiza un pliegue sobre una lista en algún contexto que soporta algún conjunto de efectos secundarios.
 
-For example, if we picked `m` to be `Maybe`, then our fold would be allowed to fail by returning `Nothing` at any stage - every step returns an optional result, and the result of the fold is therefore also optional.
+Por ejemplo, si `m` fuese `Maybe`, se permitiría a nuestro pliegue fallar devolviendo `Nothing` en cualquier fase; cada paso devuelve un valor opcional y el resultado del pliegue es por lo tanto también opcional.
 
-If we picked `m` to be the `Array` type constructor, then every step of the fold would be allowed to return zero or more results, and the fold would proceed to the next step independently for each result. At the end, the set of results would consist of all folds over all possible paths. This corresponds to a traversal of a graph!
+Si `m` fuese el constructor de tipo `Array`, cada paso del pliegue podría devolver cero o más resultados, y el pliegue continuaría con el siguiente paso independientemente para cada resultado. Al final, el conjunto do resultados consistiría en todos los pliegues sobre todos los caminos posibles. ¡Esto se corresponde al recorrido de un grafo!
 
-To write `foldM`, we can simply break the input list into cases.
+Para escribir `foldM` podemos simplemente descomponer la lista de entrada en casos.
 
-If the list is empty, then to produce the result of type `a`, we only have one option: we have to return the second argument:
+Si la lista está vacía, para producir el resultado de tipo `a` sólo tenemos una opción: tenemos que devolver el segundo argumento:
 
 ```haskell
 foldM _ a Nil = pure a
 ```
 
-Note that we have to use `pure` to lift `a` into the monad `m`.
+Fíjate en que tenemos que usar `pure` para elevar `a` a la mónada `m`.
 
-What if the list is non-empty? In that case, we have a value of type `a`, a value of type `b`, and a function of type `a -> b -> m a`. If we apply the function, we obtain a monadic result of type `m a`. We can bind the result of this computation with a backwards arrow `<-`.
+¿Qué pasa si la listo no está vacía? En ese caso, tenemos un valor de tipo `a`, un valor de tipo `b`, y una función de tipo `a -> b -> m a`. Si aplicamos la función, obtenemos un resultado monádico de tipo `m a`. Podemos ligar el resultado de este cálculo con la flecha hacia atrás `<-`. 
 
-It only remains to recurse on the tail of the list. The implementation is simple:
+Sólo queda recurrir sobre la cola de la lista. La implementación es simple:
 
 ```haskell
 foldM f a (b : bs) = do
@@ -267,9 +267,9 @@ foldM f a (b : bs) = do
   foldM f a' bs
 ```
 
-Note that this implementation is almost identical to that of `foldl` on lists, with the exception of do notation.
+Date cuenta de que esta implementación es casi idéntica a la de `foldl` sobre listas, con la excepción de la notación do.
 
-We can define and test this function in PSCi. Here is an example - suppose we defined a "safe division" function on integers, which tested for division by zero and used the `Maybe` type constructor to indicate failure:
+Podemos definir y probar esta función en PSCi. Aquí hay un ejemplo: supongamos que definimos una función de "división segura" sobre enteros, que comprueba la división por cero y usa el constructor de tipo `Maybe` para indicar fallo:
 
 ```haskell
 safeDivide :: Int -> Int -> Maybe Int
@@ -277,7 +277,7 @@ safeDivide _ 0 = Nothing
 safeDivide a b = Just (a / b)
 ```
 
-Then we can use `foldM` to express iterated safe division:  
+Podemos entonces usar `foldM` para expresar división segura iterada:
 
 ```text
 > import Data.List
@@ -289,13 +289,13 @@ Then we can use `foldM` to express iterated safe division:
 Nothing
 ```
 
-The `foldM safeDivide` function returns `Nothing` if a division by zero was attempted at any point. Otherwise it returns the result of repeatedly dividing the accumulator, wrapped in the `Just` constructor.
+La función `foldM safeDivide` devuelve `Nothing` si se intenta una división por cero en algún punto. En caso contrario, devuelve el resultado de dividir repetidamente el acumulador, envuelto en el constructor `Just`.
 
-## Monads and Applicatives
+## Mónadas y aplicativos
 
-Every instance of the `Monad` type class is also an instance of the `Applicative` type class, by virtue of the superclass relationship between the two classes.
+Toda instancia de la clase de tipos `Monad` es también una instancia de la clase de tipos `Applicative` gracias a la relación de superclase entre ambas.
 
-However, there is also an implementation of the `Applicative` type class which comes "for free" for any instance of `Monad`, given by the `ap` function:
+Sin embargo, hay una implementación de la clase de tipos `Applicative` que viene "gratis" para cualquier instancia de `Monad`, dada por la función `ap`:
 
 ```haskell
 ap :: forall m. Monad m => m (a -> b) -> m a -> m b
@@ -305,13 +305,13 @@ ap mf ma = do
   pure (f a)
 ```
 
-If `m` is a law-abiding member of the `Monad` type class, then there is a valid `Applicative` instance for `apply` is given by `ap`.
+Si `m` es un miembro de la clase de tipos `Monad` que respeta las leyes, entonces hay una instancia `Applicative` válida para `apply` dada por `ap`.
 
-The interested reader can check that `ap` agrees with `apply` for the monads we have already encountered: `Array`, `Maybe` and `Either e`.
+El lector interesado puede comprobar que `ap` concuerda con `apply` para las mónadas que ya hemos encontrado: `Array`, `Maybe` y `Either e`.
 
-If every monad is also an applicative functor, then we should be able to apply our intuition for applicative functors to every monad. In particular, we can reasonably expect a monad to correspond, in some sense, to programming "in a larger language" augmented with some set of additional side-effects. We should be able to lift functions of arbitrary arities, using `map` and `apply`, into this new language.
+Si toda mónada es también un funtor aplicativo, debemos ser capaces de aplicar nuestra intuición para los funtores aplicativos a todas las mónadas. En particular, podemos esperar razonablemente que una mónada se corresponda, en cierto sentido, a programar "en un lenguaje mayor" aumentado con algún conjunto de efectos secundarios adicional. Debemos ser capaces de elevar funciones de aridad arbitraria, usando `map` y `apply`, a este nuevo lenguaje.
 
-But monads allow us to do more than we could do with just applicative functors, and the key difference is highlighted by the syntax of do notation. Consider the `userCity` example again, in which we looked for a user's city in an XML document which encoded their user profile:
+Pero las mónadas nos permiten hacer más de lo que podríamos hacer sólo con funtores aplicativos, y la diferencia clave se pone de relieve con la sintaxis de notación do. Considera de nuevo el ejemplo de `userCity`, en el que buscábamos la ciudad de un usuario en un documento XML que codificaba su perfil de usuario:
 
 ```haskell
 userCity :: XML -> Maybe XML
@@ -322,16 +322,16 @@ userCity root = do
   pure city
 ```
 
-Do notation allows the second computation to depend on the result `prof` of the first, and the third computation to depend on the result `addr` of the second, and so on. This dependence on previous values is not possible using only the interface of the `Applicative` type class.
+La notación do permite al segundo cálculo depender del resultado `prof` del primero, el tercer cálculo puede depender del resultado `addr` del segundo, y así sucesivamente. Esta dependencia en valores previos no es posible usando sólo la interfaz de la clase de tipos `Applicative`.  
 
-Try writing `userCity` using only `pure` and `apply`: you will see that it is impossible. Applicative functors only allow us to lift function arguments which are independent of each other, but monads allow us to write computations which involve more interesting data dependencies.
+Intenta escribir `userCity` usando sólo `pure` y `apply`: verás que es imposible. Los funtores aplicativos sólo nos permiten elevar argumentos de función que son independientes unos de otros, pero las mónadas nos permiten escribir cálculos que involucran dependencias de datos más interesantes.
 
-In the last chapter, we saw that the `Applicative` type class can be used to express parallelism. This was precisely because the function arguments being lifted were independent of one another. Since the `Monad` type class allows computations to depend on the results of previous computations, the same does not apply - a monad has to combine its side-effects in sequence.
+En el último capítulo, vimos que la clase de tipos `Applicative` se puede usar para expresar paralelismo. Esto era exactamente porque los argumentos de la función que elevábamos eran independientes unos de otros. Como la clase de tipos `Monad` permite que los cálculos dependan de los resultados de cálculos previos, lo mismo no se aplica; una mónada tiene que combinar sus efectos secundarios en secuencia.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Look up the types of the `head` and `tail` functions from the `Data.Array` module in the `purescript-arrays` package. Use do notation with the `Maybe` monad to combine these functions into a function `third` which returns the third element of an array with three or more elements. Your function should return an appropriate `Maybe` type.
-X> 1. (Medium) Write a function `sums` which uses `foldM` to determine all possible totals that could be made using a set of coins. The coins will be specified as an array which contains the value of each coin. Your function should have the following result:
+X> 1. (Fácil) Busca los tipos de las funciones `head` y `tail` del módulo `Data.array` en el paquete `purescript-arrays`. Usa notación do con la mónada `Maybe` para combinar estas funciones en una función `third` que devuelve el tercer elemento de un array de tres o más elementos. Tu función debe devolver un tipo `Maybe` apropiado.
+X> 1. (Medio) Escribe una función `sums` que usa `foldM` para determinar todos los totales posibles que se pueden conseguir usando un conjunto de monedas. Las monedas se especificarán como un array que contiene el valor de cada moneda. Tu función debe tener el siguiente resultado:
 X>
 X>     ```text
 X>     > sums []
@@ -341,17 +341,17 @@ X>     > sums [1, 2, 10]
 X>     [0,1,2,3,10,11,12,13]
 X>     ```
 X>
-X>     _Hint_: This function can be written as a one-liner using `foldM`. You might want to use the `nub` and `sort` functions to remove duplicates and sort the result respectively.
-X> 1. (Medium) Confirm that the `ap` function and the `apply` operator agree for the `Maybe` monad.
-X> 1. (Medium) Verify that the monad laws hold for the `Monad` instance for the `Maybe` type, as defined in the `purescript-maybe` package.
-X> 1. (Medium) Write a function `filterM` which generalizes the `filter` function on lists. Your function should have the following type signature:
+X>     _Pista_: Esta función se puede escribir en una línea usando `foldM`. Querrás usar las funciones `nub` y `sort` para eliminar duplicados y ordenar el resultado respectivamente.
+X> 1. (Medio) Confirma que la función `ap` y el operador `apply` concuerdan para la mónada `Maybe`.
+X> 1. (Medio) Verifica que las leyes de la mónada se cumplen para la instancia `Monad` del tipo `Maybe` definida en el paquete `purescript-maybe`.
+X> 1. (Medio) Escribe una función `filterM` que generaliza la función `filter` sobre listas. Tu función debe tener la siguiente firma de tipo:
 X>
 X>     ```haskell
 X>     filterM :: forall m a. Monad m => (a -> m Boolean) -> List a -> m (List a)
 X>     ```
 X>
-X>     Test your function in PSCi using the `Maybe` and `Array` monads.
-X> 1. (Difficult) Every monad has a default `Functor` instance given by:
+X>     Prueba tu función en PSCi usando las mónadas `Maybe` y `Array`.
+X> 1. (Difícil) Toda mónada tiene una instancia de `Functor` por defecto dada por:
 X>
 X>     ```haskell
 X>     map f a = do
@@ -359,66 +359,66 @@ X>       x <- a
 X>       pure (f x)
 X>     ```
 X>
-X>     Use the monad laws to prove that for any monad, the following holds:
+X>     Usa las leyes de la mónada para probar que para cualquier mónada, lo siguiente se cumple:
 X>
 X>     ```haskell
 X>     lift2 f (pure a) (pure b) = pure (f a b)
 X>     ```
 X>     
-X>     where the `Applicative` instance uses the `ap` function defined above. Recall that `lift2` was defined as follows:
+X>     Donde la instancia `Applicative` usa la función `ap` definida antes. Recuerda que `lift2` se definió como sigue:
 X>    
 X>     ```haskell
 X>     lift2 :: forall f a b c. Applicative f => (a -> b -> c) -> f a -> f b -> f c
 X>     lift2 f a b = f <$> a <*> b
 X>     ```
 
-## Native Effects
+## Efectos nativos (native effects)
 
-We will now look at one particular monad which is of central importance in PureScript - the `Eff` monad.
+Veremos una mónada particular que tiene una importancia central en PureScript; la mónada `Eff`.
 
-The `Eff` monad is defined in the Prelude, in the `Control.Monad.Eff` module. It is used to manage so-called _native_ side-effects.
+La mónada `Eff` está definida en el Prelude, en el módulo `Control.Monad.Eff`. Se usa para gestionar los llamados efectos secundarios _nativos_.
 
-What are native side-effects? They are the side-effects which distinguish JavaScript expressions from idiomatic PureScript expressions, which typically are free from side-effects. Some examples of native effects are:
+¿Qué son los efectos secundarios nativos? Son efectos secundarios que distinguen las expresiones JavaScript de las expresiones idiomáticas PureScript, que normalmente están libres de efectos secundarios. Algunos ejemplos de efectos nativos son: 
 
-- Console IO
-- Random number generation
-- Exceptions
-- Reading/writing mutable state
+- Entrada/salida por consola
+- Generación de números aleatorios
+- Excepciones
+- Lectura/escritura de estado mutable
 
-And in the browser:
+Y en el navegador:
 
-- DOM manipulation
-- XMLHttpRequest / AJAX calls
-- Interacting with a websocket
-- Writing/reading to/from local storage
+- Manipulación del DOM
+- Llamadas XMLHttpRequest / AJAX
+- Interactuar con un websocket
+- Escribir/leer de/a almacenamiento local
 
-We have already seen plenty of examples of "non-native" side-effects:
+Hemos visto ya varios ejemplos de efectos secundarios "no nativos":
 
-- Optional values, as represented by the `Maybe` data type
-- Errors, as represented by the `Either` data type
-- Multi-functions, as represented by arrays or lists
+- Valores opcionales representados por el tipo de datos `Maybe`
+- Errores representados por el tipo de datos `Either`
+- Multi-funciones, representadas por arrays o listas
 
-Note that the distinction is subtle. It is true, for example, that an error message is a possible side-effect of a JavaScript expression, in the form of an exception. In that sense, exceptions do represent native side-effects, and it is possible to represent them using `Eff`. However, error messages implemented using `Either` are not a side-effect of the JavaScript runtime, and so it is not appropriate to implement error messages in that style using `Eff`. So it is not the effect itself which is native, but rather how it is implemented at runtime.
+Date cuenta de que la distinción es sutil. Es cierto, por ejemplo, que un mensaje de error es un posible efecto secundario de una expresión JavaScript, en forma de excepción. En ese sentido, las excepciones representan efectos secundarios nativos y es posible representarlas usando `Eff`. Sin embargo, los mensajes de error implementados usando `Either` no son un efecto secundario del runtime de JavaScript, de manera que no es apropiado implementar los mensajes de error de ese estilo usando `Eff`. Entonces no es el efecto en sí lo que es nativo, sino la forma como se implementa en tiempo de ejecución.
 
-## Side-Effects and Purity
+## Efectos secundarios y pureza
 
-In a pure language like PureScript, one question which presents itself is: without side-effects, how can one write useful real-world code?
+En un lenguaje puro como PureScript, una pregunta que se plantea es: sin efectos secundarios, ¿cómo se puede escribir código útil en el mundo real?
 
-The answer is that PureScript does not aim to eliminate side-effects. It aims to represent side-effects in such a way that pure computations can be distinguished from computations with side-effects in the type system. In this sense, the language is still pure.
+La respuesta es que PureScript no pretende eliminar los efectos secundarios. Tiene como objetivo representar los efectos secundarios de tal manera que los cálculos puros se puedan distinguir de los cálculos con efectos secundarios en el sistema de tipos. En este sentido, el lenguaje sigue siendo puro.
 
-Values with side-effects have different types from pure values. As such, it is not possible to pass a side-effecting argument to a function, for example, and have side-effects performed unexpectedly.
+Los valores con efectos secundarios tienen tipo diferente al de los valores puros. Así, no es posible pasar un argumento con efectos secundarios a una función, por ejemplo, y tener efectos secundarios que se ejecutan de manera no esperada.
 
-The only way in which side-effects managed by the `Eff` monad will be presented is to run a computation of type `Eff eff a` from JavaScript.
+La única forma en que los efectos secundarios gestionados por la mónada `Eff` se presentarán es ejecutar un cálculo de tipo `Eff eff a` desde JavaScript.
 
-The Pulp build tool (and other tools) provide a shortcut, by generating additional JavaScript to invoke the `main` computation when the application starts. `main` is required to be a computation in the `Eff` monad.
+La herramienta de construcción Pulp (y otras herramientas) proporciona un atajo, generando JavaScript adicional para invocar el cálculo `main` cuando la aplicación comienza. `main` tiene que ser un cálculo en la mónada `Eff`.
 
-In this way, we know exactly what side-effects to expect: exactly those used by `main`. In addition, we can use the `Eff` monad to restrict what types of side-effects `main` is allowed to have, so that we can say with certainty for example, that our application will interact with the console, but nothing else.
+De esta manera, sabemos exactamente qué efectos secundarios esperar: exactamente los usados por `main`. Además, podemos usar la mónada `Eff` para restringir qué tipo de efectos secundarios puede tener `main`, de manera que podemos decir con exactitud, por ejemplo, que nuestra aplicación interactuará con la consola, pero nada más.
 
-## The Eff Monad
+## La mónada Eff
 
-The goal of the `Eff` monad is to provide a well-typed API for computations with side-effects, while at the same time generating efficient Javascript. It is also called the monad of _extensible effects_, which will be explained shortly.
+El objetivo de la mónada `Eff` es proporcionar un API bien tipado para cálculos con efectos secundarios, al tiempo que genera JavaScript eficiente. También recibe el nombre de mónada de _efectos extensibles_ (extensible effects), que explicaremos en breve.
 
-Here is an example. It uses the `purescript-random` package, which defines functions for generating random numbers:
+Aquí hay un ejemplo. Usa el paquete `purescript-random` que define funciones para generar números aleatorios:
 
 ```haskell
 module Main where
@@ -433,19 +433,19 @@ main = do
   logShow n
 ```  
 
-If this file is saved as `src/Main.purs`, then it can be compiled and run using Pulp:
+Si salvamos este fichero como `src/Main.purs`, podemos compilarlo y ejecutarlo usando Pulp:
 
 ```text
 $ pulp run
 ```
 
-Running this command, you will see a randomly chosen number between `0` and `1` printed to the console.
+Al ejecutar este comando, verás un número aleatorio elegido entre `0` y `1` impreso en la consola.
 
-This program uses do notation to combine two types of native effects provided by the Javascript runtime: random number generation and console IO.
+Este programa usa notación do para combinar dos tipos de efectos nativos proporcionados por el runtime de JavaScript: generación de números aleatorios y entrada/salida por consola.
 
-## Extensible Effects
+## Efectos extensibles (extensible effects)
 
-We can inspect the type of main by opening the module in PSCi:
+Podemos inspeccionar el tipo de `main` abriendo el módulo en PSCi:
 
 ```text
 > import Main
@@ -454,64 +454,63 @@ We can inspect the type of main by opening the module in PSCi:
 forall eff. Eff (console :: CONSOLE, random :: RANDOM | eff) Unit
 ```
 
-This type looks quite complicated, but is easily explained by analogy with PureScript’s records.
+Este tipo parece bastante complicado, pero es fácil de explicar por analogía con los registros de PureScript.
 
-Consider a simple function which uses a record type:
+Considera una función simple que usa un tipo registro:
 
 ```haskell
 fullName person = person.firstName <> " " <> person.lastName
 ```
 
-This function creates a full name string from a record containing `firstName` and `lastName` properties. If you find the type of this function in PSCi as before, you will see this:
+Esta función crea una cadena de nombre completo a partir de un registro que contiene propiedades `firstName` y `lastName`. Si averiguas el tipo de esta función en PSCi como antes, verás esto:
 
 ```haskell
 forall r. { firstName :: String, lastName :: String | r } -> String
 ```
 
-This type reads as follows: “`fullName` takes a record with `firstName` and `lastName` fields _and any other properties_ and returns a `String`”.
+Este tipo se lee como sigue: "`fullName` toma un registro con campos `firstName` y `lastName` y _otras propiedades cualesquiera_ y devuelve una `String`".
 
-That is, `fullName` does not care if you pass a record with more fields, as long as the `firstName` and `lastName` properties are present:
+Esto es, a `fullName` no le importa si pasas un registro con más campos, siempre y cuando las propiedades `firstName` y `lastName` estén presentes:
 
 ```text
 > firstName { firstName: "Phil", lastName: "Freeman", location: "Los Angeles" }
 Phil Freeman
 ```
 
-Similarly, the type of `main` above can be interpreted as follows: “`main` is a _computation with side-effects_, which can be run in any environment which supports random number generation and console IO, _and any other types of side effect_, and which returns a value of type `Unit`”.
+De manera similar, el tipo de `main` de arriba se puede interpretar como sigue: "`main` es un _cálculo con efectos secundarios_, que se puede ejecutar en cualquier entorno que soporte generación de números aleatorios y entrada/salida por consola, _y cualquier otro tipo de efectos secundarios_, y que devuelve un valor de tipo `Unit`".
 
-This is the origin of the name “extensible effects”: we can always extend the set of side-effects, as long as we can support the set of effects that we need.
+Este es el origen del nombre "efectos extensibles": podemos siempre extender el conjunto de efectos secundarios, siempre y cuando soportemos el conjunto de efectos que necesitamos.
 
-## Interleaving Effects
+## Intercalando efectos
 
-This extensibility allows code in the `Eff` monad to _interleave_ different types of side-effect.
+Esta extensibilidad permite al código en la mónada `Eff` _intercalar_ (interleave) distintos tipos de efectos secundarios.
 
-The `random` function which we used has the following type:
+La función `random` que hemos usado tiene el siguiente tipo:
 
 ```haskell
 forall eff1. Eff (random :: RANDOM | eff1) Number
 ```
 
-The set of effects `(random :: RANDOM | eff1)` here is _not_ the same as those appearing in `main`.
+El conjunto de efectos `(random :: RANDOM | eff1)` que vemos aquí _no_ es es el mismo que el que aparece en `main`.
 
-However, we can _instantiate_ the type of `random` in such a way that the effects do match. If we choose `eff1` to be `(console :: CONSOLE | eff)`, then the two sets of effects become equal, up to reordering.
+Sin embargo, podemos _instanciar_ el tipo `random` de tal manera que los efectos coinciden. Si elegimos que `eff1` sea `(console :: CONSOLE | eff)`, entonces ambos conjuntos de efectos son iguales, salvo por reordenación.
 
-Similarly, `logShow` has a type which can be specialized to match the effects of `main`:
+De manera similar, `logShow` tiene un tipo que se puede especializar para que coincida con los efectos de `main`:
 
 ```haskell
 forall eff2. Show a => a -> Eff (console :: CONSOLE | eff2) Unit
 ```
+Esta vez, hemos elegido que `eff2` sea `(random :: RANDOM | eff)`.
 
-This time we have to choose `eff2` to be `(random :: RANDOM | eff)`.
+La cuestión es que los tipos de `random` y `logShow` indican los efectos secundarios que contienen, pero de tal manera que otros efectos secundarios puedan ser _mezclados_ para construir cálculos más grandes con conjuntos de efectos secundarios más grandes.
 
-The point is that the types of `random` and `logShow` indicate the side-effects which they contain, but in such a way that other side-effects can be _mixed-in_, to build larger computations with larger sets of side-effects.
+Fíjate en que no tenemos que dar un tipo para `main`. `psc` encontrará el tipo más general para `main` dados los tipos polimórficos de `random` y `logShow`.
 
-Note that we don't have to give a type for `main`. `psc` will find a most general type for `main` given the polymorphic types of `random` and `logShow`.
+## La familia de Eff
 
-## The Kind of Eff
+El tipo de `main` no se parece a los otros tipos que hemos visto antes. Para explicarlo, necesitamos considerar la _familia_ (kind) de `Eff`. Recuerda que los tipos se clasifican por sus familias de la misma manera que los valores se clasifican por sus tipos. Hasta ahora hemos visto sólo familias construidas a partir de `*` (la familia de tipos) y `->` (que construye familias para constructores de tipos).
 
-The type of `main` is unlike other types we've seen before. To explain it, we need to consider the _kind_ of `Eff`. Recall that types are classified by their kinds just like values are classified by their types. So far, we've only seen kinds built from `*` (the kind of types) and `->` (which builds kinds for type constructors).
-
-To find the kind of `Eff`, use the `:kind` command in PSCi:
+Para averiguar la familia de `Eff`, usa el comando `:kind` en PSCi:
 
 ```text
 > import Control.Monad.Eff
@@ -520,9 +519,9 @@ To find the kind of `Eff`, use the `:kind` command in PSCi:
 # ! -> * -> *
 ```
 
-There are two symbols here that we have not seen before.
+Hay dos símbolos que no hemos visto antes.
 
-`!` is the kind of _effects_, which represents _type-level labels_ for different types of side-effects. To understand this, note that the two labels we saw in `main` above both have kind `!`:
+`!` es la familia de _efectos_, que representa _etiquetas a nivel de tipo_ (type-level labels) para distintos tipos de efectos secundarios. Para entender esto, fíjate en que las dos etiquetas que vimos en `main` tienen ambas familia `!`:
 
 ```text
 > import Control.Monad.Eff.Console
@@ -535,57 +534,57 @@ There are two symbols here that we have not seen before.
 !
 ```
 
-The `#` kind constructor is used to construct kinds for _rows_, i.e. unordered, labelled sets.
+El constructor de familia `#` se usa para construir familias para _filas_, es decir, conjuntos etiquetados sin orden.
 
-So `Eff` is parameterized by a row of effects, and its return type. That is, the first argument to `Eff` is an unordered, labelled set of effect types, and the second argument is the return type.
+Así, `Eff` está parametrizada por una fila de efectos y su tipo de retorno. Esto es, el primer argumento a `Eff` es un conjunto etiquetado no ordenado de tipos de efectos, y el segundo parámetro es el tipo de retorno.
 
-We can now read the type of `main` above:
+Podemos ya leer el tipo de `main` expuesto antes:
 
 ```text
 forall eff. Eff (console :: CONSOLE, random :: RANDOM | eff) Unit
 ```
 
-The first argument to `Eff` is `(console :: CONSOLE, random :: RANDOM | eff)`. This is a row which contains the `CONSOLE` effect and the `RANDOM` effect. The pipe symbol `|` separates the labelled effects from the _row variable_ `eff` which represents _any other side-effects_ we might want to mix in.
+El primer argumento a `Eff` es `(console :: CONSOLE, random :: RANDOM | eff)`. Esto es una fila que contiene el efecto `CONSOLE` y el efecto `RANDOM`. El símbolo barra `|` separa los efectos etiquetados de la _variable de fila_ (row variable) `eff` que representa _cualquier otro efecto secundario_ que queramos mezclar.
 
-The second argument to `Eff` is `Unit`, which is the return type of the computation.
+El segundo argumento a `Eff` es `Unit`, que es el tipo del valor de retorno del cálculo.
 
-## Objects And Rows
+## Objetos y filas
 
-Considering the kind of `Eff` allows us to make a deeper connection between extensible effects and records.
+Considerar la familia de `Eff` nos permite establecer una conexión más profunda entre efectos extensibles y registros.
 
-Take the function we defined above:
+Toma la función que definimos antes:
 
 ```haskell
 fullName :: forall r. { firstName :: String, lastName :: String | r } -> String
 fullName person = person.firstName <> " " <> person.lastName
 ```
 
-The kind of the type on the left of the function arrow must be `*`, because only types of kind `*` have values.
+La familia del tipo a la izquierda de la flecha de función ha de ser `*`, porque sólo los tipos de familia `*` tienen valores.
 
-The curly braces are actually syntactic sugar, and the full type as understood by the PureScript compiler is as follows:
+Las llaves son de hecho azúcar sintáctico, y el tipo completo que el compilador PureScript entiende es como sigue:
 
 ```haskell
 fullName :: forall r. Record (firstName :: String, lastName :: String | r) -> String
 ```
 
-Note that the curly braces have been removed, and there is an extra `Record` constructor. `Record` is a built-in type constructor defined in the `Prim` module. If we find its kind, we see the following:
+Date cuenta de que las llaves han sido eliminadas y hay un constructor extra `Record`. `Record` es un constructor de tipo incorporado definido en el módulo `Prim`. Si buscamos su familia vemos lo siguiente:
 
 ```text
 > :kind Record
 # * -> *
 ```
 
-That is, `Object` is a type constructor which takes a _row of types_ and constructs a type. This is what allows us to write row-polymorphic functions on records.
+Esto es, `Record` es un constructor de tipo que toma una _fila de tipos_ y construye un tipo. Esto es lo que nos permite escribir funciones polimórficas por fila sobre registros.
 
-The type system uses the same machinery to handle extensible effects as is used for row-polymorphic records (or _extensible records_). The only difference is the _kind_ of the types appearing in the labels. Records are parameterized by a row of types, and `Eff` is parameterized by a row of effects.
+El sistema de tipos usa la misma maquinaria para gestionar los efectos extensibles y se usa para registros polimórficos por fila (o _registros extensibles_). La única diferencia es la _familia_ de los tipos que aparecen en las etiquetas. Los registros se parametrizan por una fila de tipos, y `Eff` se parametriza por una fila de efectos.
 
-The same type system feature could even be used to build other types which were parameterized on rows of type constructors, or even rows of other rows!
+La misma característica del sistema de tipos se podría usar para construir otros tipos parametrizados por filas de constructores de tipos, ¡o incluso filas de filas!
 
-## Fine-Grained Effects
+## Efectos de grano fino (fine-grained effects)
 
-Type annotations are usually not required when using `Eff`, since rows of effects can be inferred, but they can be used to indicate to the compiler which effects are expected in a computation.
+Las anotaciones de tipo no suelen ser necesarias cuando usamos `Eff`, ya que las filas de efectos se pueden inferir, pero se pueden usar para indicar al compilador qué efectos se esperan de un cálculo.
 
-If we annotate the previous example with a _closed_ row of effects:
+Si anotamos el ejemplo previo con una fila de efectos _cerrada_
 
 ``` haskell
 main :: Eff (console :: CONSOLE, random :: RANDOM) Unit
@@ -594,15 +593,15 @@ main = do
   print n
 ```
 
-(note the lack of the row variable `eff` here), then we cannot accidentally include a subcomputation which makes use of a different type of effect. In this way, we can control the side-effects that our code is allowed to have.
+(fíjate en que no hay variable de fila `eff` aquí), entonces no podemos incluir accidentalmente un subcálculo que hace uso de un tipo de efectos diferente. De esta manera, podemos controlar los efectos secundarios que permitimos a nuestro código.
 
-## Handlers and Actions
+## Gestores (handlers) y acciones (actions)
 
-Functions such as `print` and `random` are called _actions_. Actions have the `Eff` type on the right hand side of their functions, and their purpose is to _introduce_ new effects.
+Las funciones como `print` y `random` se llaman _acciones_. Las acciones tienen el tipo `Eff` a la parte derecha de sus funciones, y su propósito es _intoducir_ nuevos efectos.
 
-This is in contrast to _handlers_, in which the `Eff` type appears as the type of a function argument. While actions _add_ to the set of required effects, a handler usually _subtracts_ effects from the set.
+Esto contrasta con los _gestores_, en los que el tipo `Eff` aparece como tipo de un argumento de la función. Mientras que las acciones _suman_ al conjunto de efectos requeridos, un gestor normalmente _resta_ efectos del conjunto.
 
-As an example, consider the `purescript-exceptions` package. It defines two functions, `throwException` and `catchException`:
+Como ejemplo, considera el paquete `purescript-exceptions`. Define dos funciones, `throwException` y `catchException`:
 
 ```haskell
 throwException :: forall a eff
@@ -615,21 +614,21 @@ catchException :: forall a eff
                -> Eff eff a
 ```
 
-`throwException` is an action. `Eff` appears on the right hand side, and introduces the new `EXCEPTION` effect.
+`throwException` es una acción. `Eff` aparece en la parte derecha e introduce el nuevo efecto `EXCEPTION`.
 
-`catchException` is a handler. `Eff` appears as the type of the second function argument, and the overall effect is to _remove_ the `EXCEPTION` effect.
+`catchException` es un gestor. `Eff` aparece como tipo del segundo argumento de la función, y el efecto neto es _eliminar_ el efecto `EXCEPTION`.
 
-This is useful, because the type system can be used to delimit portions of code which require a particular effect. That code can then be wrapped in a handler, allowing it to be embedded inside a block of code which does not allow that effect.
+Esto es útil, porque el sistema de tipos se puede usar para delimitar porciones de código que requieren un efecto concreto. Ese código se puede envolver en un gestor, permitiéndole ser empotrado dentro de un bloque de código que no permite ese efecto.
 
-For example, we can write a piece of code which throws exceptions using the `Exception` effect, then wrap that code using `catchException` to embed the computation in a piece of code which does not allow exceptions.
+Por ejemplo, podemos escribir un fragmento de código que arroja excepciones usando el efecto `Exception`, y luego envolver ese código usando `catchException` para empotrar el cálculo en un fragmento de código que no permite excepciones.
 
-Suppose we wanted to read our application's configuration from a JSON document. The process of parsing the document might result in an exception. The process of reading and parsing the configuration could be written as a function with this type signature:
+Supongamos que queremos leer la configuración de nuestra aplicación de un documento JSON. El proceso de analizar el documento puede resultar en una excepción. El proceso de leer y analizar la configuración se puede escribir como una función con esta firma de tipo:
 
 ``` haskell
 readConfig :: forall eff. Eff (err :: EXCEPTION | eff) Config
 ```
 
-Then, in the `main` function, we could use `catchException` to handle the `EXCEPTION` effect, logging the error and returning a default configuration:
+Entonces, en la función `main`, podemos usar `catchException` para gestionar el efecto `EXCEPTION` anotando el error y devolviendo una configuración por defecto:
 
 ```haskell
 main = do
@@ -641,7 +640,7 @@ main = do
       return defaultConfig
 ```
 
-The `purescript-eff` package also defines the `runPure` handler, which takes a computation with _no_ side-effects, and safely evaluates it as a pure value:
+El paquete `purescript-eff` también define el gestor `runPure`, que toma un cálculo _sin_ efectos secundarios y lo evalúa de manera segura como un valor puro:
 
 ```haskell
 type Pure a = Eff () a
@@ -649,13 +648,13 @@ type Pure a = Eff () a
 runPure :: forall a. Pure a -> a
 ```
 
-## Mutable State
+## Estado mutable
 
-There is another effect defined in the core libraries: the `ST` effect.
+Hay otro efecto definido en las bibliotecas base: el efecto `ST`.
 
-The `ST` effect is used to manipulate mutable state. As pure functional programmers, we know that shared mutable state can be problematic. However, the `ST` effect uses the type system to restrict sharing in such a way that only safe _local_ mutation is allowed.
+El efecto `ST` se usa para manipular estado mutable. Como programadores funcionales puros, sabemos que el estado mutable compartido puede ser problemático. Sin embargo, el efecto `ST` usa el sistema de tipos para restringir el uso compartido de tal manera que sólo se permita mutación _local_ segura.
 
-The `ST` effect is defined in the `Control.Monad.ST` module. To see how it works, we need to look at the types of its actions:
+El efecto `ST` se define en el módulo `Control.Monad.ST`. Para ver cómo funciona, necesitamos mirar los tipos de sus acciones:
 
 ```haskell
 newSTRef :: forall a h eff. a -> Eff (st :: ST h | eff) (STRef h a)
@@ -667,11 +666,11 @@ writeSTRef :: forall a h eff. STRef h a -> a -> Eff (st :: ST h | eff) a
 modifySTRef :: forall a h eff. STRef h a -> (a -> a) -> Eff (st :: ST h | eff) a
 ```
 
-`newSTRef` is used to create a new mutable reference cell of type `STRef h a`, which can be read using the `readSTRef` action, and modified using the `writeSTRef` and `modifySTRef` actions. The type `a` is the type of the value stored in the cell, and the type `h` is used to indicate a _memory region_ (or _heap_) in the type system.
+`newSTRef` se usa para crear una nueva referencia a una celda mutable de tipo `STRef h a`, que se puede leer usando la acción `readSTRef` y se puede modificar usando las acciones `writeSTRef` y `modifySTRef`. El tipo `a` es el tipo del valor almacenado en la celda, y el tipo `h` se usa para indicar una _región de memoria_ en el sistema de tipos.
 
-Here is an example. Suppose we want to simulate the movement of a particle falling under gravity by iterating a simple update function over a large number of small time steps.
+Aquí tenemos un ejemplo. Supongamos que queremos simular el movimiento de una partícula cayendo por la gravedad mediante la iteración de una función de actualización sobre un gran número de pequeños pasos de tiempo.
 
-We can do this by creating a mutable reference cell to hold the position and velocity of the particle, and then using a for loop (using the `forE` action in `Control.Monad.Eff`) to update the value stored in that cell:
+Podemos hacer esto creando una referencia a una celda mutable que contendrá la posición y velocidad de la partícula, y mediante un bucle for (usando la acción `forE` de `Control.Monad.Eff`) actualizar el valor almacenado en esa celda:
 
 ```haskell
 import Prelude
@@ -692,28 +691,28 @@ simulate x0 v0 time = do
   return final.x
 ```
 
-At the end of the computation, we read the final value of the reference cell, and return the position of the particle.
+Al final del cálculo, leemos el valor final de la referencia a celda y devolvemos la posición de la partícula.
 
-Note that even though this function uses mutable state, it is still a pure function, so long as the reference cell `ref` is not allowed to be used by other parts of the program. We will see that this is exactly what the `ST` effect disallows.
+Fíjate en que aunque esta función usa estado mutable, sigue siendo una función pura siempre y cuando la referencia a celda `ref` no se use en otras partes del programa. Veremos que esto es exactamente lo que el efecto `ST` no permite.
 
-To run a computation with the `ST` effect, we have to use the `runST` function:
+Para ejecutar un cálculo con el efecto `ST` tenemos que usar la función `runST`:
 
 ```haskell
 runST :: forall a eff. (forall h. Eff (st :: ST h | eff) a) -> Eff eff a
 ```
 
-The thing to notice here is that the region type `h` is quantified _inside the parentheses_ on the left of the function arrow. That means that whatever action we pass to `runST` has to work with _any region_ `h` whatsoever.
+Lo que tenemos que observar aquí es que el tipo de la region `h` está cuantificado _dentro de los paréntesis_ a la izquierda de la flecha de función. Significa que cualquier acción que pasemos a `runST` tiene que funcionar con _cualquier region_ `h`.
 
-However, once a reference cell has been created by `newSTRef`, its region type is already fixed, so it would be a type error to try to use the reference cell outside the code delimited by `runST`.  This is what allows `runST` to safely remove the `ST` effect!
+Sin embargo, una vez que una referencia a celda ha sido creada por `newSTRef`, su tipo de región ya se ha fijado, de manera que sería un error de tipos usar la referencia fuera del código delimitado por `runST`. Esto es lo que permite a `runST` eliminar el efecto `ST` de manera segura.
 
-In fact, since `ST` is the only effect in our example, we can use `runST` in conjunction with `runPure` to turn `simulate` into a pure function:
+De hecho, ya que `ST` es el único efecto de nuestro ejemplo, podemos usar `runST` junto a `runPure` para convertir `simulate` en una función pura:
 
 ```haskell
 simulate' :: Number -> Number -> Number -> Number
 simulate' x0 v0 time = runPure (runST (simulate x0 v0 time))
 ```
 
-You can even try running this function in PSCi:
+Puedes incluso intentar ejecutar la función en PSCi:
 
 ```text
 > import Main
@@ -734,7 +733,7 @@ You can even try running this function in PSCi:
 21.54
 ```
 
-In fact, if we inline the definition of `simulate` at the call to `runST`, as follows:
+De hecho, si expandimos la definición de `simulate` en la llamada a `runST` como sigue:
 
 ```haskell
 simulate :: Number -> Number -> Number -> Number
@@ -750,7 +749,7 @@ simulate x0 v0 time = runPure $ runST do
   pure final.x
 ```
 
-then the `psc` compiler will notice that the reference cell is not allowed to escape its scope, and can safely turn it into a `var`. Here is the generated JavaScript for the body of the call to `runST`:
+el compilador `psc` se dará cuenta de que la referencia a celda no puede escapar de su ámbito y puede convertirla de manera segura en una `var`. Aquí está el JavaScript generado para el cuerpo de la llamada a `runST`:
 
 ```javascript
 var ref = { x: x0, v: v0 };
@@ -770,43 +769,43 @@ Control_Monad_Eff.forE(0.0)(time * 1000.0)(function (i) {
 return ref.x;
 ```
 
-The `ST` effect is a good way to generate short JavaScript when working with locally-scoped mutable state, especially when used together with actions like `forE`, `foreachE`, `whileE` and `untilE` which generate efficient loops in the `Eff` monad.
+El efecto `ST` es una buena forma de generar JavaScript corto cuando trabajamos con estado mutable en ámbito local, especialmente cuando se usa junto a acciones como `forE`, `foreachE`, `whileE` y `untilE` que generan bucles eficientes en la mónada `Eff`.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Rewrite the `safeDivide` function to throw an exception using `throwException` if the denominator is zero.
-X> 1. (Difficult) The following is a simple way to estimate pi: randomly choose a large number `N` of points in the unit square, and count the number `n` which lie in the inscribed circle. An estimate for pi is `4n/N`. Use the `RANDOM` and `ST` effects with the `forE` function to write a function which estimates pi in this way.
+X> 1. (Medio) Reescribe la función `safeDivide` para lanzar una excepción usando `throwException` si el denominador es cero.
+X> 1. (Difícil) El siguiente es un método simple para estimar pi: elige de manera aleatoria un gran número `N` de puntos en el cuadrado unidad y cuenta el número `n` que cae en el círculo inscrito. Una estimación para pi es `4n/N`. Usa los efectos `RANDOM` y `ST` con la función `forE` para escribir una función que estima pi de esta forma.
 
-## DOM Effects
+## Efectos DOM
 
-In the final sections of this chapter, we will apply what we have learned about effects in the `Eff` monad to the problem of working with the DOM.
+En las secciones finales de este capítulo, aplicaremos lo que hemos aprendido sobre efectos en la mónada `Eff` al problema de trabajar con el DOM.
 
-There are a number of PureScript packages for working directly with the DOM, or with open-source DOM libraries. For example:
+Hay un número de paquetes PureScript para trabajar directamente con el DOM o con bibliotecas DOM de código abierto. Por ejemplo:
 
-- [`purescript-dom`](http://github.com/purescript-contrib/purescript-dom) is an extensive set of low-level bindings to the browser's DOM APIs.
-- [`purescript-jquery`](http://github.com/paf31/purescript-jquery) is a set of bindings to the [jQuery](http://jquery.org) library.
+- [`purescript-dom`](http://github.com/purescript-contrib/purescript-dom) es un conjunto amplio de vínculos de bajo nivel al API DOM del navegador.
+- [`purescript-jquery`](http://github.com/paf31/purescript-jquery) es un conjunto de vínculos a la biblioteca [jQuery](http://jquery.org).
 
-There are also PureScript libraries which build abstractions on top of these libraries, such as [`purescript-thermite`](http://github.com/paf31/purescript-thermite), which builds on `purescript-react`, and [`purescript-halogen`](http://github.com/slamdata/purescript-halogen) which provides a type-safe set of abstractions on top of the [`virtual-dom`](http://github.com/Matt-Esch/virtual-dom) library.
+Hay también bibliotecas PureScript que construyen abstracciones sobre estas bibliotecas, como [`purescript-thermite`](http://github.com/paf31/purescript-thermite), que se basa en `purescript-react`, y [`purescript-halogen`](http://github.com/slamdata/purescript-halogen) que proporciona un conjunto de abstracciones seguras a nivel de tipos sobre la biblioteca [`virtual-dom`](http://github.com/Matt-Esch/virtual-dom).
 
-In this chapter, we will use the `purescript-react` library to add a user interface to our address book application, but the interested reader is encouraged to explore alternative approaches.
+En este capítulo, usaremos la biblioteca `purescript-react` para añadir una interfaz de usuario a nuestra agenda, pero animamos al lector interesado a explorar enfoques alternativos. 
 
-## An Address Book User Interface
+## Una interfaz de usuario para la agenda
 
-Using the `purescript-react` library, we will define our application as a React _component_. React components describe HTML elements in code as pure data structures, which are then efficiently rendered to the DOM. In addition, components can respond to events like button clicks. The `purescript-react` library uses the `Eff` monad to describe how to handle these events.
+Usando la biblioteca `purescript-react`, definiremos nuestra aplicación como una _componente_ React. Las componentes React describen elementos HTML en código como estructuras de datos puras, que son presentadas de manera eficiente al DOM. Además, las componentes pueden responder a eventos como pulsaciones de botón. La biblioteca `purescript-react` usa la mónada `Eff` para describir cómo gestionar estos eventos.
 
-A full tutorial for the React library is well beyond the scope of this chapter, but the reader is encouraged to consult its documentation where needed. For our purposes, React will provide a practical example of the `Eff` monad.
+Un tutorial completo de la biblioteca React está bastante fuera del alcance de este capítulo, pero animamos al lector a consultar su documentación cuando sea necesario. Para nuestros propósitos, React proporciona un ejemplo práctico de la mónada `Eff`.
 
-We are going to build a form which will allow a user to add a new entry into our address book. The form will contain text boxes for the various fields (first name, last name, city, state, etc.), and an area in which validation errors will be displayed. As the user types text into the text boxes, the validation errors will be updated.
+Vamos a construir un formulario que permita a un usuario añadir una nueva entrada a nuestra agenda. El formulario contendrá cajas de texto para varios campos (nombre, apellido, ciudad, estado, etc.), y un área en la que mostraremos los errores de validación. Según vaya escribiendo texto el usuario en las cajas de texto, los errores de validación se actualizarán.
 
-To keep things simple, the form will have a fixed shape: the different phone number types (home, cell, work, other) will be expanded into separate text boxes.
+Para mantener las cosas simples, el formulario tendrá una forma fija: los diferentes tipos de número de teléfono (casa, móvil, trabajo, otro) se pedirán en cajas de texto separadas.
 
-The HTML file is essentially empty, except for the following line:
+El fichero HTML está básicamente vacío, excepto por la siguiente línea:
 
 ```html
 <script type="text/javascript" src="../dist/Main.js"></script>
 ```
 
-This line includes the JavaScript code which is generated by Pulp. We place it at the end of the file to ensure that the relevant elements are on the page before we try to access them. To rebuild the `Main.js` file, Pulp can be used with the `browserify` command. Make sure the `dist` directory exists first, and that you have installed React as an NPM dependency:
+Esta línea incluye el código JavaScript generado por Pulp. La ponemos al final del fichero para asegurarnos de que los elementos relevantes están en la página antes de que tratemos de accederlos. Para reconstruir el fichero `Main.js` se puede usar Pulp con el comando `browserify`. Asegúrate primero de que el directorio `dist` existe y de que has instalado React como una dependencia NPM:
 
 ```text
 $ npm install # Install React
@@ -814,43 +813,43 @@ $ mkdir dist/
 $ pulp browserify --to dist/Main.js
 ```
 
-The `Main` defines the `main` function, which creates the address book component, and renders it to the screen. The `main` function uses the `CONSOLE` and `DOM` effects only, as its type signature indicates:
+El módulo `Main` define la función `main`, que crea la componente agenda y la representa en pantalla. La función `main` usa sólo los efectos `CONSOLE` y `DOM` como indica su firma de tipo:
 
 ```haskell
 main :: Eff (console :: CONSOLE, dom :: DOM) Unit
 ```
 
-First, `main` logs a status message to the console:
+Primero, `main` registra un mensaje de estado en la consola:
 
 ```haskell
 main = void do
   log "Rendering address book component"
 ```
 
-Later, `main` uses the DOM API to obtain a reference (`doc`) to the document body:
+Después, `main` usa la API DOM para obtener una referencia (`doc`) al cuerpo del documento:
 
 ```haskell
   doc <- window >>= document
 ```
 
-Note that this provides an example of interleaving effects: the `log` function uses the `CONSOLE` effect, and the `window` and `document` functions both use the `DOM` effect. The type of `main` indicates that it uses both effects.
+Fíjate en que esto proporciona un ejemplo de efectos intercalados: la función `log` usa el efecto `CONSOLE`, y las funciones `window` y `document` usan ambas el efecto `DOM`. El tipo de `main` indica que usa ambos efectos.
 
-`main` uses the `window` action to get a reference to the window object, and passes the result to the `document` function using `>>=`. `document` takes a window object and returns a reference to its document.
+`main` usa la acción `window` para obtener una referencia al objeto ventana y pasa el resultado a la función `document` usando `>>=`. `document` toma un objeto ventana y devuelve una referencia a su documento.
 
-Note that, by the definition of do notation, we could have instead written this as follows:
+Date cuenta de que, por la definición de la notación do, podríamos haber escrito esto como sigue:
 
 ```haskell
   w <- window
   doc <- document w
 ```
 
-It is a matter of personal preference whether this is more or less readable. The first version is an example of _point-free_ form, since there are no function arguments named, unlike the second version which uses the name `w` for the window object.
+Si esto es más o menos legible es un problema de preferencia personal. La primera versión es un ejemplo de estilo _libre de puntos_, ya que no hay argumentos a función con nombre, al contrario que la segundo versión que usa el nombre `w` para el objeto ventana.
 
-The `Main` module defines an address book _component_, called `addressBook`. To understand its definition, we will need to first need to understand some concepts.
+El módulo `Main` define una _componente_ agenda, llamada `addressBook`. Para entender su definición, necesitaremos primero entender algunos conceptos.
 
-In order to create a React component, we must first create a React _class_, which acts like a template for a component. In `purescript-react`, we can create classes using the `createClass` function. `createClass` requires a _specification_ of our class, which is essentially a collection of `Eff` actions which are used to handle various parts of the component's lifecycle. The action we will be interested in is the `Render` action.
+Para crear una componente React, debemos primero crear una _clase_ React, que actúa como una plantilla para una componente. En `purescript-react` podemos crear clases usando la función `createClass`. `createClass` require una _especificación_ de nuestra clase, que es esencialmente una colección de acciones `Eff` que se usan para gestionar varias partes de ciclo de vida de la componente. La acción que nos interesa es la acción `Render`.
 
-Here are the types of some relevant functions provided by the React library:
+Aquí están los tipos de algunas funciones relevantes proporcionadas por la biblioteca React:
 
 ```haskell
 createClass
@@ -873,14 +872,14 @@ spec
   -> ReactSpec props state eff
 ```
 
-There are a few interesting things to note here:
+Hay unas cuantas cosas interesantes en las que fijarse aquí:
 
-- The `Render` type synonym is provided in order to simplify some type signatures, and it represents the rendering function for a component.
-- A `Render` action takes a reference to the component (of type `ReactThis`), and returns a `ReactElement` in the `Eff` monad. A `ReactElement` is a data structure describing our intended state of the DOM after rendering.
-- Every React component defines some type of state. The state can be changed in response to events like button clicks. In `purescript-react`, the initial state value is provided in the `spec` function.
-- The effect row in the `Render` type uses some interesting effects to restrict access to the React component's state in certain functions. For example, during rendering, access to the "refs" object is `Disallowed`, and access to the component state is `ReadOnly`.
+- El sinónimo de tipo `Render` se porporciona para simplificar algunas firmas de tipo, y denota la función representadora de una componente.
+- Una acción `Render` toma una referencia a la componente (de tipo `ReactThis`), y devuelve un `ReactElement` en la mónada `Eff`. Un `ReactElement` es una estructura de datos que describe el estado deseado del DOM tras la representación.
+- Cada componente React define algún tipo de estado. El estado puede cambiar en respuesta a eventos como pulsación de botones. En `purescript-react`, el valor inicial del estado se proporciona en la función `spec`.
+- La fila de efectos del tipo `Render` usa algunos efectos interesantes para restringir el acceso al estado de la componente React en ciertas funciones. Por ejemplo, durante la representación, el acceso al objeto "refs" no está permitido (`Disallowed`), y el acceso al estado de la componente es de sólo lectura (`ReadOnly`).
 
-The `Main` module defines a type of states for the address book component, and an initial state:
+El módulo `Main` define un tipo de estados para la componente agenda y un estado inicial:
 
 ```haskell
 newtype AppState = AppState
@@ -895,15 +894,15 @@ initialState = AppState
   }
 ```
 
-The state contains a `Person` record (which we will make editable using form components), and a collection of errors (which will be populated using our existing validation code).
+El estado contiene un registro `Person` (que haremos editable usando componentes formulario) y una colección de errores (que se rellenará usando nuestro código de validación existente).
 
-Now let's see the definition of our component:
+Veamos ahora la definición de nuestra componente:
 
 ```haskell
 addressBook :: forall props. ReactClass props
 ```
 
-As already indicated, `addressBook` will use `createClass` and `spec` to create a React class. To do so, it will provide our initial state value, and a `Render` action. However, what can we do in the `Render` action? To answer that, `purescript-react` provides some simple actions which can be used:
+Como ya hemos indicado, `addressBook` usará `createClass` y `spec` para crear una clase React. Para hacerlo, proporcionará nuestro valor de estado inicial y una acción `Render`. Sin embargo, ¿que podemos hacer en la acción `Render`? Para responder a eso, `purescript-react` proporciona algunas acciones simples que podemos usar:
 
 ```haskell
 readState
@@ -926,11 +925,11 @@ writeState
          ) state
 ```
 
-The `readState` and `writeState` functions use extensible effects to ensure that we have access to the React state (via the `ReactState` effect), but note that read and write permissions are separated further, by parameterizing the `ReactState` effect on _another_ row!
+Las funciones `readState` y `writeState` usan efectos extensibles para asegurarse de que tenemos acceso al estado de React (a través del efecto `ReactState`), pero fíjate en que los permisos de lectura y escritura están separados, parametrizando el efecto `ReactState` mediante _otra_ fila.
 
-This illustrates an interesting point about PureScript's row-based effects: effects appearing inside rows need not be simple singletons, but can have interesting structure, and this flexibility enables some useful restrictions at compile time. If the `purescript-react` library did not make this restriction then it would be possible to get exceptions at runtime if we tried to write the state in the `Render` action, for example. Instead, such mistakes are now caught at compile time.
+Esto ilustra un punto interesante acerca de los efectos basados en fila de PureScript: los efectos que aparecen dentro de las filas no tienen por qué ser singletons simples, sino que pueden tener estructura interesante, y esta flexibilidad permite algunas restricciones útiles en tiempo de compilación. Si la biblioteca `purescript-react` no usase esta restricción sería posible obtener excepciones en tiempo de ejecución si por ejemplo intentásemos escribir el estado en la acción `Render`. En su lugar, dichos errores son ahora detectados en tiempo de compilación.
 
-Now we can read the definition of our `addressBook` component. It starts by reading the current component state:
+Ahora podemos leer la definición de nuestra componente `addressBook`. Comienza leyendo el estado actual de la componente:
 
 ```haskell
 addressBook = createClass $ spec initialState \ctx -> do
@@ -939,12 +938,12 @@ addressBook = createClass $ spec initialState \ctx -> do
            } <- readState ctx
 ```
 
-Note the following:
+Fíjate en que:
 
-- The name `ctx` refers to the `ReactThis` reference, and can be used to read and write the state where appropriate.
-- The record inside `AppState` is matched using a record binder, including a record pun for the _errors_ field. We explicitly name various parts of the state structure for convenience.
+- El nombre `ctx` se refiere a la referencia a `ReactThis`, y se puede usar para leer y escribir el estado donde sea apropiado.
+- El registro dentro de `AppState` se ajusta usando una ligatura de registro, incluyendo un doble sentido de registro (record pun) para el campo _errors_. Nombramos explícitamente varias partes de la estructura de estado por conveniencia.
 
-Recall that `Render` must return a `ReactElement` structure, representing the intended state of the DOM. The `Render` action is defined in terms of some helper functions. One such helper function is `renderValidationErrors`, which turns the `Errors` structure into an array of `ReactElement`s.
+Recuerda que `Render` debe devolver una estructura `ReactElement`, representando el estado deseado del DOM. La acción `Render` se define en términos de unas funciones auxiliares. Una de dichas funciones auxiliares es `renderValidationErrors`, que convierte la estructura `Errors` en un array de `ReactElement`s.
 
 ```haskell
 renderValidationError :: String -> ReactElement
@@ -958,11 +957,11 @@ renderValidationErrors xs =
   ]
 ```
 
-In `purescript-react`, `ReactElement`s are typically created by applying functions like `div`, which create single HTML elements. These functions usually take an array of attributes, and an array of child elements as arguments. However, names ending with a prime character (like `ul'` here) omit the attribute array, and use the default attributes instead.
+En `purescript-react`' los `ReactElement`s se crean típicamente aplicando funciones como `div` que crean elementos HTML. Estas funciones normalmente toman un array de atributos y un array de elementos hijos como argumentos. Sin embargo, los nombres que acaban con una comilla (como `ul'` aquí) omiten el array de atributos y usan los atributos por defecto en su lugar.
 
-Note that since we are simply manipulating regular data structures here, we can use functions like `map` to build up more interesting elements.
+Fíjate en que como estamos simplemente manipulando estructuras de datos normales, podemos usar funciones como `map` para construir elementos más interesantes.
 
-A second helper function is `formField`, which creates a `ReactElement` containing a text input for a single form field:
+Una segunda función auxiliar es `formField`, que crea un `ReactElement` conteniendo una entrada de texto para un único campo del formulario:
 
 ```haskell
 formField
@@ -986,7 +985,7 @@ formField name hint value update =
         ]
 ```
 
-Again, note that we are composing more interesting elements from simpler elements, applying attributes to each element as we go. One attribute of note here is the `onChange` attribute applied to the `input` element. This is an _event handler_, and is used to update the component state when the user edits text in our text box. Our event handler is defined using a third helper function, `updateAppState`:
+De nuevo, date cuenta de que estamos componiendo elementos más interesantes a partir de elementos más simples, aplicando atributos a cada elemento sobre la marcha. Un atributo en el que debemos fijarnos aquí es el atributo `onChange` aplicado al elemento `input`. Esto es un _gestor de eventos_ (event handler), y se usa para actualizar el estado de la componente cuando el usuario edita el texto de nuestra caja de texto. Nuestro gestor de eventos se define usando una tercera función auxiliar, `updateAppState`:
 
 ```haskell
 updateAppState
@@ -1000,14 +999,14 @@ updateAppState
          ) Unit
 ```
 
-`updateAppState` takes a reference to the component in the form of our `ReactThis` value, a function to update the `Person` record, and the `Event` record we are responding to. First, it extracts the new value of the text box from the `change` event (using the `valueOf` helper function), and uses it to create a new `Person` state:
+`updateAppState` toma una referencia a la componente del formulario de nuestro valor `ReactThis`, una función para actualizar el registro `Person`, y el registro `Event` al que respondemos. Primero, extrae el nuevo valor de la caja de texto del evento `change` (usando la función auxiliar `valueOf`), y lo usa para crear un nuevo estado `Person`:
 
 ```haskell
   for_ (valueOf e) \s -> do
     let newPerson = update s
 ```
 
-Then, it runs the validation function, and updates the component state (using `writeState`) accordingly:
+Entonces ejecuta la función de validación y actualiza el estado de la componente (usando `writeState`) en consecuencia:
 
 ```haskell
     log "Running validators"
@@ -1022,20 +1021,20 @@ Then, it runs the validation function, and updates the component state (using `w
                                  })
 ```
 
-That covers the basics of our component implementation. However, you should read the source accompanying this chapter in order to get a full understanding of the way the component works.
+Eso cubre lo esencial de la implementación de nuestra componente. Sin embargo, debes leer el código fuente que acompaña a este capítulo para obtener una comprensión completa de la forma en que funciona la componente.
 
-Also try the user interface out by running `pulp browserify --to dist/Main.js` and then opening the `html/index.html` file in your web browser. You should be able to enter some values into the form fields and see the validation errors printed onto the page.
+Prueba también la interfaz de usuario ejecutando `pulp browserify --to dist/Main.js` y abriendo el fichero `html/index.html` en tu navegador. Debes ser capaz de introducir algunos valores en los campos del formulario y ver los errores de validación impresos en la página.
 
-Obviously, this user interface can be improved in a number of ways. The exercises will explore some ways in which we can make the application more usable.
+Obviamente, esta interfaz de usuario se puede mejorar de varias maneras. Los ejercicios explorarán varias formas en que podemos hacer la aplicación más usable.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Modify the application to include a work phone number text box.
-X> 1. (Medium) Instead of using a `ul` element to show the validation errors in a list, modify the code to create one `div` with the `alert` style for each error.
-X> 1. (Medium) Rewrite the code in the `Data.AddressBook.UI` module without explicit calls to `>>=`.
-X> 1. (Difficult, Extended) One problem with this user interface is that the validation errors are not displayed next to the form fields they originated from. Modify the code to fix this problem.
+X> 1. (Fácil) Modifica la aplicación para que incluya una caja de texto para un número de teléfono del trabajo. 
+X> 1. (Medio) En lugar de usar un elemento `ul` para mostrar los errores de validación en una lista, modifica el código para crear un `div` con el estilo `alert` para cada error.
+X> 1. (Medio) Reescribe el código del módulo `Data.AddressBook.UI` sin llamadas explícitas a `>>=`.
+X> 1. (Difícil, Extendido) Un problema con esta interfaz de usuario es que los errores de validación no se muestran junto al campo del formulario en que se originan. Modifica el código para solucionar este problema.
 X>   
-X>   _Hint_: the error type returned by the validator should be extended to indicate which field caused the error. You might want to use the following modified `Errors` type:
+X>   _Pista_: el tipo de error devuelto por el validador debe extenderse para que indique qué campo causó el error. Puedes usar el siguiente tipo `Errors` modificado:
 X>   
 X>   ```haskell
 X>   data Field = FirstNameField
@@ -1050,19 +1049,19 @@ X>
 X>   type Errors = Array ValidationError
 X>   ```
 X>
-X>   You will need to write a function which extracts the validation error for a particular `Field` from the `Errors` structure.
+X>   Necesitarás escribir una función que extrae el error de validación de un `Field` particular de la estructura `Errors`.
 
-## Conclusion
+## Conclusión
 
-This chapter has covered a lot of ideas about handling side-effects in PureScript:
+Este capítulo ha cubierto un montón de ideas sobre gestión de efectos secundarios en PureScript:
 
-- We met the `Monad` type class, and its connection to do notation.
-- We introduced the monad laws, and saw how they allow us to transform code written using do notation.
-- We saw how monads can be used abstractly, to write code which works with different side-effects.
-- We saw how monads are examples of applicative functors, how both allow us to compute with side-effects, and the differences between the two approaches.
-- The concept of native effects was defined, and we met the `Eff` monad, which is used to handle native side-effects.
-- We saw how the `Eff` monad supports extensible effects, and how multiple types of native effect can be interleaved into the same computation.
-- We saw how effects and records are handled in the kind system, and the connection between extensible records and extensible effects.
-- We used the `Eff` monad to handle a variety of effects: random number generation, exceptions, console IO, mutable state, and DOM manipulation using React.
+- Hemos conocido la clase de tipos `Monad` y su conexión con la notación do.
+- Hemos presentado las leyes de la mónada, y hemos visto que nos permiten transformar código escrito usando notación do.
+- Hemos visto cómo las mónadas se pueden usar de manera abstracta para escribir código que funciona con diferentes tipos de efectos secundarios.
+- Hemos visto cómo las mónadas son ejemplos de funtores aplicativos, cómo ambos nos permiten calcular con efectos secundarios, y las diferencias entre ambos enfoques.
+- Se ha definido el concepto de efectos nativos, y hemos conocido la mónada `Eff`, que se usa para gestionar efectos secundarios nativos. 
+- Hemos visto cómo la mónada `Eff` soporta efectos extensibles, y cómo múltiples tipos de efectos nativos se pueden intercalar en el mismo cálculo.
+- Hemos visto como los efectos y los registros se gestionan en el sistema de familias, y la conexión entre registros extensibles y efectos extensibles.
+- Hemos usado la mónada `Eff` para gestionar una variedad de efectos: generación de números aleatorios, excepciones, entrada/salida por consola, estado mutable, y manipulación del DOM usando React.
 
-The `Eff` monad is a fundamental tool in real-world PureScript code. It will be used in the rest of the book to handle side-effects in a number of other use-cases.
+La mónada `Eff` es una herramienta fundamental en el código PureScript del mundo real. Se usará en el resto del libro para gestionar efectos secundarios y en otros casos de uso.

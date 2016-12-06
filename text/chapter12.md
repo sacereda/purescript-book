@@ -1,20 +1,20 @@
-# Callback Hell
+# El infierno de retrollamadas (callback hell)
 
-## Chapter Goals
+## Objetivos del capítulo
 
-In this chapter, we will see how the tools we have seen so far - namely monad transformers and applicative functors - can be put to use to solve real-world problems. In particular, we will see how we can solve the problem of _callback hell_.
+En este capítulo veremos cómo las herramientas que hemos visto hasta ahora (a saber, transformadores de mónada y funtores aplicativos) se pueden usar para resolver algunos problemas del mundo real. En particular, veremos cómo podemos resolver el problema del infierno de retrollamadas.
 
-## Project Setup
+## Preparación del proyecto
 
-The source code for this chapter can be compiled and run using `pulp run`. It is also necessary to install the `request` module using NPM:
+El código fuente de este capítulo se puede compilar y ejecutar usando `pulp run`. También es necesario instalar el módulo `request` usando NPM:
 
 ```text
 npm install
 ```
 
-## The Problem
+## El problema
 
-Asynchronous code in JavaScript typically uses _callbacks_ to structure program flow. For example, to read text from a file, the preferred approach is to use the `readFile` function and to pass a callback - a function that will be called when the text is available:
+El código asíncrono en JavaScript usa normalmente _retrollamadas_ (callbacks) para estructurar el flujo del programa. Por ejemplo, para leer texto de un fichero, el método preferido es usar la función `readFile` y pasar una retrollamada (una función que se llamará cuando el texto esté disponible):
 
 ```javascript
 function readText(onSuccess, onFailure) {
@@ -29,7 +29,7 @@ function readText(onSuccess, onFailure) {
 }
 ```
 
-However, if multiple asynchronous operations are involved, this can quickly lead to nested callbacks, which can result in code which is difficult to read:
+Sin embargo, si hay involucradas múltiples operaciones, esto puede llevar rápidamente a retrollamadas anidadas, lo que puede acabar en código difícil de leer:
 
 ```javascript
 function copyFile(onSuccess, onFailure) {
@@ -50,7 +50,7 @@ function copyFile(onSuccess, onFailure) {
 }
 ```
 
-One solution to this problem is to break out individual asynchronous calls into their own functions:
+Una solución a este problema es descomponer las llamadas asíncronas individuales en sus propias funciones:
 
 ```javascript
 function writeCopy(data, onSuccess, onFailure) {
@@ -76,20 +76,20 @@ function copyFile(onSuccess, onFailure) {
 }
 ```
 
-This solution works but has some issues:
+Esta solución funciona, pero tiene algunos problemas:
 
-- It is necessary to pass intermediate results to asynchronous functions as function arguments, in the same way that we passed `data` to `writeCopy` above. This is fine for small functions, but if there are many callbacks involved, the data dependencies can become complex, resulting in many additional function arguments.
-- There is a common pattern - the callbacks `onSuccess` and `onFailure` are usually specified as arguments to every asynchronous function - but this pattern has to be documented in module documentation which accompanies the source code. It is better to capture this pattern in the type system, and to use the type system to enforce its use.
+- Es necesario pasar resultados intermedios a funciones asíncronas como argumentos de función, de la misma manera que hemos pasado `data` a `writeCopy` arriba. Esto está bien para funciones pequeñas, pero si hay muchas retrollamadas involucradas, las dependencias de datos pueden volverse complejas, resultando en muchos argumentos de función adicionales.
+- Hay un patrón común. Las retrollamadas `onSuccess` y `onFailure` se especifican normalmente como argumentos a cada función asíncrona. Pero este patrón se tiene que documentar en la documentación del módulo que acompaña el código fuente. Es mejor capturar este patrón en el sistema de tipos y usarlo para forzar su uso.
 
-Next, we will see how to use the techniques we have learned so far to solve these issues.
+A continuación veremos cómo usar las técnicas que hemos aprendido hasta ahora para resolver estos problemas.
 
-## The Continuation Monad
+## La mónada de continuación
 
-Let's translate the `copyFile` example above into PureScript by using the FFI. In doing so, the structure of the computation will become apparent, and we will be led naturally to a monad transformer which is defined in the `purescript-transformers` package - the continuation monad transformer `ContT`.
+Traduzcamos el ejemplo `copyFile` de arriba a PureScript usando la FFI. Al hacerlo, la estructura del cálculo resultará evidente, y seremos conducidos de manera natural a un transformador de mónada definido en el paquete `purescript-transformers`; el transformador de mónada de continuación `ContT`.
 
-_Note_: in practice, it is not necessary to write these functions by hand every time. Asynchronous file IO functions can be found in the `purescript-node-fs` and `purescript-node-fs-aff` libraries.
+_Nota_: en la práctica no es necesario escribir estas funciones a mano cada vez. Puedes encontrar funciones de entrada/salida asíncrona en las bibliotecas `purescript-node-fs` y `purescript-node-fs-aff`.
 
-First, we need to gives types to `readFile` and `writeFile` using the FFI. Let's start by defining some type synonyms, and a new effect for file IO:
+Primero tenemos que dar tipos a `readFile` y `writeFile` usando la FFI. Comencemos definiendo algunos sinónimos de tipo y un nuevo efecto para entrada/salida de fichero:
 
 ```haskell
 foreign import data FS :: !
@@ -98,9 +98,9 @@ type ErrorCode = String
 type FilePath = String
 ```
 
-`readFile` takes a filename and a callback which takes two arguments. If the file was read successfully, the second argument will contain the file contents, and if not, the first argument will be used to indicate the error.
+`readFile` toma un nombre de fichero y una retrollamada que toma dos argumentos. Si el fichero ha sido leído con éxito, el segundo argumento tendrá el contenido del fichero, y si no, el primer argumento se usará para indicar el error.
 
-In our case, we will wrap `readFile` with a function which takes two callbacks: an error callback (`onFailure`) and a result callback (`onSuccess`), much like we did with `copyFile` and `writeCopy` above. Using the multiple-argument function support from `Data.Function` for simplicity, our wrapped function `readFileImpl` might look like this:
+En nuestro caso, envolveremos `readFile` con una función que toma dos retrollamadas: una retrollamada de error (`onFailure`) y una retrollamada de resultado (`onSuccess`), igual que hicimos con `copyFile` y `writeCopy` arriba. Usando el soporte de funciones de múltiples argumentos de `Data.Function` por simplicidad, nuestra función envuelta `readFileImpl` puede tener esta pinta:
 
 ```haskell
 foreign import readFileImpl
@@ -111,7 +111,7 @@ foreign import readFileImpl
          (Eff (fs :: FS | eff) Unit)
 ```
 
-In the foreign Javascript module, `readFileImpl` would be defined as:
+En el módulo externo JavaScript, `readFileImpl` estaría definida como:
 
 ```javascript
 exports.readFileImpl = function(path, onSuccess, onFailure) {
@@ -129,11 +129,11 @@ exports.readFileImpl = function(path, onSuccess, onFailure) {
 };
 ```
 
-This type signature indicates that `readFileImpl` takes three arguments: a file path, a success callback and an error callback, and returns an effectful computation which returns an empty (`Unit`) result. Notice that the callbacks themselves are given types which use the `Eff` monad to track their effects.
+Esta firma de tipo indica que `readFileImpl` toma tres argumentos: una ruta de fichero, una retrollamada de éxito y una retrollamada de error, y devuelve un cálculo con efectos secundarios que devuelve un resultado vacío (`Unit`). Fíjate en que a las retrollamadas les damos tipos que usan la mónada `Eff` para registrar sus efectos.
 
-You should try to understand why this implementation has the correct runtime representation for its type.
+Debes intentar entender por qué esta implementación tiene la representación correcta en tiempo de ejecución para su tipo.
 
-`writeFileImpl` is very similar - it is different only in that the file content is passed to the function itself, not to the callback. Its implementation looks like this:
+`writeFileImpl` es muy similar; difiere únicamente en que el contenido del fichero se pasa a la función, no a la retrollamada. Su implementación tiene esta pinta:
 
 ```haskell
 foreign import writeFileImpl
@@ -161,9 +161,9 @@ exports.writeFileImpl = function(path, data, onSuccess, onFailure) {
 };
 ```
 
-Given these FFI declarations, we can write the implementations of `readFile` and `writeFile`. These will use the `Data.Function.Uncurried` module to turn the multiple-argument FFI bindings into regular (curried) PureScript functions, and therefore have slightly more readable types.
+Dadas estas declaraciones FFI, podemos escribir las implementaciones de `readFile` y `writeFile`. Estas usarán el módulo `Data.Function.Uncurried` para convertir las ligaduras FFI de múltiples argumentos en funciones currificadas normales de PureScript, y que por lo tanto tienen tipos algo más legibles.
 
-In addition, instead of requiring two callbacks, one for successes and one for failures, we can require only a single callback which responds to _either_ successes or failures. That is, the new callback takes a value in the `Either ErrorCode` monad as its argument:
+Además, en lugar de requerir dos retrollamadas, una para éxitos y otra para fallos, podemos requerir una única retrollamada que responde a ambas cosas. Esto es, la nueva retrollamda toma un valor en la mónada `Either ErrorCode` como argumento:
 
 ```haskell
 readFile
@@ -191,29 +191,29 @@ writeFile path text k =
          (k <<< Left)
 ```
 
-Now we can spot an important pattern. Each of these functions takes a callback which returns a value in some monad (in this case `Eff (fs :: FS | eff)`) and returns a value in _the same monad_. This means that when the first callback returns a result, that monad can be used to bind the result to the input of the next asynchronous function. In fact, that's exactly what we did by hand in the `copyFile` example.
+Ahora podemos identificar un patrón importante. Cada una de estas funciones toma una retrollamada que devuelve un valor en alguna mónada (en este caso, `Eff (fs :: FS | eff)`) y devuelve un valor en _la misma mónada_. Esto significa que cuando la primera retrollamada devuelve un resultado, esa mónada se puede usar para ligar el resultado a la entrada de la siguiente función asíncrona. De hecho, eso es exactamente lo que hicimos a mano en el ejemplo `copyFile`.
 
-This is the basis of the _continuation monad transformer_, which is defined in the `Control.Monad.Cont.Trans` module in `purescript-transformers`.
+Esto es la base del _transformador de mónada de continuación_, que está definido en el módulo `Control.Monad.Cont.Trans` de `purescript-transformers`.
 
-`ContT` is defined as a newtype as follows:
+`ContT` se define como un newtype como sigue:
 
 ```haskell
 newtype ContT r m a = ContT ((a -> m r) -> m r)
 ```
 
-A _continuation_ is just another name for a callback. A continuation captures the _remainder_ of a computation - in our case, what happens after a result has been provided after an asynchronous call.
+Una _continuación_ es simplemente otro nombre para una retrollamada. Una continuación captura el _resto_ de un cálculo; en nuestro caso, qué sucede después de que el resultado sea proporcionado tras una llamada asíncrona.
 
-The argument to the `ContT` data constructor looks remarkably similar to the types of `readFile` and `writeFile`. In fact, if we take the type `a` to be the type `Either ErrorCode String`, `r` to be `Unit` and `m` to be the monad `Eff (fs :: FS | eff)`, we recover the right-hand side of the type of `readFile`.
+El argumento al constructor de datos `ContT` se parece notablemente a los tipos de `readFile` y `writeFile`. De hecho, si hacemos que el tipo `a` sea el tipo `Either ErrorCode String`, `r` sea `Unit` y `m` la mónada `Eff (fs :: FS | eff)`, podemos recuperar la parte derecha del tipo de `readFile`.
 
-This motivates the following type synonym, defining an `Async` monad, which we will use to compose asynchronous actions like `readFile` and `writeFile`:
+Esto motiva el siguiente sinónimo de tipo, definiendo una mónada `Async`, que usaremos para componer acciones asíncronas como `readFile` y `writeFile`:
 
 ```haskell
 type Async eff = ContT Unit (Eff eff)
 ```
 
-For our purposes, we will always use `ContT` to transform the `Eff` monad, and the type `r` will always be `Unit`, but this is not required.
+Para nuestros propósitos, siempre usaremos `ContT` para transformar la mónada `Eff`, y el tipo `r` será siempre `Unit`, pero esto no es obligatorio.
 
-We can treat `readFile` and `writeFile` as computations in the `Async` monad, by simply applying the `ContT` data constructor:
+Podemos tratar `readFile` y `writeFile` como cálculos en la mónada `Async` aplicando simplemente el constructor de datos `ContT`:
 
 ```haskell
 readFileCont
@@ -230,7 +230,7 @@ writeFileCont
 writeFileCont path text = ContT $ writeFile path text
 ```
 
-With that, we can write our copy-file routine by simply using do notation for the `ContT` monad transformer:
+Con eso, podemos escribir nuestra rutina de copia de ficheros usando notación do para el transformador de mónada `ContT`:
 
 ```haskell
 copyFileCont
@@ -245,9 +245,9 @@ copyFileCont src dest = do
     Right content -> writeFileCont dest content
 ```
 
-Note how the asynchronous nature of `readFileCont` is hidden by the monadic bind expressed using do notation - this looks just like synchronous code, but the `ContT` monad is taking care of wiring our asynchronous functions together.
+Fíjate en cómo la naturaleza asíncrona de `readFileCont` queda oculta por la ligadura monádica expresada usando notación do; parece código síncrono, pero la mónada `ContT` es la que se ocupa de hilar nuestras funciones asíncronas.
 
-We can run this computation using the `runContT` handler by providing a continuation. The continuation represents _what to do next_, i.e. what to do when the asynchronous copy-file routine completes. For our simple example, we can just choose the `logShow` function as the continuation, which will print the result of type `Either ErrorCode Unit` to the console:
+Podemos ejecutar este cálculo usando el gestor `runContT` suministrando una continuación. La continuación representa _qué hacer a continuación_, es decir, qué hacer cuando la rutina asíncrona de copia de ficheros finaliza. Para nuestro ejemplo simple, podemos elegir `logShow` como función de continuación, que imprimirá el resultado de tipo `Either ErrorCode Unit` a la consola:
 
 ```haskell
 import Prelude
@@ -261,10 +261,10 @@ main =
     logShow
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use `readFileCont` and `writeFileCont` to write a function which concatenates two text files.
-X> 1. (Medium) Use the FFI to give an appropriate type to the `setTimeout` function. Write a wrapper function which uses the `Async` monad:
+X> 1. (Fácil) Usa `readFileCont` y `writeFileCont` para escribir una función que concatena dos ficheros de texto.
+X> 1. (Medio) Usa la FFI para dar un tipo apropiado a la función `setTimeout`. Escribe una función envoltorio usando la mónada `Async`:
 X>
 X>     ```haskell
 X>     type Milliseconds = Number
@@ -277,19 +277,19 @@ X>        . Milliseconds
 X>       -> Async (timeout :: TIMEOUT | eff) Unit
 X>     ```
 
-## Putting ExceptT To Work
+## Poniendo ExceptT a trabajar
 
-This solution works, but it can be improved.
+Esta solución funciona, pero puede mejorarse.
 
-In the implementation of `copyFileCont`, we had to use pattern matching to analyze the result of the `readFileCont` computation (of type `Either ErrorCode String`) to determine what to do next. However, we know that the `Either` monad has a corresponding monad transformer, `ExceptT`, so it is reasonable to expect that we should be able to use `ExceptT` with `ContT` to combine the two effects of asynchronous computation and error handling.
+En la implementación de `copyFileCont` tuvimos que usar ajuste de patrones para analizar el resultado del cálculo `readFileCont` (de tipo `Either ErrorCode String`) para determinar qué hacer a continuación. Sin embargo, sabemos que la mónada `Either` tiene un transformador de mónada correspondiente, `ExceptT`, de forma que es razonable esperar que podamos usar `ExceptT` con `ContT` para combinar los dos efectos de cálculo asíncrono y gestión de errores.
 
-In fact, it is possible, and we can see why if we look at the definition of `ExceptT`:
+De hecho es posible, y podemos ver por qué si miramos la definición de `ExceptT`:
 
 ```haskell
 newtype ExceptT e m a = ExceptT (m (Either e a))
 ```
 
-`ExceptT` simply changes the result of the underlying monad from `a` to `Either e a`. This means that we can rewrite `copyFileCont` by transforming our current monad stack with the `ExceptT ErrorCode` transformer. It is as simple as applying the `ExceptT` data constructor to our existing solution:
+`ExceptT` simplemente cambia el resultado de la mónada subyacente de `a` a `Either e a`. Esto significa que podemos reescribir `copyFileCont` transformando nuestra pila de mónadas actual con el transformador `ExceptT ErrorCode`. Es tan simple como aplicar el constructor `ExceptT` a nuestra solución existente:
 
 ```haskell
 readFileContEx
@@ -306,7 +306,7 @@ writeFileContEx
 writeFileContEx path text = ExceptT $ writeFileCont path text
 ```
 
-Now, our copy-file routine is much simpler, since the asynchronous error handling is hidden inside the `ExceptT` monad transformer:
+Ahora, nuestra rutina de copia de fichero es mucho más simple, ya que la gestión de errores asíncrona queda oculta dentro del transformador de mónada `ExceptT`:
 
 ```haskell
 copyFileContEx
@@ -319,16 +319,16 @@ copyFileContEx src dest = do
   writeFileContEx dest content
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Modify your solution which concatenated two files, using `ExceptT` to handle any errors.
-X> 1. (Medium) Write a function `concatenateMany` to concatenate multiple text files, given an array of input file names. _Hint_: use `traverse`.
+X> 1. (Medio) Modifica tu solución a la concatenación de ficheros para que use `ExceptT` para gestionar cualquier error.
+X> 1. (Medio) Escribe una función `concatenateMany` para concatenar múltiples ficheros de texto dado un array de rutas de fichero de entrada. _Pista_: usa `traverse`.
 
-## A HTTP Client
+## Un cliente HTTP
 
-As another example of using `ContT` to handle asynchronous functions, we'll now look at the `Network.HTTP.Client` module from this chapter's source code. This module uses the `Async` monad to support asynchronous HTTP requests using the `request` module, which is available via NPM.
+Como otro ejemplo de uso de `ContT` para gestionar funciones asíncronas, vamos a ver el módulo `Network.HTTP.Client` del código fuente de este capítulo. Este módulo usa la mónada `Async` para soportar peticiones HTTP asíncronas usando el módulo `request`, disponible via NPM.
 
-The `request` module provides a function which takes a URL and a callback, makes a HTTP(S) request and invokes the callback when the response is available, or in the event of an error. Here is an example request:
+El módulo `request` suministra una función que toma un URL y una retrollamada, hace una petición HTTP(S) e invoca la retrollamada cuando la respuesta está disponible, o cuando ocurre un error. Aquí tenemos un ejemplo de petición:
 
 ```javascript
 require('request')('http://purescript.org'), function(err, _, body) {
@@ -340,9 +340,9 @@ require('request')('http://purescript.org'), function(err, _, body) {
 });
 ```
 
-We will recreate this simple example in PureScript using the `Async` monad.
+Vamos a recrear este ejemplo simple en PureScript usando la mónada `Async`.
 
-In the `Network.HTTP.Client` module, the `request` method is wrapped with a function `getImpl`:
+En el módulo `Network.HTTP.Client`, el método `request` está envuelto con una función `getImpl`:
 
 ```haskell
 foreign import data HTTP :: !
@@ -371,7 +371,7 @@ exports.getImpl = function(uri, done, fail) {
 };
 ```
 
-Again, we can use the `Data.Function.Uncurried` module to turn this into a regular, curried PureScript function. As before, we turn the two callbacks into a single callback, this time accepting a value of type `Either String String`, and apply the `ContT` constructor to construct an action in our `Async` monad:
+De nuevo, podemos usar el módulo `Data.Function.Uncurried` para convertir esto en una función currificada PureScript normal. Como antes, combinamos las dos retrollamadas en una, esta vez aceptando un valor de tipo `Either String String`, y aplicamos el constructor `ContT` para construir una acción en nuestra mónada `Async`:
 
 ```haskell
 get :: forall eff.
@@ -381,19 +381,19 @@ get req = ContT \k ->
   runFn3 getImpl req (k <<< Right) (k <<< Left)
 ```
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use `runContT` to test `get` in PSCi, printing the result to the console.
-X> 1. (Medium) Use `ExceptT` to write a function `getEx` which wraps `get`, as we did previously for `readFileCont` and `writeFileCont`.
-X> 1. (Difficult) Write a function which saves the response body of a request to a file on disk using `getEx` and `writeFileContEx`.
+X> 1. (Fácil) Usa `runContT` para probar `get` en PSCi, imprimiendo los resultados en la consola.
+X> 1. (Medio) Usa `ExceptT` para escribir una función `getEx` que envuelve `get`, como hicimos previamente para `readFileCont` y `writeFileCont`.
+X> 1. (Difícil) Escribe una función que salva a fichero el cuerpo de la respuesta a una petición usando `getEx` y `writeFileContEx`.
 
-## Parallel Computations
+## Cálculos paralelos
 
-We've seen how to use the `ContT` monad and do notation to compose asynchronous computations in sequence. It would also be useful to be able to compose asynchronous computations _in parallel_.
+Hemos visto cómo usar la mónada `ContT` y la notación do para componer cálculos asíncronos en secuencia. Sería también útil poder componer cálculos asíncronos _en paralelo_.
 
-If we are using `ContT` to transform the `Eff` monad, then we can compute in parallel simply by initiating our two computations one after the other.
+Si usamos `ContT` para transformar la mónada `Eff`, podemos realizar cálculos en paralelo simplemente iniciando nuestros dos cálculos uno tras otro.
 
-The `purescript-parallel` package defines a type class `MonadPar` for monads like `Async` which support parallel execution. `MonadPar` is defined in terms of a function `par` with the following type signature:
+El paquete `purescript-parallel` define una clase de tipos `MonadPar` para mónadas como `Async` que soportan ejecución paralela. `MonadPar` se define en términos de una función `par` con la siguiente firma de tipo:
 
 ```haskell
 par :: forall m a b r
@@ -404,13 +404,13 @@ par :: forall m a b r
     -> m r
 ```
 
-`par` takes two asynchronous computations, and a function to combine their results, and returns a single computation which computes and combines the results in parallel.
+`par` toma dos cálculos asíncronos y una función para combinar sus resultados, y devuelve un único cálculo que calcula y combina los resultados en paralelo.
 
-We can use the `par` function to read two files in parallel, or to issue two HTTP requests and wait for their results in parallel.
+Podemos usar la función `par` para leer dos ficheros en paralelo, o para emitir dos peticiones HTTP y esperar a sus resultados en paralelo.
 
-`purescript-parallel` defines an instance of `MonadPar` for the `ContT` monad transformer applied to the `Eff eff` monad. It uses mutable references (with the `Ref` effect) to implement `MonadPar`, by keeping track of which of the two continuations has been called. When both results have been returned, we can compute the final result and pass it to the main continuation.
+`purescript-parallel` define una instancia de `MonadPar` para el transformador de mónada `ContT` aplicado a la mónada `Eff eff`. Usa referencias mutables (con el efecto `REF`) para implementar `MonadPar`, llevando registro de cuál de las dos continuaciones se ha llamado. Cuando ambos resultados han sido devueltos, podemos calcular el resultado final y pasarlo a la continuación principal.
 
-Here is a simple example which reads two text files in parallel, and concatenates and prints their results.
+Aquí hay un simple ejemplo que lee dos ficheros de texto en paralelo, los concatena e imprime el resultado.
 
 ```haskell
 import Prelude
@@ -424,12 +424,12 @@ main = flip runContT logShow $
                      (readFileCont "/tmp/2.txt")
 ```
 
-Note that, since `readFileCont` returns a value of type `Either ErrorCode String`, we need to lift the `append` function over the `Either` type constructor using `lift2` to form our combining function.
+Fíjate en que, ya que `readFileCont` devuelve un valor de tipo `Either ErrorCode String`, necesitamos elevar la función `append` sobre el constructor de tipo `Either` usando `lift2` para formar nuestra función combinadora.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Use `par` with `get` to make two HTTP requests and collect their response bodies in parallel. Your combining function should concatenate the two response bodies, and your continuation should use `print` to print the result to the console.
-X> 1. (Medium) `purescript-parallel` defines another function
+X> 1. (Fácil) Usa `par` con `get` para hacer dos peticiones HTTP y recolectar los cuerpos de la respuesta en paralelo. Tu función combinadora debe concatenar ambos cuerpos y tu continuación debe usar `print` para imprimir el resultado a consola.
+X> 1. (Medio) `purescript-parallel` define otra función
 X>
 X>     ```haskell
 X>     race :: forall m a
@@ -439,9 +439,9 @@ X>          -> m a
 X>          -> m a
 X>     ```
 X>
-X>     which executes two computations in parallel, and returns the result from the computation which completes first.
+X>     que ejecuta dos cálculos en paralelo y devuelve el resultado del cálculo que finaliza primero.
 X>
-X>     Use the `race` function in conjunction with your `setTimeoutCont` function to define a function
+X>     Usa la función `race` junto a tu función `setTimeoutCont` para definir una función
 X>
 X>     ```haskell
 X>     timeout :: forall a eff
@@ -450,13 +450,13 @@ X>             -> Async (timeout :: TIMEOUT | eff) a
 X>             -> Async (timeout :: TIMEOUT | eff) (Maybe a)
 X>     ```
 X>
-X>     which returns `Nothing` if the specified computation does not provide a result within the given number of milliseconds.
+X>     que devuelve `Nothing` si el cálculo especificado no proporciona un resultado en el número de milisegundos especificado.
 
-## An Applicative Functor For Parallelism
+## Un funtor aplicativo para paralelismo
 
-The type of the `par` combinator looks a lot like the type of `lift2` for the monad `m`. In fact, it is possible to define a new applicative functor for which `par` is _exactly_ `lift2`.
+El tipo del combinador `par` se parece mucho al tipo de `lift2` para la mónada `m`. De hecho, es posible definir un nuevo funtor aplicativo para el que `par` es _exactamente_ `lift2`.
 
-You might be wondering why we don't define an `Applicative` instance for `m` directly in terms of `par`. The reason is this: if a type constructor has a `Monad` instance, then it is expected that the `Monad` and `Applicative` instances agree, in the sense that `apply` is equivalent to the following function:
+Te puedes preguntar por qué no definimos una instancia de `Applicative` para `m` directamente en términos de `par`. La razón es la siguiente: si un constructor de tipo tiene instancia `Monad`, se espera que las instancias de `Monad` y `Applicative` concuerden, en el sentido de que `apply` sea equivalente a la siguiente función:
 
 ```haskell
 ap :: forall m a b. Monad m => m (a -> b) -> m a -> m b
@@ -466,36 +466,36 @@ ap mf ma = do
   return (f a)
 ```
 
-This allows us to refactor code, by replacing independent computations in a `do` block with a call to `apply` (or `lift2`, or a related function). However, our hypothetical `Applicative` instance differs from the `Monad` instance in the amount of parallelism: `apply` evaluates its arguments in parallel, whereas `ap` waits for its first computation to complete before executing the second.
+Esto nos permite refactorizar código sustituyendo cálculos independientes en un bloque `do` con una llamada a `apply` (o `lift2`, o una función relacionada). Sin embargo, nuestra hipotética instancia `Applicative` difiere de la instancia `Monad` en la cantidad de paralelismo: `apply` evalúa sus argumentos en paralelo, mientras que `ap` espera a que termine su primer cálculo antes de ejecutar el segundo.
 
-Instead, `purescript-parallel` defines a newtype wrapper for `m a`, called `Parallel m a`, as follows:
+En su lugar, `purescript-parallel` define un envoltorio newtype para `m a`, llamado `Parallel m a`, como sigue:
 
 ```haskell
 newtype Parallel m a = Parallel (m a)
 ```
 
-We can write a function which turns a `Parallel m` computation into a computation in the `m` monad, by simply removing the outer data constructor. This is provided by the `runParallel` function:
+Podemos escribir una función que convierte un cálculo `Parallel m` en un cálculo en la mónada `m`, simplemente quitando el constructor de datos externo. Esto lo proporciona la función `runParallel`:
 
 ```haskell
 runParallel :: forall m a. Parallel m a -> m a
 ```
 
-The inverse transformation, from `Async` to `Parallel` is called `parallel`:
+La transformación inversa, de `Async` a `Parallel` se llama `parallel`:
 
 ```haskell
 parallel :: forall m a. m a -> Parallel m a
 ```
 
-The `Functor` instance for `Parallel m` is built directly from the `Functor` instance for `m`. However, in the case of the `Apply` type class, the `par` function is used instead:
+La instancia `Functor` para `Parallel m` se construye directamente a partir de la instancia `Functor` para `m`. Sin embargo, en el caso de la clase de tipos `Apply`, se usa la función `par` en su lugar:
 
 ```haskell
 instance applyParallel :: MonadPar m => Apply (Parallel m) where
   apply f a = parallel (par ($) (runParallel f) (runParallel a))
 ```
 
-`par` is used to combine a function with its argument by using function application `($)` as the combining function.
+`par` se usa para combinar una función con su argumento usando aplicación de función `($)` como función combinadora.
 
-We can now rewrite our example above to read two files in parallel by using the `Parallel` type constructor:
+Podemos ahora reescribir nuestro ejemplo anterior para leer dos ficheros en paralelo usando el constructor de tipo `Parallel`:
 
 ```haskell
 import Prelude
@@ -509,29 +509,29 @@ main = flip runContT logShow $ runParallel $
                <*> parallel (readFileCont "/tmp/2.txt")
 ```
 
-Because applicative functors support lifting of functions of arbitrary arity, we can perform more computations in parallel by using the applicative combinators. We can also benefit from all of the standard library functions which work with applicative functors, such as `traverse` and `sequence`!
+Dado que los funtores aplicativos soportan elevar funciones de aridad arbitraria, podemos realizar más cálculos en paralelo usando los combinadores aplicativos. ¡Podemos también beneficiarnos de todas las funciones de biblioteca estándar que trabajan con funtores aplicativos, como `traverse` y `sequence`!
 
-We can also combine parallel computations with sequential portions of code, by using applicative combinators in a do notation block, or vice versa, using `parallel` and `runParallel` to change type constructors where appropriate.
+Podemos también combinar cálculos paralelos con porciones de código secuencial usando combinadores aplicativos en un bloque en notación do, o viceversa, usando `parallel` y `runParallel` para cambiar los constructores de tipo donde sea apropiado.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Rewrite the parallel file IO example to use `ExceptT` for error handling, instead of lifting `append` with `lift2`. Your solution should use the `ExceptT` transformer to transform the `Parallel` functor.
+X> 1. (Medio) Reescribe el ejemplo de entrada/salida de fichero paralela para que use `ExceptT` para gestión de errores, en lugar de elevar `append` con `lift2`. Tu solución debe usar el transformador `ExceptT` para transformar el funtor `Parallel`.
 X>
-X>     Use this approach to modify your `concatenateMany` function to read the multiple input files in parallel.
-X> 1. (Difficult, Extended) Suppose we are given a collection of JSON documents on disk, such that each document contains an array of references to other files on disk:
+X>     Usa este método para modificar tu función `concatenateMany` de forma que lea múltiples ficheros de entrada en paralelo.
+X> 1. (Difícil, Extendido) Supongamos que nos dan una colección de documentos JSON en disco, de forma que cada documento contiene un array de referencias a otros ficheros en disco:
 X>
 X>     ```javascript
 X>     { references: ['/tmp/1.json', '/tmp/2.json'] }
 X>     ```
 X>     
-X>     Write a utility which takes a single filename as input, and spiders the JSON files on disk referenced transitively by that file, collecting a list of all referenced files.
+X>     Escribe una utilidad que toma un único fichero como entrada y recorre todos los ficheros JSON del disco referenciados de manera transitiva por ese fichero, acumulando una lista de todos los ficheros referenciados.
 X>
-X>     Your utility should use the `purescript-foreign` library to parse the JSON documents, and should fetch files referenced by a single file in parallel.
+X>     Tu utilidad debe usar la biblioteca `purescript-foreign` para analizar los documentos JSON, y debe extraer los ficheros referenciados por un único fichero en paralelo.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we have seen a practical demonstration of monad transformers:
+En este capítulo, hemos visto una demostración práctica de los transformadores de mónada:
 
-- We saw how the common JavaScript idiom of callback-passing can be captured by the `ContT` monad transformer.
-- We saw how the problem of callback hell can be solved by using do notation to express sequential asynchronous computations, and an applicative functor to express parallelism.
-- We used `ExceptT` to express _asynchronous errors_.
+- Vimos cómo el idioma común en JavaScript de pasar retrollamadas se puede capturar con el transformador de mónada `ContT`.
+- Vimos cómo el problema del infierno de las retrollamadas se puede resolver usando notación do para expresar cálculos asíncronos secuenciales, y un funtor aplicativo para expresar paralelismo.
+- Hemos usado `ExceptT` pare expresar _errores asíncronos_.

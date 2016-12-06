@@ -1,27 +1,27 @@
-# Pattern Matching
+# Ajuste de patrones (pattern matching)
 
-## Chapter Goals
+## Objetivos del capítulo
 
-This chapter will introduce two new concepts: algebraic data types, and pattern matching. We will also briefly cover an interesting feature of the PureScript type system: row polymorphism.
+Este capítulo presentará dos nuevos conceptos: tipos de datos algebraicos (algebraic data types) y ajuste de patrones. También cubriremos brevemente una interesante característica del sistema de tipos de PureScript: polimorfismo de fila (row polymorphism).
 
-Pattern matching is a common technique in functional programming and allows the developer to write compact functions which express potentially complex ideas, by breaking their implementation down into multiple cases.
+El ajuste de patrones es una técnica común en la programación funcional y permite al desarrollador escribir funciones compactas que expresan ideas potencialmente complejas partiendo su implementación en múltiples casos.
 
-Algebraic data types are a feature of the PureScript type system which enable a similar level of expressiveness in the language of types - they are closely related to pattern matching.
+Los tipos de datos algebraicos son una característica del sistema de tipos de PureScript que permiten un nivel similar de expresividad en el lenguaje de los tipos; están estrechamente relacionados con el ajuste de patrones.
 
-The goal of the chapter will be to write a library to describe and manipulate simple vector graphics using algebraic types and pattern matching.
+El objetivo del capítulo será escribir una biblioteca para describir y manipular gráficos vectoriales simples usando tipos de datos algebraicos y ajuste de patrones.
 
-## Project Setup
+## Preparación del proyecto
 
-The source code for this chapter is defined in the file `src/Data/Picture.purs`. 
+El código fuente de este capítulo está definido en el fichero `src/Data/Picture.purs`. 
 
-The project uses some Bower packages which we have already seen, and adds the following new dependencies:
+El proyecto usa algunos paquetes de Bower que ya hemos visto y añade las siguientes dependencias nuevas:
 
-- `purescript-globals`, which provides access to some common JavaScript values and functions.
-- `purescript-math`, which provides access to the JavaScript `Math` module.
+- `purescript-globals`, que proporciona acceso a algunos valores y funciones comunes en JavaScript.
+- `purescript-math`, que proporciona acceso al modulo `Math` de JavaScript.
 
-The `Data.Picture` module defines a data type `Shape` for simple shapes, and a type `Picture` for collections of shapes, along with functions for working with those types.  
+El módulo `Data.Picture` define un tipo de datos `Shape` para formas simples y un tipo `Picture` para colecciones de formas, junto a funciones para trabajar con esos tipos.
 
-The module imports the `Data.Foldable` module, which provides functions for folding data structures:
+El módulo importa el módulo `Data.Foldable`, que proporciona funciones para plegar estructuras de datos:
 
 ```haskell
 module Data.Picture where
@@ -31,20 +31,20 @@ import Prelude
 import Data.Foldable (foldl)
 ```
 
-The `Data.Picture` module also imports the `Global` and `Math` modules, but this time using the `as` keyword:
+El módulo `Data.Picture` también importa los módulos `Global` y `Math`, pero esta vez usando la palabra reservada `as`:
 
 ```haskell
 import Global as Global
 import Math as Math
 ```
 
-This makes the types and functions in those modules available for use, but only by using _qualified names_, like `Global.infinity` and `Math.max`. This can be useful to avoid overlapping imports, or just to make it clearer which modules certain things are imported from.
+Esto deja disponibles los tipos y funciones de esos módulos, pero sólo usando _nombres cualificados_ (qualified names), como `Global.infinity` y `Math.max`. Esto puede ser útil para evitar importaciones superpuestas o simplemente para dejar claro de qué modulo se importan ciertas cosas. 
 
-_Note_: it is not necessary to use the same module name as the original module for a qualified import. Shorter qualified names like `import Math as M` are possible, and quite common.
+_Nota_: no es necesario usar el mismo nombre de módulo que el original en un import cualificado. Nombres cualificados más cortos como `import Math as M` son posibles y bastante comunes.
 
-## Simple Pattern Matching
+## Ajuste de patrones simple
 
-Let's begin by looking at an example. Here is a function which computes the greatest common divisor of two integers using pattern matching:
+Comencemos viendo un ejemplo. Aquí hay una función que calcula el máximo común divisor de dos enteros usando ajuste de patrones:
 
 ```haskell
 gcd :: Int -> Int -> Int
@@ -55,31 +55,31 @@ gcd n m = if n > m
             else gcd n (m - n)
 ```
 
-This algorithm is called the Euclidean Algorithm. If you search for its definition online, you will likely find a set of mathematical equations which look a lot like the code above. This is one benefit of pattern matching: it allows you to define code by cases, writing simple, declarative code which looks like a specification of a mathematical function.
+Este algoritmo se llama Algoritmo de Euclides. Si buscas su definición, probablemente encontrarás un conjunto que ecuaciones matemáticas que se parecen bastante al código de arriba. Este es uno de los beneficios del ajuste de patrones: te permite definir el código por casos, escribiendo código simple y declarativo que parece una especificación de una función matemática.
 
-A function written using pattern matching works by pairing sets of conditions with their results. Each line is called an _alternative_ or a _case_. The expressions on the left of the equals sign are called _patterns_, and each case consists of one or more patterns, separated by spaces. Cases describe which conditions the arguments must satisfy before the expression on the right of the equals sign should be evaluated and returned. Each case is tried in order, and the first case whose patterns match their inputs determines the return value.
+Una función escrita usando ajuste de patrones funciona emparejando conjuntos de condiciones con sus resultados. Cada línea se llama _alternativa_ o _caso_. Las expresiones a la izquierda del signo igual se llaman _patrones_ (patterns), y cada caso consiste en uno o más patrones separados por espacios. Los casos describen qué condiciones deben satisfacer los argumentos antes de que se evalúe y devuelva la expresión a la derecha del signo igual. Cada caso se intenta por orden y el primer caso cuyos patrones se ajusten a sus entradas determina el valor de retorno.
 
-For example, the `gcd` function is evaluated using the following steps:
+Por ejemplo, la función `gcd` se evalúa usando los siguientes pasos:
 
-- The first case is tried: if the second argument is zero, the function returns `n` (the first argument).
-- If not, the second case is tried: if the first argument is zero, the function returns `m` (the second argument).
-- Otherwise, the function evaluates and returns the expression in the last line.
+- Se prueba con el primer caso: si el segundo argumento es cero, la función devuelve `n` (el primer argumento).
+- Si no, se prueba con el segundo caso: si el primer argumento es cero, la función devuelve `m` (el segundo argumento).
+- De otra manera, la función se evalúa y devuelve la expresión de la última línea.
 
-Note that patterns can bind values to names - each line in the example binds one or both of the names `n` and `m` to the input values. As we learn about different kinds of patterns, we will see that different types of patterns correspond to different ways to choose names from the input arguments.
+Date cuenta de que los patrones pueden ligar valores a nombres; cada línea en el ejemplo liga uno o dos de los nombres `n` y `m` a sus valores de entrada. Según vayamos aprendiendo distintos tipos de patrones veremos que diferentes tipos de patrones corresponden a diferentes formas de elegir nombres para los argumentos de entrada.
 
-## Simple Patterns
+## Patrones simples
 
-The example code above demonstrates two types of patterns:
+El ejemplo de código anterior demuestra dos tipos de patrones:
 
-- Integer literals patterns, which match something of type `Int`, only if the value matches exactly.
-- Variable patterns, which bind their argument to a name
+- Patrones enteros literales, que se ajustan a algo de tipo `Int` sólo si el valor coincide exactamente.
+- Patrones variables, que ligan su argumento a un nombre.
 
-There are other types of simple patterns:
+Hay otros tipos de patrones simples:
 
-- `Number`, `String`, `Char` and `Boolean` literals
-- Wildcard patterns, indicated with an underscore (`_`), which match any argument, and which do not bind any names.
+- Literales `Number`, `String`, `Char` y `Boolean`.
+- Patrones comodín (wildcard patterns), indicados mediante un subrayado (`_`), que van a ajustarse a cualquier argumento y que no ligan ningún nombre.
 
-Here are two more examples which demonstrate using these simple patterns:
+Aquí tenemos dos ejemplos más que demuestran el uso de estos patrones simples:
 
 ```haskell
 fromString :: String -> Boolean
@@ -91,13 +91,13 @@ toString true  = "true"
 toString false = "false"
 ```
 
-Try these functions in PSCi.
+Prueba estas funciones en PSCi.
 
-## Guards
+## Guardas
 
-In the Euclidean algorithm example, we used an `if .. then .. else` expression to switch between the two alternatives when `m > n` and `m <= n`. Another option in this case would be to use a _guard_.
+En el ejemplo del Algoritmo de Euclides, hemos usado una expresión `if .. then .. else` para decidir entre las dos alternativas `m > n` y `m <= n`. Otra opción en este caso sería usar una _guarda_.
 
-A guard is a boolean-valued expression which must be satisfied in addition to the constraints imposed by the patterns. Here is the Euclidean algorithm rewritten to use a guard:
+Una guarda es una expresión de valor booleano que debe ser satisfecha junto a las restricciones impuestas por los patrones. Aquí esta el Algoritmo de Euclides reescrito para usar una guarda:
 
 ```haskell
 gcd :: Int -> Int -> Int
@@ -107,18 +107,18 @@ gcd n m | n > m     = gcd (n - m) m
         | otherwise = gcd n (m - n)
 ```
 
-In this case, the third line uses a guard to impose the extra condition that the first argument is strictly larger than the second.
+En este caso, la tercera línea usa una guarda para imponer la condición extra de que el primer argumento es estrictamente mayor que el segundo.
 
-As this example demonstrates, guards appear on the left of the equals symbol, separated from the list of patterns by a pipe character (`|`).
+Como este ejemplo muestra, las guardas aparecen a la izquierda del símbolo igual, separadas de la lista de patrones por un carácter barra (`|`).
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Write the factorial function using pattern matching. _Hint_. Consider the two cases zero and non-zero inputs.
-X> 1. (Medium) Look up _Pascal's Rule_ for computing binomial coefficients. Use it to write a function which computes binomial coefficients using pattern matching.
+X> 1. (Fácil) Escribe la función factorial usando ajuste de patrones. _Pista_: considera los dos casos donde la entrada es cero y distinta de cero.
+X> 1. (Medio) Busca la _Regla de Pascal_ para calcular coeficientes binomiales. Úsala para escribir una función que calcula coeficientes binomiales usando ajuste de patrones.
 
-## Array Patterns
+## Patrones de array (Array Patterns)
 
-_Array literal patterns_ provide a way to match arrays of a fixed length. For example, suppose we want to write a function `isEmpty` which identifies empty arrays. We could do this by using an empty array pattern (`[]`) in the first alternative:
+Los _patrones de array literales_ proporcionan una forma de ajustarse a arrays de una longitud fija. Por ejemplo, supongamos que queremos escribir una función `isEmpty` que identifica arrays vacíos. Podríamos hacer esto usando un patrón de array vacío (`[]`) en la primera alternativa: 
 
 ```haskell
 isEmpty :: forall a. Array a -> Boolean
@@ -126,7 +126,7 @@ isEmpty [] = true
 isEmpty _ = false
 ```
 
-Here is another function which matches arrays of length five, binding each of its five elements in a different way:
+Aquí tenemos otra función que se ajusta a arrays de longitud 5, ligando cada uno de sus cinco argumentos de distinta manera:
 
 ```haskell
 takeFive :: Array Int -> Int
@@ -134,7 +134,7 @@ takeFive [0, 1, a, b, _] = a * b
 takeFive _ = 0
 ```
 
-The first pattern only matches arrays with five elements, whose first and second elements are 0 and 1 respectively. In that case, the function returns the product of the third and fourth elements. In every other case, the function returns zero. For example, in PSCi:
+El primer patrón sólo se ajusta a arrays de cinco elementos, cuyo primer y segundo elemento son 0 y 1 respectivamente. En ese caso, la función devuelve el producto del tercer y cuarto elemento. En cualquier otro caso, la función devuelve cero. Por ejemplo, en PSCi:
 
 ```text
 > let takeFive [0, 1, a, b, _] = a * b
@@ -150,22 +150,22 @@ The first pattern only matches arrays with five elements, whose first and second
 0
 ```
 
-Array literal patterns allow us to match arrays of a fixed length, but PureScript does _not_ provide any means of matching arrays of an unspecified length. In older versions of the compiler, a feature called _cons patterns_ provided a way to break arrays into their head element and tail, but due to the poor performance of immutable arrays in Javascript, this feature was removed. If you need a data structure which supports this sort of matching, the recommended approach is to use `Data.List`. Other data structures exist which provide improved asymptotic performance for different operations.
+Los patrones de array literales nos permiten ajustar arrays de una longitud fija, pero PureScript _no_ proporciona ningún medio para ajustar arrays de una longitud no especificada. En versiones más viejas del compilador, una característica llamada _patrones cons_ (cons patterns) proporcionaba una forma de descomponer arrays en su elemento de cabeza y su cola, pero debido al pobre rendimiento de los arrays inmutables en JavaScript, esta característica fue eliminada. Si necesitas una estructura de datos que soporte este tipo de ajuste, la manera recomendada es usar `Data.List`. Existen otras estructuras de datos que proporcionan para distintas operaciones rendimiento asintótico mejorado.
 
-## Record Patterns and Row Polymorphism
+## Patrones de registro (record patterns) y polimorfismo de fila (row polymorphism)
 
-_Record patterns_ are used to match - you guessed it - records.
+Los _patrones de registro_ se usan para ajustar (lo has adivinado) registros.
 
-Record patterns look just like record literals, but instead of values on the right of the colon, we specify a binder for each field.
+Los patrones de registro tienen el mismo aspecto que los registros literales, pero en lugar de especificar valores a la derecha de los dos puntos, especificamos un símbolo a ligar para cada campo.
 
-For example: this pattern matches any record which contains fields called `first` and `last`, and binds their values to the names `x` and `y` respectively:
+Por ejemplo: este patrón se ajusta a cualquier registro que contenga campos llamados `first` y `last`, y liga sus valores a los nombres `x` e `y` respectivamente:
 
 ```haskell
 showPerson :: { first :: String, last :: String } -> String
 showPerson { first: x, last: y } = y <> ", " <> x
 ```
 
-Record patterns provide a good example of an interesting feature of the PureScript type system: _row polymorphism_. Suppose we had defined `showPerson` without a type signature above. What would its inferred type have been? Interestingly, it is not the same as the type we gave:
+Los patrones de registro proporcionan un buen ejemplo de una característica interesante del sistema de tipos de PureScript: _polimorfismo de fila_. Supongamos que hemos definido `showPerson` sin la firma de tipos de arriba. ¿Cuál sería su tipo inferido? Curiosamente, no es el mismo tipo que le dimos:
 
 ```text
 > let showPerson { first: x, last: y } = y <> ", " <> x
@@ -174,7 +174,7 @@ Record patterns provide a good example of an interesting feature of the PureScri
 forall r. { first :: String, last :: String | r } -> String
 ```
 
-What is the type variable `r` here? Well, if we try `showPerson` in PSCi, we see something interesting:
+¿Qué es la variable de tipo `r` aquí? Bien, si probamos `showPerson` en PSCi vemos algo interesante:
 
 ```text
 > showPerson { first: "Phil", last: "Freeman" }
@@ -184,7 +184,7 @@ What is the type variable `r` here? Well, if we try `showPerson` in PSCi, we see
 "Freeman, Phil"
 ```
 
-We are able to append additional fields to the record, and the `showPerson` function will still work. As long as the record contains the `first` and `last` fields of type `String`, the function application is well-typed. However, it is _not_ valid to call `showPerson` with too _few_ fields:
+Podemos añadir campos adicionales al registro y la función `showPerson` sigue funcionando. Siempre y cuando el registro contenga los campos `first` y `last` de tipo `String`, la aplicación de función está bien tipada. Sin embargo, _no_ es válido llamar a `showPerson` con _menos_ campos:
 
 ```text
 > showPerson { first: "Phil" }
@@ -192,25 +192,25 @@ We are able to append additional fields to the record, and the `showPerson` func
 Type of expression lacks required label "last"
 ```
 
-We can read the new type signature of `showPerson` as "takes any record with `first` and `last` fields which are `Strings` _and any other fields_, and returns a `String`".
+Podemos leer la nueva firma de tipos de `showPerson` como "toma cualquier registro con campos `first` y `last` que son de tipo `String` _y cualquier otro campo_, y devuelve un `String`".
 
-This function is polymorphic in the _row_ `r` of record fields, hence the name _row polymorphism_.
+Esta función es polimórfica en la _fila_ `r` de los campos del registro, de ahí el nombre _polimorfismo de fila_.
 
-Note that we could have also written
+Date cuenta de que también podríamos haber escrito: 
 
 ```haskell
 > let showPerson p = p.last <> ", " <> p.first
 ```
 
-and PSCi would have inferred the same type.
+y PSCi habría inferido el mismo tipo.
 
-We will see row polymorphism again later, when we discuss _extensible effects_.
+Veremos el polimorfismo de fila de nuevo más tarde cuando veamos los _efectos extensibles_.
 
-## Nested Patterns
+## Patrones anidados (nested patterns)
 
-Array patterns and record patterns both combine smaller patterns to build larger patterns. For the most part, the examples above have only used simple patterns inside array patterns and record patterns, but it is important to note that patterns can be arbitrarily _nested_, which allows functions to be defined using conditions on potentially complex data types.
+Tanto los patrones de array como los patrones de registro combinan patrones más pequeños para construir patrones más grandes. Mayormente, los ejemplos anteriores sólo han usado patrones simples dentro de patrones array y registro, pero es importante notar que los patrones se pueden _anidar_ arbitrariamente, lo que permite definir funciones usando condiciones en tipos de datos potencialmente complejos. 
 
-For example, this code combines two record patterns to match an array of records:
+Por ejemplo, este código combina dos patrones de registro para ajustarse a un registro:
 
 ```haskell
 type Address = { street :: String, city :: String }
@@ -222,11 +222,11 @@ livesInLA { address: { city: "Los Angeles" } } = true
 livesInLA _ = false
 ```
 
-## Named Patterns
+## Patrones nombrados (named patters)
 
-Patterns can be _named_ to bring additional names into scope when using nested patterns. Any pattern can be named by using the `@` symbol.
+Los patrones pueden ser _nombrados_ para traer nombres adicionales al contexto cuando se usan patrones anidados. Cualquier patrón puede nombrarse usando el símbolo `@`.
 
-For example, this function sorts two-element arrays, naming the two elements, but also naming the array itself:
+Por ejemplo, esta función ordena arrays de dos elementos, nombrando los dos elementos, pero también nombrando el propio array: 
 
 ```haskell
 sortPair :: Array Int -> Array Int
@@ -236,19 +236,19 @@ sortPair arr@[x, y]
 sortPair arr = arr
 ```
 
-This way, we save ourselves from allocating a new array if the pair is already sorted.
+De esta manera, nos ahorramos reservar un nuevo array si el par está ya ordenado.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Write a function `sameCity` which uses record patterns to test whether two `Person` records belong to the same city.
-X> 1. (Medium) What is the most general type of the `sameCity` function, taking into account row polymorphism? What about the `livesInLA` function defined above?
-X> 1. (Medium) Write a function `fromSingleton` which uses an array literal pattern to extract the sole member of a singleton array. If the array is not a singleton, your function should return a provided default value. Your function should have type `forall a. a -> Array a -> a`
+X> 1. (Fácil) Escribe una función `sameCity` que usa patrones de registro para comprobar si dos registros `Person` pertenecen a la misma ciudad.
+X> 1. (Medio) ¿Cuál es el tipo más general de la función `sameCity` teniendo en cuenta el polimorfismo de fila? ¿Y para la función `livesInLA` definida antes?
+X> 1. (Medio) Escribe una función `fromSingleton` que usa un patrón de array literal para extraer el único miembro de un array singleton. Si el array no es un singleton, tu función debe devolver un valor por defecto proporcionado. Tu función debe tener el tipo `forall a. a -> Array a -> a`
 
-## Case Expressions
+## Expresiones "case" (case expressions)
 
-Patterns do not only appear in top-level function declarations. It is possible to use patterns to match on an intermediate value in a computation, using a `case` expression. Case expressions provide a similar type of utility to anonymous functions: it is not always desirable to give a name to a function, and a `case` expression allows us to avoid naming a function just because we want to use a pattern.
+Los patrones no sólo aparecen en las declaraciones de función de nivel superior. Es posible usar patrones para ajustarse a un valor intermedio de un cálculo usando una expresión `case`. Las expresiones case proporcionan una utilidad similar a las funciones anónimas: no siempre es deseable dar un nombre a una función, y una expresión `case` nos permite evitar nombrar una función sólo porque queremos usar un patrón.
 
-Here is an example. This function computes "longest zero suffix" of an array (the longest suffix which sums to zero):
+Aquí tenemos un ejemplo. Esta función calcula el "sufijo cero más largo" de un array (el sufijo más largo que suma cero):
 
 ```haskell
 import Data.Array.Unsafe (tail)
@@ -260,7 +260,7 @@ lzs xs = case sum xs of
            _ -> lzs (tail xs)
 ```
 
-For example:
+Por ejemplo:
 
 ```text
 > lzs [1, 2, 3, 4]
@@ -270,13 +270,13 @@ For example:
 [-1, -2, 3]
 ```
 
-This function works by case analysis. If the array is empty, our only option is to return an empty array. If the array is non-empty, we first use a `case` expression to split into two cases. If the sum of the array is zero, we return the whole array. If not, we recurse on the tail of the array.
+Esta función trabaja por análisis de casos. Si el array está vacío, nuestra única opción es devolver un array vacío. Si el array no está vacío, usamos una expresión `case` para partir en dos casos. Si la suma del array es cero, devolvemos el array completo. Si no, recurrimos sobre la cola del array.
 
-## Pattern Match Failures and Partial Functions
+## Fallos de ajuste de patrones (pattern match failures) y funciones parciales (partial functions)
 
-If patterns in a case expression are tried in order, then what happens in the case when none of the patterns in a case alternatives match their inputs? In this case, the case expression will fail at runtime with a _pattern match failure_.
+Si los patrones de una expresión case se prueban por orden, ¿qué pasa en el caso en que ninguno de los patrones de las alternativas se ajustan a sus entradas? En este caso, la expresión case fallará en tiempo de ejecución con un _fallo de ajuste de patrones_.
 
-We can see this behavior with a simple example:
+Podemos ver este comportamiento con un ejemplo simple:
 
 ```haskell
 import Partial.Unsafe (unsafePartial)
@@ -285,7 +285,7 @@ partialFunction :: Boolean -> Boolean
 partialFunction = unsafePartial \true -> true
 ```
 
-This function contains only a single case, which only matches a single input, `true`. If we compile this file, and test in PSCi with any other argument, we will see an error at runtime:
+Esta función contiene un único caso, que sólo se ajusta a una única entrada, `true`. Si compilamos este fichero y probamos en PSCi con cualquier otro argumento, veremos un error en tiempo de ejecución:
 
 ```text
 > partialFunction false
@@ -293,11 +293,11 @@ This function contains only a single case, which only matches a single input, `t
 Failed pattern match
 ```
 
-Functions which return a value for any combination of inputs are called _total_ functions, and functions which do not are called _partial_.
+Las funciones que devuelven un valor para cualquier combinación de entradas se llaman funciones _totales_, y las funciones que no se llaman _parciales_.
 
-It is generally considered better to define total functions where possible. If it is known that a function does not return a result for some valid set of inputs, it is usually better to return a value with type `Maybe a` for some `a`, using `Nothing` to indicate failure. This way, the presence or absence of a value can be indicated in a type-safe way.
+Generalmente se considera mejor definir funciones totales donde sea posible. Si se sabe que una función no devuelve un resultado para algún conjunto válido de entradas, normalmente es mejor devolver un valor de tipo `Maybe a` para algún `a`, usando `Nothing` para indicar fallo. De esta manera, la presencia o ausencia de un valor se puede indicar de una forma segura a nivel de tipos.
 
-The PureScript compiler will generate an error if it can detect that your function is not total due to an incomplete pattern match. The `unsafePartial` function can be used to silence these errors (if you are sure that your partial function is safe!) If we removed the call to the `unsafePartial` function above, then `psc` would generate the following error:
+El compilador de PureScript generará un error si puede detectar que tu función no es total debido a un ajuste de patrones incompleto. La función `unsafePartial` se puede usar para silenciar estos errores (¡si estas seguro de que tu función parcial es segura!). Si quitamos la llamada a la función `unsafePartial` en la función de antes, `psc` generará el siguiente error:
 
 ```text
 A case expression could not be determined to cover all inputs.
@@ -306,15 +306,15 @@ The following additional cases are required to cover all inputs:
   false
 ```
 
-This tells us that the value `false` is not matched by any pattern. In general, these warnings might include multiple unmatched cases.
+Esto nos dice que el valor `false` no coincide con ningún patrón. En general, estos avisos pueden incluir múltiples casos sin ajuste.
 
-If we also omit the type signature above:
+Si también omitimos la firma de tipos de antes:
 
 ```purescript
 partialFunction true = true
 ```
 
-then PSCi infers a curious type:
+PSCi infiere un tipo curioso:
 
 ```text
 > :type partialFunction
@@ -322,9 +322,9 @@ then PSCi infers a curious type:
 Partial => Boolean -> Boolean
 ```
 
-We will see more types which involve the `=>` symbol later on in the book (they are related to _type classes_), but for now, it suffices to observe that PureScript keeps track of partial functions using the type system, and that we must explicitly tell the type checker when they are safe.
+Veremos más tipos que involucran el símbolo `=>` más tarde en el libro (están relacionados con las _clases de tipos_), pero por ahora, basta observar que PureScript lleva el registro de las funciones parciales usando el sistema de tipos, y que debemos decir explícitamente al comprobador de tipos cuándo son seguras.
 
-The compiler will also generate a warning in certain cases when it can detect that cases are _redundant_ (that is, a case only matches values which would have been matched by a prior case):
+El compilador generará también un aviso en ciertos casos cuando puede detectar casos _redundantes_ (esto es, un caso sólo se ajusta a valores que habrían sido ajustados por un caso anterior):
 
 ```purescript
 redundantCase :: Boolean -> Boolean
@@ -333,7 +333,7 @@ redundantCase false = false
 redundantCase false = false
 ```
 
-In this case, the last case is correctly identified as redundant:
+En este caso, el último caso se identifica correctamente como redundante:
 
 ```text
 Redundant cases have been detected.
@@ -342,22 +342,21 @@ The definition has the following redundant cases:
   false
 ```
 
-_Note_: PSCi does not show warnings, so to reproduce this example, you will need to
-save this function as a file and compile it using `pulp build`.
+_Nota_: PSCi no muestra avisos, de manera que para reproducir este ejemplo tendrás que salvar esta función a un fichero y compilarla usando `pulp build`.
 
-## Algebraic Data Types
+## Tipos de datos algebraicos (algebraic data types)
 
-This section will introduce a feature of the PureScript type system called _Algebraic Data Types_ (or _ADTs_), which are fundamentally related to pattern matching.
+Esta sección introducirá una característica del sistema de tipos de PureScript llamada _tipos de datos algebraicos_ (o _ADTs_), que se relacionan fundamentalmente con el ajuste de patrones.
 
-However, we'll first consider a motivating example, which will provide the basis of a solution to this chapter's problem of implementing a simple vector graphics library.
+Sin embargo, vamos primero a considerar un ejemplo motivador que proporcionará la base para una solución al problema de este capítulo de implementar una biblioteca de gráficos vectoriales simple.
 
-Suppose we wanted to define a type to represent some simple shape types: lines, rectangles, circles, text, etc. In an object oriented language, we would probably define an interface or abstract class `Shape`, and one concrete subclass for each type of shape that we wanted to be able to work with.
+Supongamos que queremos definir un tipo para representar algunos tipos simples de formas: líneas, rectángulos, círculos, texto, etc. En un lenguaje orientado a objetos, probablemente definiríamos una interfaz o clase abstracta `Shape`, y una subclase concreta para cada tipo de forma con la que queramos trabajar.
 
-However, this approach has one major drawback: to work with `Shape`s abstractly, it is necessary to identify all of the operations one might wish to perform, and to define them on the `Shape` interface. It becomes difficult to add new operations without breaking modularity.
+Sin embargo, esta aproximación tiene un inconveniente importante: para trabajar con `Shape`s de manera abstracta, es necesario identificar todas las operaciones que uno quiera realizar y definirlas en la interfaz `Shape`. Se vuelve difícil añadir nuevas operaciones sin romper la modularidad.
 
-Algebraic data types provide a type-safe way to solve this sort of problem, if the set of shapes is known in advance. It is possible to define new operations on `Shape` in a modular way, and still maintain type-safety.
+Los tipos de datos algebraicos proporcionan una forma segura a nivel de tipos de resolver este tipo de problemas si el conjunto de formas se conoce por anticipado. Es posible definir nuevas operaciones sobre `Shape` de una forma modular manteniendo la seguridad a nivel de tipos.
 
-Here is how `Shape` might be represented as an algebraic data type:
+Así es como `Shape` se puede representar como un tipo de datos algebraico:
 
 ```haskell
 data Shape
@@ -367,7 +366,7 @@ data Shape
   | Text Point String
 ```
 
-The `Point` type might also be defined as an algebraic data type, as follows:
+El tipo `Point` se puede definir también como un tipo de datos algebraico como sigue:
 
 ```haskell
 data Point = Point
@@ -376,37 +375,37 @@ data Point = Point
   }
 ```
 
-The `Point` data type illustrates some interesting points:
+El tipo de datos `Point` ilustra algunos puntos interesantes:
 
-- The data carried by an ADT's constructors doesn't have to be restricted to primitive types: constructors can include records, arrays, or even other ADTs.
-- Even though ADTs are useful for describing data with multiple constructors, they can also be useful when there is only a single constructor.
-- The constructors of an algebraic data type might have the same name as the ADT itself. This is quite common, and it is important not to confuse the `Point` _type constructor_ with the `Point` _data constructor_ - they live in different namespaces.
+- Los datos portados por un constructor de ADT no están restringidos a tipos primitivos: los constructores pueden incluir registros, arrays, o incluso otros ADTs.
+- Aunque los ADTs son útiles para describir datos con múltiples constructores, también pueden ser útiles cuando hay un único constructor.
+- Los constructores de un tipo de datos algebraico pueden tener el mismo nombre que el propio ADT. Esto es bastante común y es importante no confundir el _constructor de tipo_ `Point` con el _constructor de datos_ `Point`; viven en espacios de nombres distintos.
 
-This declaration defines `Shape` as a sum of different constructors, and for each constructor identifies the data that is included. A `Shape` is either a `Circle` which contains a center `Point` and a radius (a number), or a `Rectangle`, or a `Line`, or `Text`. There are no other ways to construct a value of type `Shape`.
+Esta declaración define `Shape` como una suma de diferentes constructores, y para cada constructor identifica los datos que se incluyen. Una `Shape` es o bien un `Circle` que contiene un `Point` para el centro y un radio (un número), o un `Rectangle`, o una `Line`, o `Text`. No hay otras formas de construir un valor de tipo `Shape`.
 
-An algebraic data type is introduced using the `data` keyword, followed by the name of the new type and any type arguments. The type's constructors are defined after the equals symbol, and are separated by pipe characters (`|`).
+Los tipos de datos algebraicos se presentan usando la palabra reservada `data`, seguida del nombre del tipo nuevo y cualquier argumento de tipo. Los constructores de tipo se definen tras el signo igual y se separan con barras (`|`).
 
-Let's see another example from PureScript's standard libraries. We saw the `Maybe` type, which is used to to define optional values, earlier in the book. Here is it's definition from the `purescript-maybe` package:
+Veamos otro ejemplo de las bibliotecas estándar de PureScript. Vimos antes el tipo `Maybe` que se usa para definir valores opcionales. Aquí está su definición del paquete `purescript-maybe`:
 
 ```haskell
 data Maybe a = Nothing | Just a
 ```
 
-This example demonstrates the use of a type parameter `a`. Reading the pipe character as the word "or", its definition almost reads like English: "a value of type `Maybe a` is either `Nothing`, or `Just` a value of type `a`".
+Este ejemplo muestra el uso del parámetro de tipo `a`. Leyendo la barra como la palabra "o", su definición es bastante legible: "un valor de tipo `Maybe a` es o bien `Nothing` o `Just` un valor de tipo `a`".
 
-Data constructors can also be used to define recursive data structures. Here is one more example, defining a data type of singly-linked lists of elements of type `a`:
+Los constructores de datos se pueden usar también para definir estructuras de datos recursivas. Aquí hay otro ejemplo definiendo un tipo de datos para listas enlazadas de elementos de tipo `a`:
 
 ```haskell
 data List a = Nil | Cons a (List a)
 ```
 
-This example is taken from the `purescript-lists` package. Here, the `Nil` constructor represents an empty list, and `Cons` is used to create non-empty lists from a head element and a tail. Notice how the tail is defined using the data type `List a`, making this a recursive data type.
+Este ejemplo está sacado del paquete `purescript-lists`. Aquí, el constructor `Nil` representa una lista vacía, y `Cons` se usa para crear listas no vacías a partir de un elemento de cabeza y una cola. Date cuenta como la cola se define usando el tipo de datos `List a`, convirtiéndose en un tipo de datos recursivo.
 
-## Using ADTs
+## Usando ADTs
 
-It is simple enough to use the constructors of an algebraic data type to construct a value: simply apply them like functions, providing arguments corresponding to the data included with the appropriate constructor.
+Es bastante simple usar los constructores de un tipo de datos algebraico para construir un valor: simplemente los aplicamos como funciones, proporcionando argumentos correspondientes a los datos incluidos en el constructor apropiado.
 
-For example, the `Line` constructor defined above required two `Point`s, so to construct a `Shape` using the `Line` constructor, we have to provide two arguments of type `Point`:
+Por ejemplo, el constructor `Line` definido arriba requería dos `Point`s, así que para construir un `Shape` usando el constructor `Line` tenemos que proporcionar dos argumentos de tipo `Point`:
 
 ```haskell
 exampleLine :: Shape
@@ -419,11 +418,11 @@ exampleLine = Line p1 p2
   p2 = Point { x: 100.0, y: 50.0 }
 ```
 
-To construct the points `p1` and `p2`, we apply the `Point` constructor to its single argument, which is a record.
+Para construir los puntos `p1` y `p2`, aplicamos el constructor `Point` a su único argumento, que es un registro.
 
-So, constructing values of algebraic data types is simple, but how do we use them? This is where the important connection with pattern matching appears: the only way to consume a value of an algebraic data type is to use a pattern to match its constructor.
+Así, construir valores de tipos de datos algebraicos es simple, pero ¿cómo los usamos? Aquí es donde aparece la conexión importante con el ajuste de patrones: la única forma de consumir valores de un tipo algebraico de datos es usar ajuste de patrones para ajustarse a su constructor.
 
-Let's see an example. Suppose we want to convert a `Shape` into a `String`. We have to use pattern matching to discover which constructor was used to construct the `Shape`. We can do this as follows:
+Veamos un ejemplo. Supongamos que queremos convertir una `Shape` en `String`. Tenemos que usar ajuste de patrones para descubrir qué constructor se usó para construir la `Shape`. Lo podemos hacer como sigue:
 
 ```haskell
 showPoint :: Point -> String
@@ -437,22 +436,22 @@ showShape (Line start end)  = ...
 showShape (Text loc text) = ...
 ```
 
-Each constructor can be used as a pattern, and the arguments to the constructor can themselves be bound using patterns of their own. Consider the first case of `showShape`: if the `Shape` matches the `Circle` constructor, then we bring the arguments of `Circle` (center and radius) into scope using two variable patterns, `c` and `r`. The other cases are similar.
+Cada constructor se puede usar como un patrón, y los argumentos al constructor se pueden ligar usando sus propios patrones. Considera el primer caso de `showShape`: si la `Shape` coincide con el constructor `Circle`, metemos en contexto los argumentos de `Circle` (centro y radio) usando dos patrones variables `c` y `r`. Los otros casos son similares.
 
-`showPoint` is another example of pattern matching. In this case, there is only a single case, but we use a nested pattern to match the fields of the record contained inside the `Point` constructor.
+`showPoint` es otro ejemplo de ajuste de patrones. En este caso, sólo hay un único caso, pero usamos un patrón anidado para ajustarnos a los nombres del registro contenido dentro del constructor `Point`.
 
-## Record Puns
+## Doble sentido en registros (record puns)
 
-The `showPoint` function matches a record inside its argument, binding the `x` and `y` properties to values with the same names. In PureScript, we can simplify this sort of pattern match as follows:
+La función `showPoint` se ajusta a un registro dentro de su argumento, ligando las propiedades `x` e `y` a valores con los mismos nombres. En PureScript podemos simplificar este tipo de ajuste de patrones como sigue:
 
 ```haskell
 showPoint :: Point -> String
 showPoint (Point { x, y }) = ...
 ```
 
-Here, we only specify the names of the properties, and we do not need to specify the names of the values we want to introduce. This is called a _record pun_.
+Aquí, únicamente especificamos los nombres de las propiedades y no necesitamos especificar los nombres de los valores que queremos ligar. Es lo que se llama un _doble sentido en registro_.
 
-It is also possible to use record puns to _construct_ records. For example, if we have values named `x` and `y` in scope, we can construct a `Point` using `Point { x, y }`:
+También es posible usar doble sentido en registro para _construir_ registros. Por ejemplo, si tenemos valores llamados `x` e `y` en el ámbito, podemos construir un `Point` usando Point{ x, y}`:
 
 ```haskell
 origin :: Point
@@ -462,49 +461,49 @@ origin = Point { x, y }
     y = 0.0
 ```
 
-This can be useful for improving readability of code in some circumstances.
+Esto puede ser útil para mejorar la legibilidad del código en algunas circunstancias.
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Easy) Construct a value of type `Shape` which represents a circle centered at the origin with radius `10.0`.
-X> 1. (Medium) Write a function from `Shape`s to `Shape`s, which scales its argument by a factor of `2.0`, center the origin.
-X> 1. (Medium) Write a function which extracts the text from a `Shape`. It should return `Maybe String`, and use the `Nothing` constructor if the input is not constructed using `Text`.
+X> 1. (Fácil) Construye un valor de tipo `Shape` que representa un círculo centrado en el origen con radio `10.0`.
+X> 1. (Medio) Escribe una función de `Shape`s a `Shape`s que escala sus argumentos por un factor de `2.0` con centro en el origen.
+X> 1. (Medio) Escribe una función que extraiga el texto de un `Shape`. Debe devolver `Maybe String` y usar el constructor `Nothing` si la entrada no está construida usando `Text`.
 
 ## Newtypes
 
-There is an important special case of algebraic data types, called _newtypes_. Newtypes are introduced using the `newtype` keyword instead of the `data` keyword.
+Hay un caso especial importante de tipos de datos algebraicos llamados _newtypes_. Los newtypes se presentan usando la palabra reservada `newtype` en lugar de `data`.
 
-Newtypes must define _exactly one_ constructor, and that constructor must take _exactly one_ argument. That is, a newtype gives a new name to an existing type. In fact, the values of a newtype have the same runtime representation as the underlying type. They are, however, distinct from the point of view of the type system. This gives an extra layer of type safety.
+Los newtypes deben definir _exactamente un_ constructor, y ese constructor debe tomar _exactamente un_ argumento. Esto es, un newtype da un nuevo nombre a un tipo existente. De hecho, los valores de un newtype tienen la misma representación en tiempo de ejecución que el tipo subyacente. Son, sin embargo, distintos desde el punto de vista del sistema de tipos. Esto da un nivel adicional de seguridad de tipos.
 
-As an example, we might want to define newtypes as type-level aliases for `Number`, to ascribe units like pixels and inches:
+Como ejemplo, podemos querer definir newtypes como sinónimos de `Number` para atribuir unidades como píxeles y pulgadas:
 
 ```haskell
 newtype Pixels = Pixels Number
 newtype Inches = Inches Number
 ```
 
-This way, it is impossible to pass a value of type `Pixels` to a function which expects `Inches`, but there is no runtime performance overhead.
+De esta forma, es imposible pasar un valor de tipo `Pixels` a una función que espera `Inches`, pero no hay sobrecoste de rendimiento en tiempo de ejecución. 
 
-Newtypes will become important when we cover _type classes_ in the next chapter, since they allow us to attach different behavior to a type without changing its representation at runtime.
+Los newtypes cobrarán importancia cuando veamos las _clases de tipos_ en el siguiente capítulo, ya que nos permiten adjuntar comportamiento diferente a un tipo sin cambiar su representación en tiempo de ejecución.
 
-## A Library for Vector Graphics
+## Una biblioteca para gráficos vectoriales
 
-Let's use the data types we have defined above to create a simple library for using vector graphics.
+Usemos los tipos de datos que hemos definido antes para crear una biblioteca simple para usar gráficos vectoriales.
 
-Define a type synonym for a `Picture` - just an array of `Shape`s:
+Definamos un sinónimo de tipo para una `Picture`, un simple array de `Shape`s:
 
 ```haskell
 type Picture = Array Shape
 ```
 
-For debugging purposes, we'll want to be able to turn a `Picture` into something readable. The `showPicture` function lets us do that:
+Para depurar, querremos ser capaces de convertir una `Picture` en algo legible. La función `showPicture` nos permite hacerlo:
 
 ```haskell
 showPicture :: Picture -> Array String
 showPicture = map showShape
 ```
 
-Let's try it out. Compile your module with `pulp build` and open PSCi with `pulp psci`:
+Probémosla. Compila tu módulo con `pulp build` y abre PSCi con `pulp psci`:
 
 ```text
 $ pulp build
@@ -518,11 +517,11 @@ $ pulp psci
 ["Line [start: (0.0, 0.0), end: (1.0, 1.0)]"]
 ```
 
-## Computing Bounding Rectangles
+## Calculando rectángulos de delimitación
 
-The example code for this module contains a function `bounds` which computes the smallest bounding rectangle for a `Picture`.
+El código de ejemplo para este módulo contiene una función `bounds` que calcula el rectángulo de delimitación mínimo para una `Picture`.
 
-The `Bounds` data type defines a bounding rectangle. It is also defined as an algebraic data type with a single constructor:
+El tipo de datos `Bounds` define un rectángulo de delimitación. También está definido como un tipo algebraico de datos con un único constructor:
 
 ```haskell
 data Bounds = Bounds
@@ -533,7 +532,7 @@ data Bounds = Bounds
   }
 ```
 
-`bounds` uses the `foldl` function from `Data.Foldable` to traverse the array of `Shapes` in a `Picture`, and accumulate the smallest bounding rectangle:
+`bounds` usa la función `foldl` de `Data.Foldable` para recorrer el array de `Shape`s en una `Picture`, y acumular el rectángulo de delimitación mínimo:
 
 ```haskell
 bounds :: Picture -> Bounds
@@ -543,21 +542,21 @@ bounds = foldl combine emptyBounds
   combine b shape = shapeBounds shape \/ b
 ```
 
-In the base case, we need to find the smallest bounding rectangle of an empty `Picture`, and the empty bounding rectangle defined by `emptyBounds` suffices.
+En el caso base, necesitamos encontrar el rectángulo de delimitación mínimo de una `Picture` vacía, y el rectángulo de delimitación mínimo vacío definido por `emptyBounds` es suficiente.
 
-The accumulating function `combine` is defined in a `where` block. `combine` takes a bounding rectangle computed from `foldl`'s recursive call, and the next `Shape` in the array, and uses an infix operator alias `\/` to compute the union of the two bounding rectangles. The `shapeBounds` function computes the bounds of a single shape using pattern matching.
+La función de acumulación `combine` se define en un bloque `where`. `combine` toma un rectángulo de delimitación calculado por la llamada recursiva `foldl` y la siguiente `Shape` del array, y usa el operador infijo `\/` para calcular la unión de dos rectángulos de delimitación. La función `shapeBounds` calcula la delimitación de un único shape usando ajuste de patrones. 
 
-X> ## Exercises
+X> ## Ejercicios
 X>
-X> 1. (Medium) Extend the vector graphics library with a new operation `area` which computes the area of a `Shape`. For the purposes of this exercise, the area of a piece of text is assumed to be zero.
-X> 1. (Difficult) Extend the `Shape` type with a new data constructor `Clipped`, which clips another `Picture` to a rectangle. Extend the `shapeBounds` function to compute the bounds of a clipped picture. Note that this makes `Shape` into a recursive data type.
+X> 1. (Medio) Extiende la biblioteca de gráficos vectoriales con una nueva operación `area` que calcula el área de una `Shape`. Para los propósitos de este ejercicio, el área de un texto se asume que es cero.
+X> 1. (Difícil) Extiende el tipo `Shape` con un constructor de datos nuevo `Clipped`, que recorta otra `Picture` con un rectángulo. Extiende la función `shapeBounds` para calcular los límites de una imagen recortada. Date cuenta de que esto convierte `Shape` en un tipe de datos recursivo.
 
-## Conclusion
+## Conclusión
 
-In this chapter, we covered pattern matching, a basic but powerful technique from functional programming. We saw how to use simple patterns as well as array and record patterns to match parts of deep data structures.
+En este capítulo, hemos visto el ajuste de patrones, una técnica básica pero potente de la programación funcional. Hemos visto cómo usar patrones simples así como patrones de array y de registro para ajustar partes de estructuras de datos profundas.
 
-This chapter also introduced algebraic data types, which are closely related to pattern matching. We saw how algebraic data types allow concise descriptions of data structures, and provide a modular way to extend data types with new operations.
+Este capítulo también ha presentado los tipos de datos algebraicos, que están estrechamente relacionados con el ajuste de patrones. Hemos visto cómo los tipos de datos algebraicos permiten descripciones concisas de estructuras de datos y proporcionan una forma modular de extender tipos de datos con nuevas operaciones.
 
-Finally, we covered _row polymorphism_, a powerful type of abstraction which allows many idiomatic JavaScript functions to be given a type. We will see this idea again later in the book.
+Finalmente, hemos visto el _polimorfismo de línea_, un potente tipo de abstracción que permite dar un tipo a muchas funciones idiomáticas de JavaScript. Veremos esta idea de nuevo más adelante.
 
-In the rest of the book, we will use ADTs and pattern matching extensively, so it will pay dividends to become familiar with them now. Try creating your own algebraic data types and writing functions to consume them using pattern matching.
+En el resto del libro, usaremos ADTs y ajuste de patrones extensamente, de manera que va a resultar rentable familiarizarse con ellos ya. Intenta crear tus propios tipos de datos algebraicos y escribir funciones que los consuman usando ajuste de patrones.
