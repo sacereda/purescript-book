@@ -220,7 +220,7 @@ Next, the code uses the `for_` function to loop over the integers between `0` an
   for_ (1 .. 100) \_ -> do
 ```
 
-On each iteration, the do notation block starts by generating three random numbers:
+On each iteration, the do notation block starts by generating three random numbers distributed between `0` and `1`. These numbers represent the `x` and `y` coordinates, and the radius of a circle:
 
 ```haskell
     x <- random
@@ -228,9 +228,7 @@ On each iteration, the do notation block starts by generating three random numbe
     r <- random
 ```
 
-These numbers are randomly distributed between `0` and `1`. They represent the `x` and `y` coordinates, and the radius, respectively.
-
-Next, the code creates an `Arc` based on these parameters:
+Next, for each circle, the code creates an `Arc` based on these parameters and finally fills and strokes the arc with the current styles:
 
 ```haskell
     let path = arc ctx
@@ -240,11 +238,6 @@ Next, the code creates an `Arc` based on these parameters:
          , start : 0.0
          , end   : Math.pi * 2.0
          }
-```
-
-and finally fills and strokes the arc with the current styles:
-
-```haskell
     fillPath ctx path
     strokePath ctx path
 ```

@@ -17,7 +17,7 @@ The project adds the following Bower dependencies:
 
 In addition to the modules from the previous chapter, this chapter's project adds a `Main` module, which provides the entry point to the application, and functions to render the user interface.
 
-To run this project, build and bundle the JavaScript source with `pulp browserify --to dist/Main.js`, and then open the `html/index.html` file in your web browser.
+To compile this project, first install React using `npm install`, and then build and bundle the JavaScript source with `pulp browserify --to dist/Main.js`. To run the project, open the `html/index.html` file in your web browser.
 
 ## Monads and Do Notation
 
@@ -298,7 +298,7 @@ Every instance of the `Monad` type class is also an instance of the `Applicative
 However, there is also an implementation of the `Applicative` type class which comes "for free" for any instance of `Monad`, given by the `ap` function:
 
 ```haskell
-ap :: forall m. Monad m => m (a -> b) -> m a -> m b
+ap :: forall m a b. Monad m => m (a -> b) -> m a -> m b
 ap mf ma = do
   f <- mf
   a <- ma
@@ -679,17 +679,17 @@ import Prelude
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.ST (ST, newSTRef, readSTRef, modifySTRef)
 
-simulate :: forall eff h. Number -> Number -> Number -> Eff (st :: ST h | eff) Number
+simulate :: forall eff h. Number -> Number -> Int -> Eff (st :: ST h | eff) Number
 simulate x0 v0 time = do
   ref <- newSTRef { x: x0, v: v0 }
-  forE 0.0 (time * 1000.0) $ \i -> do
+  forE 0 (time * 1000) \_ -> do
     modifySTRef ref \o ->
       { v: o.v - 9.81 * 0.001
       , x: o.x + o.v * 0.001
       }
     pure unit
   final <- readSTRef ref
-  return final.x
+  pure final.x
 ```
 
 At the end of the computation, we read the final value of the reference cell, and return the position of the particle.
@@ -737,10 +737,10 @@ You can even try running this function in PSCi:
 In fact, if we inline the definition of `simulate` at the call to `runST`, as follows:
 
 ```haskell
-simulate :: Number -> Number -> Number -> Number
+simulate :: Number -> Number -> Int -> Number
 simulate x0 v0 time = runPure $ runST do
   ref <- newSTRef { x: x0, v: v0 }
-  forE 0.0 (time * 1000.0) $ \i -> do
+  forE 0 (time * 1000) \_ -> do
     modifySTRef ref \o ->  
       { v: o.v - 9.81 * 0.001
       , x: o.x + o.v * 0.001  
@@ -755,7 +755,7 @@ then the `psc` compiler will notice that the reference cell is not allowed to es
 ```javascript
 var ref = { x: x0, v: v0 };
 
-Control_Monad_Eff.forE(0.0)(time * 1000.0)(function (i) {
+Control_Monad_Eff.forE(0)(time * 1000 | 0)(function (i) {
   return function __do() {
     ref = (function (o) {
       return {
@@ -786,7 +786,10 @@ There are a number of PureScript packages for working directly with the DOM, or 
 - [`purescript-dom`](http://github.com/purescript-contrib/purescript-dom) is an extensive set of low-level bindings to the browser's DOM APIs.
 - [`purescript-jquery`](http://github.com/paf31/purescript-jquery) is a set of bindings to the [jQuery](http://jquery.org) library.
 
-There are also PureScript libraries which build abstractions on top of these libraries, such as [`purescript-thermite`](http://github.com/paf31/purescript-thermite), which builds on `purescript-react`, and [`purescript-halogen`](http://github.com/slamdata/purescript-halogen) which provides a type-safe set of abstractions on top of the [`virtual-dom`](http://github.com/Matt-Esch/virtual-dom) library.
+There are also PureScript libraries which build abstractions on top of these libraries, such as
+
+- [`purescript-thermite`](http://github.com/paf31/purescript-thermite), which builds on `purescript-react`, and
+- [`purescript-halogen`](http://github.com/slamdata/purescript-halogen) which provides a type-safe set of abstractions on top of the [`virtual-dom`](http://github.com/Matt-Esch/virtual-dom) library.
 
 In this chapter, we will use the `purescript-react` library to add a user interface to our address book application, but the interested reader is encouraged to explore alternative approaches.
 
@@ -1032,7 +1035,6 @@ X> ## Exercises
 X>
 X> 1. (Easy) Modify the application to include a work phone number text box.
 X> 1. (Medium) Instead of using a `ul` element to show the validation errors in a list, modify the code to create one `div` with the `alert` style for each error.
-X> 1. (Medium) Rewrite the code in the `Data.AddressBook.UI` module without explicit calls to `>>=`.
 X> 1. (Difficult, Extended) One problem with this user interface is that the validation errors are not displayed next to the form fields they originated from. Modify the code to fix this problem.
 X>   
 X>   _Hint_: the error type returned by the validator should be extended to indicate which field caused the error. You might want to use the following modified `Errors` type:

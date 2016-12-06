@@ -18,7 +18,7 @@ Our running example will be a domain-specific language for creating HTML documen
 
 The project accompanying this chapter adds one new Bower dependency - the `purescript-free` library, which defines the _free monad_, one of the tools which we will be using.
 
-We will test this chapter's project in PSCi. You will need to either create a test module to paste code snippets, or use multi-line mode with the `-m` flag.
+We will test this chapter's project in PSCi.
 
 ## A HTML Data Type
 
@@ -52,25 +52,27 @@ render :: Element -> String
 which renders HTML elements as HTML strings. We can try out this version of the library by constructing values of the appropriate types explicitly in PSCi:
 
 ```text
-$ pulp psci -m
+$ pulp psci
 
 > import Prelude
 > import Data.DOM.Simple
 > import Data.Maybe
 > import Control.Monad.Eff.Console
 
-> log $ render $ Element
-    { name: "p"
-    , attribs: [
-        Attribute
-          { key: "class"
-          , value: "main"
-          }
-      ]
-    , content: Just [
-        TextContent "Hello World!"
-      ]
-    }
+> :paste
+… log $ render $ Element
+…   { name: "p"
+…   , attribs: [
+…       Attribute
+…         { key: "class"
+…         , value: "main"
+…         }
+…     ]
+…   , content: Just [
+…       TextContent "Hello World!"
+…     ]
+…   }
+… ^D
 
 <p class="main">Hello World!</p>
 unit
@@ -336,11 +338,13 @@ Now we find it is impossible to represent these invalid HTML documents, and we a
 > import Data.DOM.Phantom
 > import Control.Monad.Eff.Console
 
-> log $ render $ img
-    [ src    := "cat.jpg"
-    , width  := 100
-    , height := 200
-    ]
+> :paste
+… log $ render $ img
+…   [ src    := "cat.jpg"
+…   , width  := 100
+…   , height := 200
+…   ]
+… ^D
 
 <img src="cat.jpg" width="100" height="200" />
 unit
@@ -480,68 +484,68 @@ Our new `render` method starts by delegating to a helper function, `renderElemen
 
 ```haskell
 render :: Element -> String
-render e = execWriter $ renderElement e
+render = execWriter <<< renderElement
 ```
 
 `renderElement` is defined in a where block:
 
 ```haskell
   where
-  renderElement :: Element -> Writer String Unit
-  renderElement (Element e) = do
+    renderElement :: Element -> Writer String Unit
+    renderElement (Element e) = do
 ```
 
 The definition of `renderElement` is straightforward, using the `tell` action from the `Writer` monad to accumulate several small strings:
 
 ```haskell
-    tell "<"
-    tell e.name
-    for_ e.attribs $ \x -> do
-      tell " "
-      renderAttribute x
-    renderContent e.content
+      tell "<"
+      tell e.name
+      for_ e.attribs $ \x -> do
+        tell " "
+        renderAttribute x
+      renderContent e.content
 ```
 
 Next, we define the `renderAttribute` function, which is equally simple:
 
 ```haskell
     where
-    renderAttribute :: Attribute -> Writer String Unit
-    renderAttribute (Attribute x) = do
-      tell x.key
-      tell "=\""
-      tell x.value
-      tell "\""
+      renderAttribute :: Attribute -> Writer String Unit
+      renderAttribute (Attribute x) = do
+        tell x.key
+        tell "=\""
+        tell x.value
+        tell "\""
 ```
 
 The `renderContent` function is more interesting. Here, we use the `runFreeM` function to interpret the computation inside the free monad, delegating to a helper function, `renderContentItem`:
 
 ```haskell
-    renderContent :: Maybe (Content Unit) -> Writer String Unit
-    renderContent Nothing = tell " />"
-    renderContent (Just content) = do
-      tell ">"
-      runFreeM renderContentItem content
-      tell "</"
-      tell e.name
-      tell ">"
+      renderContent :: Maybe (Content Unit) -> Writer String Unit
+      renderContent Nothing = tell " />"
+      renderContent (Just content) = do
+        tell ">"
+        runFreeM renderContentItem content
+        tell "</"
+        tell e.name
+        tell ">"
 ```
 
 The type of `renderContentItem` can be deduced from the type signature of `runFreeM`. The functor `f` is our type constructor `ContentF`, and the monad `m` is the monad in which we are interpreting the computation, namely `Writer String`. This gives the following type signature for `renderContentItem`:
 
 ```haskell
-    renderContentItem :: ContentF (Content Unit) -> Writer String (Content Unit)
+      renderContentItem :: ContentF (Content Unit) -> Writer String (Content Unit)
 ```
 
 We can implement this function by simply pattern matching on the two data constructors of `ContentF`:
 
 ```haskell
-    renderContentItem (TextContent s rest) = do
-      tell s
-      pure rest
-    renderContentItem (ElementContent e rest) = do
-      renderElement e
-      pure rest
+      renderContentItem (TextContent s rest) = do
+        tell s
+        pure rest
+      renderContentItem (ElementContent e rest) = do
+        renderElement e
+        pure rest
 ```
 
 In each case, the expression `rest` has the type `Content Unit`, and represents the remainder of the interpreted computation. We can complete each case by returning the `rest` action.
@@ -553,9 +557,11 @@ That's it! We can test our new monadic API in PSCi, as follows:
 > import Data.DOM.Free
 > import Control.Monad.Eff.Console
 
-> log $ render $ p [] $ do
-    elem $ img [ src := "cat.jpg" ]
-    text "A cat"
+> :paste
+… log $ render $ p [] $ do
+…   elem $ img [ src := "cat.jpg" ]
+…   text "A cat"
+… ^D
 
 <p><img src="cat.jpg" />A cat</p>
 unit
@@ -605,7 +611,7 @@ data Href
 
 instance hrefIsValue :: IsValue Href where
   toValue (URLHref url) = url
-  toValue (AnchorHref (Name nm)) = "#" ++ nm
+  toValue (AnchorHref (Name nm)) = "#" <> nm
 ```
 
 With this new type, we can modify the value type of the `href` attribute, forcing our users to use our new `Href` type. We can also create a new `name` attribute, which can be used to turn an element into an anchor:
@@ -665,11 +671,11 @@ render e = evalState (execWriterT (renderElement e)) 0
 We also need to add a new case to `renderContentItem`, to interpret the new `NewName` data constructor:
 
 ```haskell
-    renderContentItem (NewName k) = do
-      n <- get
-      let fresh = Name $ "name" <> show n
-      put $ n + 1
-      pure (k fresh)
+renderContentItem (NewName k) = do
+  n <- get
+  let fresh = Name $ "name" <> show n
+  put $ n + 1
+  pure (k fresh)
 ```
 
 Here, we are given a continuation `k` of type `Name -> Content a`, and we need to construct an interpretation of type `Content a`. Our interpretation is simple: we use `get` to read the state, use that state to generate a unique name, then use `put` to increment the state. Finally, we pass our new name to the continuation to complete the computation.
@@ -681,12 +687,14 @@ With that, we can try out our new functionality in PSCi, by generating a unique 
 > import Data.DOM.Name
 > import Control.Monad.Eff.Console
 
-> render $ p [ ] $ do
-    top <- newName
-    elem $ a [ name := top ] $
-      text "Top"
-    elem $ a [ href := AnchorHref top ] $
-      text "Back to top"
+> :paste
+… render $ p [ ] $ do
+…   top <- newName
+…   elem $ a [ name := top ] $
+…     text "Top"
+…   elem $ a [ href := AnchorHref top ] $
+…     text "Back to top"
+… ^D
 
 <p><a name="name0">Top</a><a href="#name0">Back to top</a></p>
 unit

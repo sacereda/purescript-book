@@ -267,7 +267,7 @@ X> 1. (Easy) Use `readFileCont` and `writeFileCont` to write a function which co
 X> 1. (Medium) Use the FFI to give an appropriate type to the `setTimeout` function. Write a wrapper function which uses the `Async` monad:
 X>
 X>     ```haskell
-X>     type Milliseconds = Number
+X>     type Milliseconds = Int
 X>
 X>     foreign import data TIMEOUT :: !
 X>
@@ -393,55 +393,49 @@ We've seen how to use the `ContT` monad and do notation to compose asynchronous 
 
 If we are using `ContT` to transform the `Eff` monad, then we can compute in parallel simply by initiating our two computations one after the other.
 
-The `purescript-parallel` package defines a type class `MonadPar` for monads like `Async` which support parallel execution. `MonadPar` is defined in terms of a function `par` with the following type signature:
+The `purescript-parallel` package defines a type class `Parallel` for monads like `Async` which support parallel execution. When we met applicative functors earlier in the book, we observed how applicative functors can be useful for combining parallel computations. In fact, an instance for `Parallel` defines a correspondence between a monad `m` (such as `Async`) and an applicative functor `f` which can be used to combine computations in parallel:
 
 ```haskell
-par :: forall m a b r
-     . MonadPar m
-    => (a -> b -> r)
-    -> m a
-    -> m b
-    -> m r
+class (Monad m, Applicative f) <= Parallel f m | m -> f, f -> m where
+  sequential :: forall a. f a -> m a
+  parallel :: forall a. m a -> f a
 ```
 
-`par` takes two asynchronous computations, and a function to combine their results, and returns a single computation which computes and combines the results in parallel.
+The class defines two functions:
 
-We can use the `par` function to read two files in parallel, or to issue two HTTP requests and wait for their results in parallel.
+- `parallel`, which takes computations in the monad `m` and turns them into computations in the applicative functor `f`, and
+- `sequential`, which performs a conversion in the opposite direction.
 
-`purescript-parallel` defines an instance of `MonadPar` for the `ContT` monad transformer applied to the `Eff eff` monad. It uses mutable references (with the `Ref` effect) to implement `MonadPar`, by keeping track of which of the two continuations has been called. When both results have been returned, we can compute the final result and pass it to the main continuation.
+The `purescript-parallel` library provides a `Parallel` instance for the `Async` monad. It uses mutable references to combine `Async` actions in parallel, by keeping track of which of the two continuations has been called. When both results have been returned, we can compute the final result and pass it to the main continuation.
 
-Here is a simple example which reads two text files in parallel, and concatenates and prints their results.
+We can use the `parallel` function to create a version of our `readFileCont` action which can be combined in parallel. Here is a simple example which reads two text files in parallel, and concatenates and prints their results:
 
 ```haskell
 import Prelude
 import Control.Apply (lift2)
 import Control.Monad.Cont.Trans (runContT)
 import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Parallel.Class (par)
+import Control.Monad.Parallel (parallel, sequential)
 
-main = flip runContT logShow $
-  par (lift2 append) (readFileCont "/tmp/1.txt")
-                     (readFileCont "/tmp/2.txt")
+main = flip runContT logShow do
+  sequential $
+   lift2 append
+     <$> parallel (readFileCont "/tmp/1.txt")
+     <*> parallel (readFileCont "/tmp/2.txt")
 ```
 
 Note that, since `readFileCont` returns a value of type `Either ErrorCode String`, we need to lift the `append` function over the `Either` type constructor using `lift2` to form our combining function.
 
+Because applicative functors support lifting of functions of arbitrary arity, we can perform more computations in parallel by using the applicative combinators. We can also benefit from all of the standard library functions which work with applicative functors, such as `traverse` and `sequence`!
+
+We can also combine parallel computations with sequential portions of code, by using applicative combinators in a do notation block, or vice versa, using `parallel` and `sequential` to change type constructors where appropriate.
+
 X> ## Exercises
 X>
-X> 1. (Easy) Use `par` with `get` to make two HTTP requests and collect their response bodies in parallel. Your combining function should concatenate the two response bodies, and your continuation should use `print` to print the result to the console.
-X> 1. (Medium) `purescript-parallel` defines another function
+X> 1. (Easy) Use `parallel` and `sequential` to make two HTTP requests and collect their response bodies in parallel. Your combining function should concatenate the two response bodies, and your continuation should use `print` to print the result to the console.
+X> 1. (Medium) The applicative functor which corresponds to `Async` is also an instance of `Alternative`. The `<|>` operator defined by this instance runs two computations in parallel, and returns the result from the computation which completes first.
 X>
-X>     ```haskell
-X>     race :: forall m a
-X>           . MonadRace m
-X>          => m a
-X>          -> m a
-X>          -> m a
-X>     ```
-X>
-X>     which executes two computations in parallel, and returns the result from the computation which completes first.
-X>
-X>     Use the `race` function in conjunction with your `setTimeoutCont` function to define a function
+X>     Use this `Alternative` instance in conjunction with your `setTimeoutCont` function to define a function
 X>
 X>     ```haskell
 X>     timeout :: forall a eff
@@ -451,73 +445,11 @@ X>             -> Async (timeout :: TIMEOUT | eff) (Maybe a)
 X>     ```
 X>
 X>     which returns `Nothing` if the specified computation does not provide a result within the given number of milliseconds.
-
-## An Applicative Functor For Parallelism
-
-The type of the `par` combinator looks a lot like the type of `lift2` for the monad `m`. In fact, it is possible to define a new applicative functor for which `par` is _exactly_ `lift2`.
-
-You might be wondering why we don't define an `Applicative` instance for `m` directly in terms of `par`. The reason is this: if a type constructor has a `Monad` instance, then it is expected that the `Monad` and `Applicative` instances agree, in the sense that `apply` is equivalent to the following function:
-
-```haskell
-ap :: forall m a b. Monad m => m (a -> b) -> m a -> m b
-ap mf ma = do
-  f <- mf
-  a <- ma
-  return (f a)
-```
-
-This allows us to refactor code, by replacing independent computations in a `do` block with a call to `apply` (or `lift2`, or a related function). However, our hypothetical `Applicative` instance differs from the `Monad` instance in the amount of parallelism: `apply` evaluates its arguments in parallel, whereas `ap` waits for its first computation to complete before executing the second.
-
-Instead, `purescript-parallel` defines a newtype wrapper for `m a`, called `Parallel m a`, as follows:
-
-```haskell
-newtype Parallel m a = Parallel (m a)
-```
-
-We can write a function which turns a `Parallel m` computation into a computation in the `m` monad, by simply removing the outer data constructor. This is provided by the `runParallel` function:
-
-```haskell
-runParallel :: forall m a. Parallel m a -> m a
-```
-
-The inverse transformation, from `Async` to `Parallel` is called `parallel`:
-
-```haskell
-parallel :: forall m a. m a -> Parallel m a
-```
-
-The `Functor` instance for `Parallel m` is built directly from the `Functor` instance for `m`. However, in the case of the `Apply` type class, the `par` function is used instead:
-
-```haskell
-instance applyParallel :: MonadPar m => Apply (Parallel m) where
-  apply f a = parallel (par ($) (runParallel f) (runParallel a))
-```
-
-`par` is used to combine a function with its argument by using function application `($)` as the combining function.
-
-We can now rewrite our example above to read two files in parallel by using the `Parallel` type constructor:
-
-```haskell
-import Prelude
-import Control.Apply (lift2)
-import Control.Monad.Cont.Trans (runContT)
-import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Parallel.Class (parallel, runParallel)
-
-main = flip runContT logShow $ runParallel $
-  lift2 append <$> parallel (readFileCont "/tmp/1.txt")
-               <*> parallel (readFileCont "/tmp/2.txt")
-```
-
-Because applicative functors support lifting of functions of arbitrary arity, we can perform more computations in parallel by using the applicative combinators. We can also benefit from all of the standard library functions which work with applicative functors, such as `traverse` and `sequence`!
-
-We can also combine parallel computations with sequential portions of code, by using applicative combinators in a do notation block, or vice versa, using `parallel` and `runParallel` to change type constructors where appropriate.
-
-X> ## Exercises
+X> 1. (Medium) `purescript-parallel` also provides instances of the `Parallel` class for several monad transformers, including `ExceptT`.
 X>
-X> 1. (Medium) Rewrite the parallel file IO example to use `ExceptT` for error handling, instead of lifting `append` with `lift2`. Your solution should use the `ExceptT` transformer to transform the `Parallel` functor.
+X>     Rewrite the parallel file IO example to use `ExceptT` for error handling, instead of lifting `append` with `lift2`. Your solution should use the `ExceptT` transformer to transform the `Async` monad.
 X>
-X>     Use this approach to modify your `concatenateMany` function to read the multiple input files in parallel.
+X>     Use this approach to modify your `concatenateMany` function to read multiple input files in parallel.
 X> 1. (Difficult, Extended) Suppose we are given a collection of JSON documents on disk, such that each document contains an array of references to other files on disk:
 X>
 X>     ```javascript
@@ -533,5 +465,5 @@ X>     Your utility should use the `purescript-foreign` library to parse the JSO
 In this chapter, we have seen a practical demonstration of monad transformers:
 
 - We saw how the common JavaScript idiom of callback-passing can be captured by the `ContT` monad transformer.
-- We saw how the problem of callback hell can be solved by using do notation to express sequential asynchronous computations, and an applicative functor to express parallelism.
+- We saw how the problem of callback hell can be solved by using do notation to express sequential asynchronous computations, and applicative functors to express parallelism.
 - We used `ExceptT` to express _asynchronous errors_.

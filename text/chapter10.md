@@ -304,7 +304,7 @@ allowing unused Javascript exports to be removed from bundled code.
 With these two pieces in place, we can now use the `encodeURIComponent` function from PureScript like any function written in PureScript.
 For example, if this declaration is saved as a module and loaded into PSCi, we can reproduce the calculation above:
 
-```haskell
+```text
 $ pulp psci
 
 > import Data.URI
@@ -621,32 +621,35 @@ readJSON :: forall a. IsForeign a => String -> F a
 The type constructor `F` is actually just a type synonym, defined in `Data.Foreign`:
 
 ```haskell
-type F = Either ForeignError
+type F = Except (NonEmptyList ForeignError)
 ```
+
+Here, `Except` is an monad for handling exceptions in pure code, much like `Either`. We can convert a value in the `F` monad into a value in the `Either` monad by using the `runExcept` function.
 
 Most of the functions in the `purescript-foreign` library return a value in the `F` monad, which means that we can use do notation and the applicative functor combinators to build typed values.
 
 The `IsForeign` type class represents those types which can be obtained from untyped data. There are type class instances defined for the primitive types and arrays, and we can define our own instances as well.
 
-Let's try parsing some simple JSON documents using `readJSON` in PSCi:
+Let's try parsing some simple JSON documents using `readJSON` in PSCi (remembering to use `runExcept` to unwrap the results):
 
 ```text
-> readJSON "\"Testing\"" :: F String
+> runExcept (readJSON "\"Testing\"" :: F String)
 Right "Testing"
 
-> readJSON "true" :: F Boolean
+> runExcept (readJSON "true" :: F Boolean)
 Right true
 
-> readJSON "[1, 2, 3]" :: F (Array Int)
+> runExcept (readJSON "[1, 2, 3]" :: F (Array Int))
 Right [1, 2, 3]
 ```
 
 Recall that in the `Either` monad, the `Right` data constructor indicates success. Note however, that invalid JSON, or an incorrect type leads to an error:
 
 ```text
-> readJSON "[1, 2, true]" :: F (Array Int)
+> import Control.Monad.Except
 
-Left (Error at array index 2: Type mismatch: expected Int, found Boolean)
+> runExcept (readJSON "[1, 2, true]" :: F (Array Int))
+(Left (NonEmptyList (NonEmpty (ErrorAtIndex 2 (TypeMismatch "Int" "Boolean")) Nil)))
 ```
 
 The `purescript-foreign` library tells us where in the JSON document the type error occurred.
@@ -660,10 +663,13 @@ Real-world JSON documents contain null and undefined values, so we need to be ab
 Each type constructor provides a function to unwrap the inner value: `unNull`, `unUndefined` and `unNullOrUndefined`. We can lift the appropriate function over the `readJSON` action to parse JSON documents which permit null values:
 
 ```text
-> unNull <$> readJSON "42" :: F (Null Int)
+> import Prelude
+> import Data.Foreign.Null
+
+> runExcept (unNull <$> readJSON "42" :: F (Null Int))
 (Right (Just 42))
 
-> unNull <$> readJSON "null" :: F (Null Int)
+> runExcept (unNull <$> readJSON "null" :: F (Null Int))
 (Right Nothing)
 ```
 
@@ -672,7 +678,7 @@ In each case, the type annotation applies to the term to the right of the `<$>` 
 The type `Null Int` represents values which are either integers, or null. What if we wanted to parse more interesting values, like arrays of integers, where each element might be `null`? In that case, we could lift the function `map unNull` over the `readJSON` action, as follows:
 
 ```text
-> map unNull <$> readJSON "[1, 2, null]" :: F (Array (Null Int))
+> runExcept (map unNull <$> readJSON "[1, 2, null]" :: F (Array (Null Int)))
 (Right [(Just 1),(Just 2),Nothing])
 ```
 
@@ -742,8 +748,8 @@ loadSavedData = do
   item <- getItem "person"
 
   let
-    savedData :: F (Maybe FormData)
-    savedData = do
+    savedData :: Either (NonEmptyList ForeignError) (Maybe FormData)
+    savedData = runExcept do
       jsonOrNull <- read item
       traverse readJSON (unNull jsonOrNull)
 ```
@@ -795,4 +801,4 @@ In this chapter, we've learned how to work with foreign JavaScript code from Pur
 - We looked at some common foreign types defined in the Prelude, and how they can be used to interoperate with idiomatic JavaScript code. In particular, the representation of side-effects in the `Eff` monad was introduced, and we saw how to use the `Eff` monad to capture new side effects.
 - We saw how to safely deserialize JSON data using the `IsForeign` type class.
 
-For more examples, the `purescript` and `purescript-contrib` GitHub organizations provide plenty of examples of libraries which use the FFI. In the remaining chapters, we will see some of these libraries put to use to solve real-world problems in a type-safe way.
+For more examples, the `purescript`, `purescript-contrib` and `purescript-node` GitHub organizations provide plenty of examples of libraries which use the FFI. In the remaining chapters, we will see some of these libraries put to use to solve real-world problems in a type-safe way.

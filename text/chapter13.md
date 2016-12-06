@@ -369,15 +369,18 @@ For the purposes of testing, we usually include calls to the `quickCheck` functi
 We can test `quickCheckPure` using PSCi. Here, we test that the `merge` operation is associative:
 
 ```text
+> import Prelude
 > import Merge
 > import Test.QuickCheck
 > import Test.QuickCheck.LCG (mkSeed)
 
-> quickCheckPure (mkSeed 12345) 10 \xs ys zs ->
-    ((xs `merge` ys) `merge` zs) ==
-      (xs `merge` (ys `merge` zs))
+> :paste
+… quickCheckPure (mkSeed 12345) 10 \xs ys zs ->
+…   ((xs `merge` ys) `merge` zs) ==
+…     (xs `merge` (ys `merge` zs))
+… ^D
 
-[Success, Success, ..., Success]
+Success : Success : ...
 ```
 
 `quickCheckPure` takes three arguments: the random seed, the number of test cases to generate, and the property to test. If all tests pass, you should see an array of `Success` data constructors printed to the console.

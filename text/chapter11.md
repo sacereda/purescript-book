@@ -40,7 +40,7 @@ The player name is required
 Provide the player name using the `-p` option:
 
 ```text
-pulp run -p Phil
+pulp run -- -p Phil
 >
 ```
 
@@ -51,7 +51,7 @@ The game is played on a two-dimensional grid, and the player moves by issuing co
 For reference, here is a complete walkthrough of the game:
 
 ```text
-$ pulp run -p Phil
+$ pulp run -- -p Phil
 
 > look
 You are at (0, 0)
@@ -124,11 +124,12 @@ Each of these functions takes an initial state of type `s` and a computation of 
 Given the `sumArray` function above, we could use `execState` in PSCi to sum the numbers in several arrays as follows:
 
 ```text
-> execState (do
-    sumArray [1, 2, 3]
-    sumArray [4, 5]
-    sumArray [6]) 0
-
+> :paste
+… execState (do
+…   sumArray [1, 2, 3]
+…   sumArray [4, 5]
+…   sumArray [6]) 0
+… ^D
 21
 ```
 
@@ -307,13 +308,13 @@ gcdLog :: Int -> Int -> Writer (Array String) Int
 We only have to change our function slightly to log the two inputs at each step:
 
 ```haskell
-gcd n 0 = pure n
-gcd 0 m = pure m
-gcd n m = do
-  tell ["gcd " <> show n <> " " <> show m]
-  if n > m
-    then gcd (n - m) m
-    else gcd n (m - n)
+    gcdLog n 0 = pure n
+    gcdLog 0 m = pure m
+    gcdLog n m = do
+      tell ["gcdLog " <> show n <> " " <> show m]
+      if n > m
+        then gcdLog (n - m) m
+        else gcdLog n (m - n)
 ```
 
 We can run a computation in the `Writer` monad by using either of the `execWriter` or `runWriter` functions:
@@ -328,14 +329,11 @@ Just like in the case of the `State` monad, `execWriter` only returns the accumu
 We can test our modified function in PSCi:
 
 ```text
-> import Data.Tuple
-> import Data.Monoid
 > import Control.Monad.Writer
 > import Control.Monad.Writer.Class
 
-> runWriter (gcd 21 15)
-
-Tuple 3 ["gcd 21 15","gcd 6 15","gcd 6 9","gcd 6 3","gcd 3 3"]
+> runWriter (gcdLog 21 15)
+Tuple 3 ["gcdLog 21 15","gcdLog 6 15","gcdLog 6 9","gcdLog 6 3","gcdLog 3 3"]
 ```
 
 X> ## Exercises
@@ -853,7 +851,7 @@ In this case, we can use `put` to update the game state, and `tell` to add a mes
       put $ GameState state { items     = newItems
                             , inventory = newInventory
                             }
-      tell (L.singleton "You now have the " <> show item)
+      tell (L.singleton ("You now have the " <> show item))
 ```
 
 Note that there is no need to `lift` either of the two computations here, because there are appropriate instances for both `MonadState` and `MonadWriter` for our `Game` monad transformer stack.
