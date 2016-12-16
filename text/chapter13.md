@@ -1,8 +1,8 @@
-# Verificación generativa (generative testing)
+# Verificación generativa (*generative testing*)
 
 ## Objetivos del capítulo
 
-En este capítulo veremos una aplicación particularmente elegante de las clases de tipos al problema de probar código. En lugar de probar nuestro código diciendo al compilador _cómo_ probar, simplemente decimos _qué_ propiedades debe tener nuestro código. Los casos de prueba se pueden generar de manera aleatoria a partir de esta especificación usando clases de tipos para ocultar el código repetitivo que genera los datos aleatorios. Esto se llama _verificación generativa_ (generative testing) o _verificación basada en propiedades_ (property-based testing), una técnica popularizada en Haskell por la biblioteca [QuickCheck](http://www.haskell.org/haskellwiki/Introduction_to_QuickCheck1).
+En este capítulo veremos una aplicación particularmente elegante de las clases de tipos al problema de probar código. En lugar de probar nuestro código diciendo al compilador _cómo_ probar, simplemente decimos _qué_ propiedades debe tener nuestro código. Los casos de prueba se pueden generar de manera aleatoria a partir de esta especificación usando clases de tipos para ocultar el código repetitivo que genera los datos aleatorios. Esto se llama _verificación generativa_ (*generative testing*) o _verificación basada en propiedades_ (*property-based testing*), una técnica popularizada en Haskell por la biblioteca [QuickCheck](http://www.haskell.org/haskellwiki/Introduction_to_QuickCheck1).
 
 El paquete `purescript-quickcheck` es un conversión de la biblioteca QuickCheck de Haskell a PureScript, que mayormente preserva los tipos y sintaxis de la biblioteca original. Veremos cómo usar `purescript-quickcheck` para verificar una biblioteca simple, usando Pulp para integrar nuestro conjunto de pruebas en nuestro proceso de desarrollo.
 

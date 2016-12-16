@@ -138,7 +138,7 @@ Esto ilustra unos cuantos puntos sobre el modo en que el compilador de PureScrip
 - PureScript intenta preservar los nombres de las variables cuando sea posible.
 - La aplicación de funciones en PureScript se convierte en aplicación de funciones de JavaScript.
 - El método principal se ejecuta después de que todos los módulos hayan sido definidos, y es generado como una simple llamada a método sin argumentos.
-- El código PureScript no depende de ninguna biblioteca de tiempo de ejecución (runtime library). Todo el código que genera el compilador tiene su origen en un módulo PureScript del que tu código depende.
+- El código PureScript no depende de ninguna biblioteca de tiempo de ejecución (*runtime library*). Todo el código que genera el compilador tiene su origen en un módulo PureScript del que tu código depende.
 
 Estos puntos son importantes, ya que significan que PureScript genera código simple e inteligible. De hecho, el proceso de generación de código es una transformación bastante superficial. No es necesario un conocimiento avanzado del lenguaje para predecir qué código JavaScript será generado para cierto código de entrada.
 
@@ -211,7 +211,7 @@ $ pulp run
 
 ## Probando el código usando el modo interactivo
 
-El compilador PureScript viene con un REPL (Read Eval Print Loop) interactivo llamado PSCi. Puede ser muy util para probar tu código y experimentar con nuevas ideas. Usemos PSCi para probar la función `diagonal`.
+El compilador PureScript viene con un REPL (*Read Eval Print Loop*) interactivo llamado PSCi. Puede ser muy util para probar tu código y experimentar con nuevas ideas. Usemos PSCi para probar la función `diagonal`.
 
 Pulp puede cargar módulos fuente en PSCi automáticamente mediante el comando `pulp psci`.
 

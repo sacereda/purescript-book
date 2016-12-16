@@ -141,7 +141,7 @@ translate dx dy shape = shape
 
 Fíjate en el tipo polimórfico por fila. Dice que `translate` acepta cualquier registro con propiedades `x` e `y` _y otras propiedades cualesquiera_, y devuelve el mismo tipo de registro. Los campos `x` e `y` se actualizan, pero el resto de campos permanecen intactos.
 
-Esto es un ejemplo de _sintaxis de actualización de registro_ (record update syntax). La expresión `shape { ... }` crea un nuevo registro basado en el registro `shape`, actualizando los campos entre llaves a los valores especificados. Date cuenta de que las expresiones entre llaves se separan de sus etiquetas por símbolos igual, no con dos puntos como en los registros literales.
+Esto es un ejemplo de _sintaxis de actualización de registro_ (*record update syntax*). La expresión `shape { ... }` crea un nuevo registro basado en el registro `shape`, actualizando los campos entre llaves a los valores especificados. Date cuenta de que las expresiones entre llaves se separan de sus etiquetas por símbolos igual, no con dos puntos como en los registros literales.
 
 La función `translate` se puede usar tanto con `Rectangle` como con `Arc`, como veremos en el ejemplo `Shapes`.
 

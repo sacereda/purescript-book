@@ -1,4 +1,4 @@
-# Funciones y registros (records)
+# Funciones y registros (*records*)
 
 ## Objetivos del capítulo
 
@@ -55,7 +55,7 @@ String
 Boolean
 ```
 
-PureScript define otros tipos integrados: enteros, caracteres, formaciones (arrays en adelante), registros (records) y funciones.
+PureScript define otros tipos integrados: enteros, caracteres, formaciones (*arrays* en adelante), registros (*records*) y funciones.
 
 Los enteros se diferencian de los tipos de coma flotante de tipo `Number` en que carecen de coma decimal.
 
@@ -177,7 +177,7 @@ Aunque podemos elegir cualquier tipo para `a`, `b` y `c`, tenemos que ser consis
 Could not match type Int with type String
 ```
 
-## Notas sobre la sangría (indentation)
+## Notas sobre la sangría (*indentation*)
 
 El código PureScript es _sensible a la sangría_, al igual que Haskell y al contrario que JavaScript. Esto significa que el espacio en blanco de tu código no carece de significado. Se usa para agrupar regiones de código, de la misma manera que se usan las llaves en los lenguajes tipo C.
 
@@ -262,7 +262,7 @@ type AddressBook = List Entry
 
 Date cuenta de que `List Entry` no es lo mismo que `Array Entry`, que representa un array de entradas.
 
-## Constructores de tipo (type constructors) y familias (kinds)
+## Constructores de tipo (*type constructors*) y familias (*kinds*)
 
 `List` es un ejemplo de un _constructor de tipo_. Los valores no tienen el tipo `List` directamente, sino `List a` para algún tipo `a`. Esto es, `List` toma un _argumento de tipo_ `a` y _construye_ un nuevo tipo `List a`.
 
@@ -418,7 +418,7 @@ insertEntry entry book = Cons entry book
 
 Esto usa los dos argumentos `entry` y `book` declarados a la izquierda del símbolo igual y les aplica la función `Cons` para crear el resultado.
 
-## Funciones currificadas (curried functions)
+## Funciones currificadas (*curried functions*)
 
 Las funciones en PureScript toman exactamente un argumento. Aunque parece que la función `insertEntry` toma dos argumentos, es de hecho un ejemplo de una _función currificada_.
 
@@ -477,7 +477,7 @@ insertEntry :: Entry -> AddressBook -> AddressBook
 insertEntry = Cons
 ```
 
-Este proceso se llama _conversión eta_, y se puede usar (junto a otras técnicas) para reescribir funciones en _forma libre de puntos_ (point-free form), que significa que las funciones están definidas sin referencia a sus argumentos.
+Este proceso se llama _conversión eta_, y se puede usar (junto a otras técnicas) para reescribir funciones en _forma libre de puntos_ (*point-free form*), que significa que las funciones están definidas sin referencia a sus argumentos.
 
 En el caso de `insertEntry`, la _conversión eta_ ha resultado en una definición muy clara de nuestra función: "`insertEntry` es simplemente cons sobre listas". Sin embargo, es discutible si la forma libre de puntos es mejor en general.
 
@@ -584,7 +584,7 @@ Al igual que hemos sido capaces de simplificar la función `insertEntry` usando 
 
 Date cuenta de que el argumento `book` se pasa a la función `filter filterEntry`, y el resultado de esta aplicación se pasa a `head`. En otras palabras, `book` se pasa a la _composición_ de las funciones `filter filterEntry` y `head`.
 
-En PureScript, los operadores de composición de función son `<<<` y `>>>`. El primero es "composición hacia atrás" (backwards composition) y el segundo es "composición hacia delante" (forwards composition).
+En PureScript, los operadores de composición de función son `<<<` y `>>>`. El primero es "composición hacia atrás" (*backwards composition*) y el segundo es "composición hacia delante" (*forwards composition*).
 
 Podemos reescribir la parte derecha de `findEntry` usando cualquier operador. Usando composición hacia atrás, la parte derecha sería:
 
@@ -642,7 +642,7 @@ El tipo de retorno de `findEntry` es `Maybe Entry`, que podemos convertir a `Str
 
 Nuestra función `showEntry` espera un argumento de tipo `Entry`, pero tenemos un valor de tipo `Maybe Entry`. Recuerda que esto significa que la función devuelve un valor opcional de tipo `Entry`. Lo que necesitamos es aplicar la función `showEntry` si el valor opcional está presente y propagar el valor ausente si no lo está.
 
-Afortunadamente, el módulo Prelude proporciona una manera de hacer esto. El operador `map` se puede usar para elevar (lift) una función sobre un constructor de tipo apropiado como `Maybe` (veremos más sobre esta función y otras como ella más tarde cuando hablemos de funtores):
+Afortunadamente, el módulo Prelude proporciona una manera de hacer esto. El operador `map` se puede usar para elevar (*lift*) una función sobre un constructor de tipo apropiado como `Maybe` (veremos más sobre esta función y otras como ella más tarde cuando hablemos de funtores):
 
 ```text
 > import Prelude

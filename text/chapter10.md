@@ -1,4 +1,4 @@
-# Interfaz para funciones externas (foreign function interface)
+# Interfaz para funciones externas (*foreign function interface*)
 
 ## Objetivos del capítulo
 
@@ -96,7 +96,7 @@ var example$prime = 100;
 
 Cuando se pretenda que el código PureScript compilado sea llamado desde JavaScript, se recomienda que los identificadores usen caracteres alfanuméricos y evitar las palabras reservadas de JavaScript. Si se proporcionan operadores definidos por el usuario en código PureScript, es buena práctica proporcionar una función alternativa con un nombre alfanumérico para ser usada desde JavaScript.
 
-## Representación de datos en tiempo de ejecución (runtime data representation)
+## Representación de datos en tiempo de ejecución (*runtime data representation*)
 
 Los tipos nos permiten razonar en tiempo de compilación sobre si nuestros programas son "correctos" en cierto sentido; esto es, que no se van a romper en tiempo de ejecución. Pero ¿que significa eso? En PureScript significa que el tipo de una expresión debe ser compatible con su representación en tiempo de ejecución.
 
@@ -221,7 +221,7 @@ Una discusión completa del _polimorfismo paramétrico_ y la _parametricidad_ es
 
 ## Representando tipos restringidos
 
-Las funciones con una restricción de clase de tipos tienen una representación interesante en tiempo de ejecución. Ya que el comportamiento de la función dependerá de la instancia de clase de tipos elegida por el compilador, a la función se le pasa un argumento adicional, llamado _diccionario de clase de tipos_ (type class dictionary), que contiene la implementación de la funciones de la clase de tipos proporcionada por la instancia elegida.
+Las funciones con una restricción de clase de tipos tienen una representación interesante en tiempo de ejecución. Ya que el comportamiento de la función dependerá de la instancia de clase de tipos elegida por el compilador, a la función se le pasa un argumento adicional, llamado _diccionario de clase de tipos_ (*type class dictionary*), que contiene la implementación de la funciones de la clase de tipos proporcionada por la instancia elegida.
 
 Por ejemplo, aquí tenemos una función PureScript simple con un tipo restringido que usa la clase de tipos `Show`:
 
@@ -263,7 +263,7 @@ X> 1. (Medio) Intenta usar las funciones definidas en el paquete `purescript-arr
 
 ## Usando código JavaScript desde PureScript
 
-La forma más simple de usar código JavaScript desde PureScript es dar un tipo a un valor JavaScript existente usando una declaración de _importación externa_ (foreign import). Las declaraciones de importaciones externas deben tener una declaración JavaScript correspondiente en un _módulo externo JavaScript_ (foreign JavaScript module).
+La forma más simple de usar código JavaScript desde PureScript es dar un tipo a un valor JavaScript existente usando una declaración de _importación externa_ (*foreign import*). Las declaraciones de importaciones externas deben tener una declaración JavaScript correspondiente en un _módulo externo JavaScript_ (*foreign JavaScript module*).
 
 Por ejemplo, considera la función `encodeURIComponent` que se puede usar en JavaScript para codificar una componente de un URI escapando caracteres especiales:
 
@@ -351,7 +351,7 @@ Lanzar una excepción en caso de fallo es menos que ideal; el código PureScript
 
 Supongamos que queremos definir un nuevo tipo `Undefined a` cuya representación en tiempo de ejecución sea como la del tipo `a` pero que también permita el valor `undefined`.
 
-Podemos definir un _tipo externo_ (foreign type) usando la FFI mediante una _declaración de tipo externo_ (foreign type declaration). La sintaxis es similar a la de definir una función externa:
+Podemos definir un _tipo externo_ (*foreign type*) usando la FFI mediante una _declaración de tipo externo_ (*foreign type declaration*). La sintaxis es similar a la de definir una función externa:
 
 ```haskell
 foreign import data Undefined :: * -> *
@@ -433,7 +433,7 @@ true
 false
 ```
 
-La clave aquí es que el compilador _expande in situ_ (inlines) las funciones `mkFn2` y `runFn2` cuando se aplican por completo. El resultado es que el código generado es muy compacto:
+La clave aquí es que el compilador _expande in situ_ (*inlines*) las funciones `mkFn2` y `runFn2` cuando se aplican por completo. El resultado es que el código generado es muy compacto:
 
 ```javascript
 exports.divides = function(n, m) {

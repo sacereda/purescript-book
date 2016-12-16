@@ -16,7 +16,7 @@ Hace ya algún tiempo que han empezado a aparecer las técnicas de programación
          .value();
     ```
 
-- La programación asíncrona en NodeJS se apoya firmemente en las funciones como valores de primera clase para definir retrollamadas (callbacks). 
+- La programación asíncrona en NodeJS se apoya firmemente en las funciones como valores de primera clase para definir retrollamadas (*callbacks*). 
 
     ```javascript
     require('fs').readFile(sourceFile, function (error, data) {
@@ -59,7 +59,7 @@ Aquí, el tipo de `x` es desconocido, pero el compilador sigue pudiendo verifica
 
 En este libro, intentaré convencerte (o reafirmar tu creencia) de que los tipos estáticos no sólo son medios para ganar confianza en la corrección de tus programas, sino que también ayudan al desarrollo por derecho propio. Refactorizar una base de código extensa en JavaScript puede ser difícil para cualquier cosa que no sean las abstracciones más simples, pero un sistema de tipos expresivo junto a un comprobador de tipos puede incluso convertir la refactorización en una experiencia divertida e interactiva.
 
-Además, la red de seguridad proporcionada por un sistema de tipos permite formas de abstracción más avanzadas. De hecho, PureScript proporciona una poderosa forma de abstracción que es fundamentalmente guiada por tipos: las clases de tipos (type classes) populares en el lenguaje de programación funcional Haskell.
+Además, la red de seguridad proporcionada por un sistema de tipos permite formas de abstracción más avanzadas. De hecho, PureScript proporciona una poderosa forma de abstracción que es fundamentalmente guiada por tipos: las clases de tipos (*type classes*) populares en el lenguaje de programación funcional Haskell.
 
 ## Programación web políglota
 

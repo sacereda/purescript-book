@@ -17,9 +17,9 @@ El proyecto añade las siguientes dependencias Bower:
 
 Además de los módulos del capítulo anterior, este proyecto añade un módulo `Main` que proporciona el punto de entrada para la aplicación, y funciones para representar la interfaz de usuario.
 Para ejecutar este proyecto, instala primero React usando `npm install`, y construye y empaqueta el código JavaScript con `pulp browserify --to dist/Main.js`. Para ejecutar el proyecto, abre el fichero `html/index.html` en tu navegador.
-## Mónadas (monads) y notación do
+## Mónadas (*monads*) y notación do
 
-La notación do se presentó cuando vimos los _arrays por comprensión_. Los arrays por comprensión proporcionan azúcar sintáctico (syntactic sugar) para la función `concatMap` del módulo `Data.Array`.
+La notación do se presentó cuando vimos los _arrays por comprensión_. Los arrays por comprensión proporcionan azúcar sintáctico (*syntactic sugar*) para la función `concatMap` del módulo `Data.Array`.
 
 Considera el siguiente ejemplo. Supongamos que lanzamos dos dados y queremos contar el número de formas en que podemos obtener un total de `n`. Podríamos hacerlo usando el siguiente algoritmo no determinista:
 
@@ -157,7 +157,7 @@ Es más fácil explicar estas leyes usando notación do.
 
 ### Leyes de identidad
 
-La ley de _elemento neutro por la derecha_ (right-identity) es la más simple de las tres leyes. Nos dice que podemos eliminar una llamada a `pure` si es la última expresión en un bloque de notación do:
+La ley de _elemento neutro por la derecha_ (*right-identity*) es la más simple de las tres leyes. Nos dice que podemos eliminar una llamada a `pure` si es la última expresión en un bloque de notación do:
 
 ```haskell
 do
@@ -370,7 +370,7 @@ X>     lift2 :: forall f a b c. Applicative f => (a -> b -> c) -> f a -> f b -> 
 X>     lift2 f a b = f <$> a <*> b
 X>     ```
 
-## Efectos nativos (native effects)
+## Efectos nativos (*native effects*)
 
 Veremos una mónada particular que tiene una importancia central en PureScript; la mónada `Eff`.
 
@@ -414,7 +414,7 @@ De esta manera, sabemos exactamente qué efectos secundarios esperar: exactament
 
 ## La mónada Eff
 
-El objetivo de la mónada `Eff` es proporcionar un API bien tipado para cálculos con efectos secundarios, al tiempo que genera JavaScript eficiente. También recibe el nombre de mónada de _efectos extensibles_ (extensible effects), que explicaremos en breve.
+El objetivo de la mónada `Eff` es proporcionar un API bien tipado para cálculos con efectos secundarios, al tiempo que genera JavaScript eficiente. También recibe el nombre de mónada de _efectos extensibles_ (*extensible effects*), que explicaremos en breve.
 
 Aquí hay un ejemplo. Usa el paquete `purescript-random` que define funciones para generar números aleatorios:
 
@@ -441,7 +441,7 @@ Al ejecutar este comando, verás un número aleatorio elegido entre `0` y `1` im
 
 Este programa usa notación do para combinar dos tipos de efectos nativos proporcionados por el runtime de JavaScript: generación de números aleatorios y entrada/salida por consola.
 
-## Efectos extensibles (extensible effects)
+## Efectos extensibles (*extensible effects*)
 
 Podemos inspeccionar el tipo de `main` abriendo el módulo en PSCi:
 
@@ -481,7 +481,7 @@ Este es el origen del nombre "efectos extensibles": podemos siempre extender el 
 
 ## Intercalando efectos
 
-Esta extensibilidad permite al código en la mónada `Eff` _intercalar_ (interleave) distintos tipos de efectos secundarios.
+Esta extensibilidad permite al código en la mónada `Eff` _intercalar_ (*interleave*) distintos tipos de efectos secundarios.
 
 La función `random` que hemos usado tiene el siguiente tipo:
 
@@ -506,7 +506,7 @@ Fíjate en que no tenemos que dar un tipo para `main`. `psc` encontrará el tipo
 
 ## La familia de Eff
 
-El tipo de `main` no se parece a los otros tipos que hemos visto antes. Para explicarlo, necesitamos considerar la _familia_ (kind) de `Eff`. Recuerda que los tipos se clasifican por sus familias de la misma manera que los valores se clasifican por sus tipos. Hasta ahora hemos visto sólo familias construidas a partir de `*` (la familia de tipos) y `->` (que construye familias para constructores de tipos).
+El tipo de `main` no se parece a los otros tipos que hemos visto antes. Para explicarlo, necesitamos considerar la _familia_ (*kind*) de `Eff`. Recuerda que los tipos se clasifican por sus familias de la misma manera que los valores se clasifican por sus tipos. Hasta ahora hemos visto sólo familias construidas a partir de `*` (la familia de tipos) y `->` (que construye familias para constructores de tipos).
 
 Para averiguar la familia de `Eff`, usa el comando `:kind` en PSCi:
 
@@ -519,7 +519,7 @@ Para averiguar la familia de `Eff`, usa el comando `:kind` en PSCi:
 
 Hay dos símbolos que no hemos visto antes.
 
-`!` es la familia de _efectos_, que representa _etiquetas a nivel de tipo_ (type-level labels) para distintos tipos de efectos secundarios. Para entender esto, fíjate en que las dos etiquetas que vimos en `main` tienen ambas familia `!`:
+`!` es la familia de _efectos_, que representa _etiquetas a nivel de tipo_ (*type-level labels*) para distintos tipos de efectos secundarios. Para entender esto, fíjate en que las dos etiquetas que vimos en `main` tienen ambas familia `!`:
 
 ```text
 > import Control.Monad.Eff.Console
@@ -542,7 +542,7 @@ Podemos ya leer el tipo de `main` expuesto antes:
 forall eff. Eff (console :: CONSOLE, random :: RANDOM | eff) Unit
 ```
 
-El primer argumento a `Eff` es `(console :: CONSOLE, random :: RANDOM | eff)`. Esto es una fila que contiene el efecto `CONSOLE` y el efecto `RANDOM`. El símbolo barra `|` separa los efectos etiquetados de la _variable de fila_ (row variable) `eff` que representa _cualquier otro efecto secundario_ que queramos mezclar.
+El primer argumento a `Eff` es `(console :: CONSOLE, random :: RANDOM | eff)`. Esto es una fila que contiene el efecto `CONSOLE` y el efecto `RANDOM`. El símbolo barra `|` separa los efectos etiquetados de la _variable de fila_ (*row variable*) `eff` que representa _cualquier otro efecto secundario_ que queramos mezclar.
 
 El segundo argumento a `Eff` es `Unit`, que es el tipo del valor de retorno del cálculo.
 
@@ -578,7 +578,7 @@ El sistema de tipos usa la misma maquinaria para gestionar los efectos extensibl
 
 La misma característica del sistema de tipos se podría usar para construir otros tipos parametrizados por filas de constructores de tipos, ¡o incluso filas de filas!
 
-## Efectos de grano fino (fine-grained effects)
+## Efectos de grano fino (*fine-grained effects*)
 
 Las anotaciones de tipo no suelen ser necesarias cuando usamos `Eff`, ya que las filas de efectos se pueden inferir, pero se pueden usar para indicar al compilador qué efectos se esperan de un cálculo.
 
@@ -593,7 +593,7 @@ main = do
 
 (fíjate en que no hay variable de fila `eff` aquí), entonces no podemos incluir accidentalmente un subcálculo que hace uso de un tipo de efectos diferente. De esta manera, podemos controlar los efectos secundarios que permitimos a nuestro código.
 
-## Gestores (handlers) y acciones (actions)
+## Gestores (*handlers*) y acciones (*actions*)
 
 Las funciones como `print` y `random` se llaman _acciones_. Las acciones tienen el tipo `Eff` a la parte derecha de sus funciones, y su propósito es _intoducir_ nuevos efectos.
 
@@ -942,7 +942,7 @@ addressBook = createClass $ spec initialState \ctx -> do
 Fíjate en que:
 
 - El nombre `ctx` se refiere a la referencia a `ReactThis`, y se puede usar para leer y escribir el estado donde sea apropiado.
-- El registro dentro de `AppState` se ajusta usando una ligatura de registro, incluyendo un doble sentido de registro (record pun) para el campo _errors_. Nombramos explícitamente varias partes de la estructura de estado por conveniencia.
+- El registro dentro de `AppState` se ajusta usando una ligatura de registro, incluyendo un doble sentido de registro (*record pun*) para el campo _errors_. Nombramos explícitamente varias partes de la estructura de estado por conveniencia.
 
 Recuerda que `Render` debe devolver una estructura `ReactElement`, representando el estado deseado del DOM. La acción `Render` se define en términos de unas funciones auxiliares. Una de dichas funciones auxiliares es `renderValidationErrors`, que convierte la estructura `Errors` en un array de `ReactElement`s.
 
@@ -986,7 +986,7 @@ formField name hint value update =
         ]
 ```
 
-De nuevo, date cuenta de que estamos componiendo elementos más interesantes a partir de elementos más simples, aplicando atributos a cada elemento sobre la marcha. Un atributo en el que debemos fijarnos aquí es el atributo `onChange` aplicado al elemento `input`. Esto es un _gestor de eventos_ (event handler), y se usa para actualizar el estado de la componente cuando el usuario edita el texto de nuestra caja de texto. Nuestro gestor de eventos se define usando una tercera función auxiliar, `updateAppState`:
+De nuevo, date cuenta de que estamos componiendo elementos más interesantes a partir de elementos más simples, aplicando atributos a cada elemento sobre la marcha. Un atributo en el que debemos fijarnos aquí es el atributo `onChange` aplicado al elemento `input`. Esto es un _gestor de eventos_ (*event handler*), y se usa para actualizar el estado de la componente cuando el usuario edita el texto de nuestra caja de texto. Nuestro gestor de eventos se define usando una tercera función auxiliar, `updateAppState`:
 
 ```haskell
 updateAppState

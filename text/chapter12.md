@@ -1,4 +1,4 @@
-# El infierno de retrollamadas (callback hell)
+# El infierno de retrollamadas (*callback hell*)
 
 ## Objetivos del capítulo
 
@@ -14,7 +14,7 @@ npm install
 
 ## El problema
 
-El código asíncrono en JavaScript usa normalmente _retrollamadas_ (callbacks) para estructurar el flujo del programa. Por ejemplo, para leer texto de un fichero, el método preferido es usar la función `readFile` y pasar una retrollamada (una función que se llamará cuando el texto esté disponible):
+El código asíncrono en JavaScript usa normalmente _retrollamadas_ (*callbacks*) para estructurar el flujo del programa. Por ejemplo, para leer texto de un fichero, el método preferido es usar la función `readFile` y pasar una retrollamada (una función que se llamará cuando el texto esté disponible):
 
 ```javascript
 function readText(onSuccess, onFailure) {

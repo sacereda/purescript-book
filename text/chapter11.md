@@ -349,7 +349,7 @@ X>     Escribe una función que usa recursividad para calcular cuántas iteracio
 X>
 X>     Modifica tu función para que use la mónada `Writer` para registrar mensajes en cada aplicación de la función Collatz.
 
-## Transformadores de mónada (monad transformers)
+## Transformadores de mónada (*monad transformers*)
 
 Cada una de las tres mónadas anteriores, `State`, `Reader` y `Writer`, son también ejemplos de los llamados _transformadores de mónada_. Los transformadores de mónada equivalentes se llaman `StateT`, `ReaderT`, y `WriterT` respectivamente.
 
@@ -488,7 +488,7 @@ Tuple (Left "Error!") ["Before the error"]
 
 Fíjate en que sólo los mensajes escritos antes de que se lanzase el error han sido añadidos al registro.
 
-## Pilas de transformadores de mónada (monad transformer stacks)
+## Pilas de transformadores de mónada (*monad transformer stacks*)
 
 Como hemos visto, los transformadores de mónada se pueden usar para construir nuevas mónadas sobre mónadas existentes. Para algún transformador de mónada `t1` y alguna mónada `m`, la aplicación `t1 m` es también una mónada. Esto significa que podemos aplicar un _segundo_ transformador de mónada `t2` al resultado `t1 m` para construir una tercera mónada `t2 (t1 m)`. De esta forma, podemos construir una _pila_ de transformadores de mónada que pueden combinar los efectos secundarios proporcionados por sus mónadas constituyentes.
 
@@ -680,7 +680,7 @@ upper = do
 
 Aquí hemos usado `guard` para fallar si la cadena no está en mayúsculas. Fíjate en que este código es muy similar a los arrays por comprensión que vimos antes. Cuando usamos `MonadPlus` de esta forma, decimos que estamos construyendo _mónadas por comprensión_.
 
-## Retroceso (backtracking)
+## Retroceso (*backtracking*)
 
 Podemos usar el operador `<|>` para retroceder a otra alternativa en caso de fallo. Para demostrarlo, definamos otro analizador que busca caracteres minúsculos:
 

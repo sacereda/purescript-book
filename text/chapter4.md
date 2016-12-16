@@ -1,4 +1,4 @@
-# Recursividad, asociaciones (maps) y pliegues (folds)
+# Recursividad, asociaciones (*maps*) y pliegues (*folds*)
 
 ## Objetivos del capítulo
 
@@ -55,7 +55,7 @@ De nuevo, este problema se resuelve considerando las soluciones a subproblemas. 
 
 ## Recursividad sobre arrays
 
-¡No estamos limitados a definir funciones recursivas sobre el tipo `Int`! Veremos funciones recursivas definidas sobre una amplia variedad de tipos de datos cuando abarquemos el _ajuste de patrones_ (pattern matching) más tarde en el libro, pero por ahora, nos ceñiremos a arrays y números.
+¡No estamos limitados a definir funciones recursivas sobre el tipo `Int`! Veremos funciones recursivas definidas sobre una amplia variedad de tipos de datos cuando abarquemos el _ajuste de patrones_ (*pattern matching*) más tarde en el libro, pero por ahora, nos ceñiremos a arrays y números.
 
 Igual que podemos ramificar dependiendo de si la entrada es distinta de cero, en el caso de arrays ramificaremos dependiendo de si la entrada es no-vacía. Considera esta función que calcula la longitud de un array usando recursividad:
 
@@ -82,11 +82,11 @@ X>
 X> 1. (Fácil) Escribe una función recursiva que devuelve `true` si y sólo si su entrada es un entero par.
 X> 2. (Medio) Escribe una función recursiva que cuenta el número de enteros pares en un array. _Pista_: la función `unsafePartial head` (donde `head` también se importa de `Data.Array.Partial`) se puede usar para encontrar el primer elemento de un array no vacío.
 
-## Asociaciones (maps)
+## Asociaciones (*maps*)
 
 La función `map` es un ejemplo de una función recursiva sobre arrays. Se usa para transformar los elementos de un array aplicando una función a cada uno de sus elementos. Así, cambian el _contenido_ del array, pero preserva su _forma_ (es decir, su longitud).
 
-Cuando veamos las _clases de tipo_ más adelante en el libro, veremos que la función `map` es un ejemplo de un patron más general de funciones que preservan la forma y que transforman una clase de constructores de tipo llamados _funtores_ (functors).
+Cuando veamos las _clases de tipo_ más adelante en el libro, veremos que la función `map` es un ejemplo de un patron más general de funciones que preservan la forma y que transforman una clase de constructores de tipo llamados _funtores_ (*functors*).
 
 Probemos la función `map` en PSCi:
 
@@ -139,7 +139,7 @@ Este tipo dice que podemos elegir dos tipos cualesquiera, `a` y `b`, con los que
 ["1","2","3","4","5"]
 ```
 
-Aunque el operador infijo `<$>` parece una sintaxis especial, es de hecho un simple apodo (alias) para una función PureScript normal. La función es simplemente _aplicada_ usando notación infija. De hecho, la función se puede usar como una función normal poniendo el nombre entre paréntesis. Esto significa que podemos usar el nombre entre paréntesis `(<$>)` en lugar de `map` sobre arrays:
+Aunque el operador infijo `<$>` parece una sintaxis especial, es de hecho un simple apodo (*alias*) para una función PureScript normal. La función es simplemente _aplicada_ usando notación infija. De hecho, la función se puede usar como una función normal poniendo el nombre entre paréntesis. Esto significa que podemos usar el nombre entre paréntesis `(<$>)` en lugar de `map` sobre arrays:
 
 ```text
 > (<$>) show [1, 2, 3, 4, 5]
@@ -228,7 +228,7 @@ Date cuenta que `concatMap` concatena sus resultados. Llama a la función propor
 
 `map`, `filter` y `concatMap` forman la base de todo un rango de funciones sobre arrays llamadas `arrays por comprensión`.
 
-## Arrays por comprensión (array comprehensions)
+## Arrays por comprensión (*array comprehensions*)
 
 Supongamos que queremos encontrar los factores de un número `n`. Una forma simple de hacerlo sería por fuerza bruta: podemos generar todos los pares de números entre 1 y `n`, y tratar de multiplicarlos. Si el producto fuese `n`, habríamos encontrado un par de factores de `n`.
 
@@ -291,11 +291,11 @@ Este código usa la función `product` del módulo `Data.Foldable` en la bibliot
 
 ¡Excelente! Hemos conseguido encontrar el conjunto correcto de pares de factores sin duplicados.
 
-## Notación 'do' (do notation)
+## Notación 'do' (*do notation*)
 
 Sin embargo, podemos mejorar la legibilidad de nuestro código considerablemente. `map` y `concatMap` son tan fundamentales que forman la base (o más bien, sus generalizaciones `map` y `bind` forman la base) de una sintaxis especial llamada _notación do_.
 
-_Nota_: Igual que `map` y `concatMap` nos permitían escribir _arrays por comprensión_, los operadores más generales `map` y `bind` nos permiten escribir las llamadas _mónadas por comprensión_ (monad comprehensions). Veremos muchos mas ejemplos de _mónadas_ mas adelante, pero en este capítulo vamos a considerar únicamente arrays.
+_Nota_: Igual que `map` y `concatMap` nos permitían escribir _arrays por comprensión_, los operadores más generales `map` y `bind` nos permiten escribir las llamadas _mónadas por comprensión_ (*monad comprehensions*). Veremos muchos mas ejemplos de _mónadas_ mas adelante, pero en este capítulo vamos a considerar únicamente arrays.
 
 Podemos reescribir nuestra función `factors` usando notación do como sigue:
 
@@ -334,7 +334,7 @@ factors n = filter (\xs -> product xs == n) $ do
 
 El resultado será el mismo.
 
-## Guardas (guards)
+## Guardas (*guards*)
 
 Otra mejora que podemos hacer a la función `factors` es poner el filtro dentro del array por comprensión. Esto es posible usando la función `guard` del módulo `Control.MonadZero` (del paquete `purescript-control`):
 
@@ -453,7 +453,7 @@ Mientras que el pliegue por la derecha es equivalente a esto:
 ((((("" <> show 5) <> show 4) <> show 3) <> show 2) <> show 1)
 ```
 
-## Recursividad final (tail recursion)
+## Recursividad final (*tail recursion*)
 
 La recursividad es una técnica potente para especificar algoritmos, pero tiene un problema: evaluar funciones recursivas en JavaScript puede llevar a errores de desbordamiento de pila si las entradas son demasiado grandes.
 
@@ -472,11 +472,11 @@ RangeError: Maximum call stack size exceeded
 
 Esto es un problema. Si vamos a adoptar la recursividad como una técnica estándar de la programación funcional, necesitamos una forma de tratar con la recursividad posiblemente infinita.
 
-PureScript proporciona una solución parcial a este problema en la forma de _optimización de recursividad final_ (tail recursion optimization).
+PureScript proporciona una solución parcial a este problema en la forma de _optimización de recursividad final_ (*tail recursion optimization*).
 
 _Nota_: se pueden implementar soluciones al problema más completas en bibliotecas usando el llamado _trampolining_, pero eso está fuera del ámbito de este capítulo. El lector interesado puede consultar la documentación de los paquetes `purescript-free` y `purescript-tailrec`.
 
-La observación clave que permite la optimización de la recursividad final es la siguiente: una llamada recursiva en una _posición de cola_ (tail position) a una función se puede reemplazar por un _salto_, que no reserva una trama de pila. Una llamada está en _posición de cola_ cuando es la última llamada hecha antes de que la función retorne. Esta es la razón por la que hemos observado un desbordamiento de pila en el ejemplo - la llamada recursiva a `f` _no_ estaba en posición de cola.
+La observación clave que permite la optimización de la recursividad final es la siguiente: una llamada recursiva en una _posición de cola_ (*tail position*) a una función se puede reemplazar por un _salto_, que no reserva una trama de pila. Una llamada está en _posición de cola_ cuando es la última llamada hecha antes de que la función retorne. Esta es la razón por la que hemos observado un desbordamiento de pila en el ejemplo - la llamada recursiva a `f` _no_ estaba en posición de cola.
 
 En la práctica, el compilador de PureScript no sustituye la llamada recursiva por un salto, en su lugar sustituye la función recursiva por un _bucle while_.
 
@@ -490,7 +490,7 @@ fact n acc = fact (n - 1) (acc * n)
 
 Date cuenta de que la llamada recursiva a `fact` es lo último que sucede en esta función - está en posición de cola.
 
-## Acumuladores (accumulators)
+## Acumuladores (*accumulators*)
 
 Una forma común de convertir una función que no es recursiva final en una función recursiva final es usar un _parámetro acumulador_. Un parámetro acumulador es un parámetro adicional que se añade a una función para _acumular_ un valor de retorno, en contraposición a usar el valor de retorno para acumular el resultado.
 

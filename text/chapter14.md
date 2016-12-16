@@ -1,4 +1,4 @@
-# Lenguajes específicos del dominio (domain-specific languages)
+# Lenguajes específicos del dominio (*domain-specific languages*)
 
 ## Objetivos del capítulo
 
@@ -16,7 +16,7 @@ Nuestro ejemplo será un lenguaje específico del dominio para crear documentos 
 
 ## Preparación del proyecto
 
-El proyecto que acompaña este capítulo añade una nueva dependencia Bower; la biblioteca `purescript-free` que define la _mónada libre_ (free monad), una de las herramientas que usaremos.
+El proyecto que acompaña este capítulo añade una nueva dependencia Bower; la biblioteca `purescript-free` que define la _mónada libre_ (*free monad*), una de las herramientas que usaremos.
 
 Probaremos el proyecto de este capítulo en PSCi. 
 
@@ -88,7 +88,7 @@ Esta biblioteca tiene varios problemas tal cual está:
 
 En el resto del capítulo, aplicaremos ciertas técnicas para resolver estos problemas y convertir nuestra biblioteca en un lenguaje específico del dominio para crear documentos HTML.
 
-## Constructores inteligentes (smart constructors)
+## Constructores inteligentes (*smart constructors*)
 
 La primera técnica que aplicaremos es simple pero puede ser muy efectiva. En lugar de exponer la representación de los datos a los usuarios del módulo, podemos usar la lista de exportaciones del módulo para ocultar los constructores de datos `Element`, `Content` y `Attribute`, y exportar únicamente los llamados _constructores inteligentes_, que construyen datos que se saben correctos.
 
@@ -258,7 +258,7 @@ X>     ```
 X>
 X>     Modifica la representación de un `Attribute` para considerar los atributos vacíos. Escribe una función que se pueda usar en lugar de `attribute` o `:=` para añadir un atributo vacío a un elemento.
 
-## Tipos fantasma (phantom types)
+## Tipos fantasma (*phantom types*)
 
 Para motivar la siguiente técnica, considera el siguiente código:
 
@@ -362,7 +362,7 @@ X>     ```
 X>
 X>     Modifica tu solución al ejercicio anterior para usar un tipo fantasma con el fin de evitar que el usuario use el operador `attribute` con un atributo vacío.
 
-## La mónada libre (free monad)
+## La mónada libre (*free monad*)
 
 En nuestro conjunto final de modificaciones a nuestra API, usaremos un constructor llamado la _mónada libre_ para convertir nuestro tipo `Content` en una mónada, habilitando la notación do. Esto nos permitirá estructurar nuestro documento HTML en una forma en que el anidamiento de elementos se vuelve más claro; en lugar de esto:
 
@@ -577,7 +577,7 @@ Una mónada en la que todas las acciones devuelven algo de tipo `Unit` no es par
 
 Ilustremos la potencia de la construcción de mónada libre extendiendo nuestro lenguaje con una nueva acción monádica que devuelve un resultado no trivial.
 
-Supongamos que queremos generar documentos HTML que contienen hipervínculos a diferentes secciones del documento usando _anclas_ (anchors). Podemos conseguir esto actualmente generando nombres de ancla a mano e incluyéndolos al menos dos veces en el documento: una vez en la definición de la propia ancla, y otra en cada hipervínculo. Sin embargo, este enfoque tiene algunos problemas básicos:
+Supongamos que queremos generar documentos HTML que contienen hipervínculos a diferentes secciones del documento usando _anclas_ (*anchors*). Podemos conseguir esto actualmente generando nombres de ancla a mano e incluyéndolos al menos dos veces en el documento: una vez en la definición de la propia ancla, y otra en cada hipervínculo. Sin embargo, este enfoque tiene algunos problemas básicos:
 
 - El desarrollador puede equivocarse generando nombres de ancla únicos.
 - El desarrollador puede equivocarse al escribir una o más instancias del nombre del ancla.

@@ -1,8 +1,8 @@
-# Ajuste de patrones (pattern matching)
+# Ajuste de patrones (*pattern matching*)
 
 ## Objetivos del capítulo
 
-Este capítulo presentará dos nuevos conceptos: tipos de datos algebraicos (algebraic data types) y ajuste de patrones. También cubriremos brevemente una interesante característica del sistema de tipos de PureScript: polimorfismo de fila (row polymorphism).
+Este capítulo presentará dos nuevos conceptos: tipos de datos algebraicos (*algebraic data types*) y ajuste de patrones. También cubriremos brevemente una interesante característica del sistema de tipos de PureScript: polimorfismo de fila (*row polymorphism*).
 
 El ajuste de patrones es una técnica común en la programación funcional y permite al desarrollador escribir funciones compactas que expresan ideas potencialmente complejas partiendo su implementación en múltiples casos.
 
@@ -37,7 +37,7 @@ import Global as Global
 import Math as Math
 ```
 
-Esto deja disponibles los tipos y funciones de esos módulos, pero sólo usando _nombres cualificados_ (qualified names), como `Global.infinity` y `Math.max`. Esto puede ser útil para evitar importaciones superpuestas o simplemente para dejar claro de qué modulo se importan ciertas cosas. 
+Esto deja disponibles los tipos y funciones de esos módulos, pero sólo usando _nombres cualificados_ (*qualified names*), como `Global.infinity` y `Math.max`. Esto puede ser útil para evitar importaciones superpuestas o simplemente para dejar claro de qué modulo se importan ciertas cosas. 
 
 _Nota_: no es necesario usar el mismo nombre de módulo que el original en un import cualificado. Nombres cualificados más cortos como `import Math as M` son posibles y bastante comunes.
 
@@ -56,7 +56,7 @@ gcd n m = if n > m
 
 Este algoritmo se llama Algoritmo de Euclides. Si buscas su definición, probablemente encontrarás un conjunto que ecuaciones matemáticas que se parecen bastante al código de arriba. Este es uno de los beneficios del ajuste de patrones: te permite definir el código por casos, escribiendo código simple y declarativo que parece una especificación de una función matemática.
 
-Una función escrita usando ajuste de patrones funciona emparejando conjuntos de condiciones con sus resultados. Cada línea se llama _alternativa_ o _caso_. Las expresiones a la izquierda del signo igual se llaman _patrones_ (patterns), y cada caso consiste en uno o más patrones separados por espacios. Los casos describen qué condiciones deben satisfacer los argumentos antes de que se evalúe y devuelva la expresión a la derecha del signo igual. Cada caso se intenta por orden y el primer caso cuyos patrones se ajusten a sus entradas determina el valor de retorno.
+Una función escrita usando ajuste de patrones funciona emparejando conjuntos de condiciones con sus resultados. Cada línea se llama _alternativa_ o _caso_. Las expresiones a la izquierda del signo igual se llaman _patrones_ (*patterns*), y cada caso consiste en uno o más patrones separados por espacios. Los casos describen qué condiciones deben satisfacer los argumentos antes de que se evalúe y devuelva la expresión a la derecha del signo igual. Cada caso se intenta por orden y el primer caso cuyos patrones se ajusten a sus entradas determina el valor de retorno.
 
 Por ejemplo, la función `gcd` se evalúa usando los siguientes pasos:
 
@@ -76,7 +76,7 @@ El ejemplo de código anterior demuestra dos tipos de patrones:
 Hay otros tipos de patrones simples:
 
 - Literales `Number`, `String`, `Char` y `Boolean`.
-- Patrones comodín (wildcard patterns), indicados mediante un subrayado (`_`), que van a ajustarse a cualquier argumento y que no ligan ningún nombre.
+- Patrones comodín (*wildcard patterns*), indicados mediante un subrayado (`_`), que van a ajustarse a cualquier argumento y que no ligan ningún nombre.
 
 Aquí tenemos dos ejemplos más que demuestran el uso de estos patrones simples:
 
@@ -115,7 +115,7 @@ X>
 X> 1. (Fácil) Escribe la función factorial usando ajuste de patrones. _Pista_: considera los dos casos donde la entrada es cero y distinta de cero.
 X> 1. (Medio) Busca la _Regla de Pascal_ para calcular coeficientes binomiales. Úsala para escribir una función que calcula coeficientes binomiales usando ajuste de patrones.
 
-## Patrones de array (Array Patterns)
+## Patrones de array (*array patterns*)
 
 Los _patrones de array literales_ proporcionan una forma de ajustarse a arrays de una longitud fija. Por ejemplo, supongamos que queremos escribir una función `isEmpty` que identifica arrays vacíos. Podríamos hacer esto usando un patrón de array vacío (`[]`) en la primera alternativa: 
 
@@ -153,7 +153,7 @@ El primer patrón sólo se ajusta a arrays de cinco elementos, cuyo primer y seg
 
 Los patrones de array literales nos permiten ajustar arrays de una longitud fija, pero PureScript _no_ proporciona ningún medio para ajustar arrays de una longitud no especificada, ya que descomponer arrays inmutables de esta manera resulta en rendimiento pobre. Si necesitas una estructura de datos que soporte este tipo de ajuste, la manera recomendada es usar `Data.List`. Existen otras estructuras de datos que proporcionan rendimiento asintótico mejorado para distintas operaciones.
 
-## Patrones de registro (record patterns) y polimorfismo de fila (row polymorphism)
+## Patrones de registro (*record patterns*) y polimorfismo de fila (*row polymorphism*)
 
 Los _patrones de registro_ se usan para ajustar (lo has adivinado) registros.
 
@@ -207,7 +207,7 @@ y PSCi habría inferido el mismo tipo.
 
 Veremos el polimorfismo de fila de nuevo más tarde cuando veamos los _efectos extensibles_.
 
-## Patrones anidados (nested patterns)
+## Patrones anidados (*nested patterns*)
 
 Tanto los patrones de array como los patrones de registro combinan patrones más pequeños para construir patrones más grandes. Mayormente, los ejemplos anteriores sólo han usado patrones simples dentro de patrones array y registro, pero es importante notar que los patrones se pueden _anidar_ arbitrariamente, lo que permite definir funciones usando condiciones en tipos de datos potencialmente complejos. 
 
@@ -223,7 +223,7 @@ livesInLA { address: { city: "Los Angeles" } } = true
 livesInLA _ = false
 ```
 
-## Patrones nombrados (named patters)
+## Patrones nombrados (*named patters*)
 
 Los patrones pueden ser _nombrados_ para traer nombres adicionales al contexto cuando se usan patrones anidados. Cualquier patrón puede nombrarse usando el símbolo `@`.
 
@@ -245,7 +245,7 @@ X> 1. (Fácil) Escribe una función `sameCity` que usa patrones de registro para
 X> 1. (Medio) ¿Cuál es el tipo más general de la función `sameCity` teniendo en cuenta el polimorfismo de fila? ¿Y para la función `livesInLA` definida antes?
 X> 1. (Medio) Escribe una función `fromSingleton` que usa un patrón de array literal para extraer el único miembro de un array singleton. Si el array no es un singleton, tu función debe devolver un valor por defecto proporcionado. Tu función debe tener el tipo `forall a. a -> Array a -> a`
 
-## Expresiones "case" (case expressions)
+## Expresiones "case" (*case expressions*)
 
 Los patrones no sólo aparecen en las declaraciones de función de nivel superior. Es posible usar patrones para ajustarse a un valor intermedio de un cálculo usando una expresión `case`. Las expresiones case proporcionan una utilidad similar a las funciones anónimas: no siempre es deseable dar un nombre a una función, y una expresión `case` nos permite evitar nombrar una función sólo porque queremos usar un patrón.
 
@@ -274,7 +274,7 @@ Por ejemplo:
 
 Esta función trabaja por análisis de casos. Si el array está vacío, nuestra única opción es devolver un array vacío. Si el array no está vacío, usamos una expresión `case` para partir en dos casos. Si la suma del array es cero, devolvemos el array completo. Si no, recurrimos sobre la cola del array.
 
-## Fallos de ajuste de patrones (pattern match failures) y funciones parciales (partial functions)
+## Fallos de ajuste de patrones (*pattern match failures*) y funciones parciales (*partial functions*)
 
 Si los patrones de una expresión case se prueban por orden, ¿qué pasa en el caso en que ninguno de los patrones de las alternativas se ajustan a sus entradas? En este caso, la expresión case fallará en tiempo de ejecución con un _fallo de ajuste de patrones_.
 
@@ -346,7 +346,7 @@ The definition has the following redundant cases:
 
 _Nota_: PSCi no muestra avisos, de manera que para reproducir este ejemplo tendrás que salvar esta función a un fichero y compilarla usando `pulp build`.
 
-## Tipos de datos algebraicos (algebraic data types)
+## Tipos de datos algebraicos (*algebraic data types*)
 
 Esta sección introducirá una característica del sistema de tipos de PureScript llamada _tipos de datos algebraicos_ (o _ADTs_), que se relacionan fundamentalmente con el ajuste de patrones.
 
@@ -442,7 +442,7 @@ Cada constructor se puede usar como un patrón, y los argumentos al constructor 
 
 `showPoint` es otro ejemplo de ajuste de patrones. En este caso, sólo hay un único caso, pero usamos un patrón anidado para ajustarnos a los nombres del registro contenido dentro del constructor `Point`.
 
-## Doble sentido en registros (record puns)
+## Doble sentido en registros (*record puns*)
 
 La función `showPoint` se ajusta a un registro dentro de su argumento, ligando las propiedades `x` e `y` a valores con los mismos nombres. En PureScript podemos simplificar este tipo de ajuste de patrones como sigue:
 

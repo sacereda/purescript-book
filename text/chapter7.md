@@ -1,10 +1,10 @@
-# Validación aplicativa (applicative validation)
+# Validación aplicativa (*applicative validation*)
 
 ## Objetivos del capítulo
 
-En este capítulo, vamos a conocer una importante abstracción nueva, el _funtor aplicativo_ (applicative functor), descrito por la clase de tipos `Applicative`. No te preocupes si el nombre suena raro. Daremos un motivo para el concepto con un ejemplo práctico: validar datos de formulario. Esta técnica nos permite convertir código que normalmente implica un montón de código de comprobación repetitivo en una descripción declarativa de nuestro formulario.
+En este capítulo, vamos a conocer una importante abstracción nueva, el _funtor aplicativo_ (*applicative functor*), descrito por la clase de tipos `Applicative`. No te preocupes si el nombre suena raro. Daremos un motivo para el concepto con un ejemplo práctico: validar datos de formulario. Esta técnica nos permite convertir código que normalmente implica un montón de código de comprobación repetitivo en una descripción declarativa de nuestro formulario.
 
-Veremos también otra clase de tipos, `Traversable`, que describe los _funtores transitables_ (traversable functors), y veremos cómo este concepto también aparece de manera muy natural a partir de soluciones a problemas del mundo real.
+Veremos también otra clase de tipos, `Traversable`, que describe los _funtores transitables_ (*traversable functors*), y veremos cómo este concepto también aparece de manera muy natural a partir de soluciones a problemas del mundo real.
 
 El código de ejemplo para este capítulo será una continuación del ejemplo de la agenda del capítulo 3. Esta vez, extenderemos los tipos de datos de nuestra agenda y escribiremos funciones para validar los valores de esos tipos. Estas funciones podrían usarse, por ejemplo, en una interfaz de usuario web para mostrar errores al usuario como parte del formulario de entrada de datos.
 
@@ -463,7 +463,7 @@ Podemos probar esta función en PSCi:
 
 Esta vez, recibimos un array de todos los errores de validación.
 
-## Validadores con expresiones regulares (regular expression validators)
+## Validadores con expresiones regulares (*regular expression validators*)
 
 La función `validatePhoneNumber` usa una expresión regular para validar la forma de sus argumentos. La clave es una función de validación `matches`, que usa una `Regex` del módulo `Data.String.Regex` para validar su entrada:
 
@@ -501,7 +501,7 @@ X>
 X> 1. (Fácil) Usa un validador de expresiones regulares para asegurarte de que el campo `state` del tipo `Address` contiene dos caracteres alfabéticos. _Pista_: mira el código fuente de `phoneNumberRegex`.
 X> 1. (Medio) Usando el validador `matches`, escribe una función de validación que compruebe que una cadena no está compuesta completamente por espacios en blanco. Úsala para reemplazar `nonEmpty` donde sea apropiado.
 
-## Funtores transitables (traversable functors)
+## Funtores transitables (*traversable functors*)
 
 El validador restante es `validatePerson`, que combina los validadores que hemos visto hasta ahora para validar una estructura `Person` completa:
 
@@ -629,7 +629,7 @@ f <$> parallel computation1
 
 Este cálculo comenzaría a calcular valores de manera asíncrona usando `computation 1` y `computation 2`. Cuando ambos resultados hayan sido calculados, serán combinados en un resultado único usando la función `f`.
 
-Veremos esta idea en más detalle cuando apliquemos los funtores aplicativos al problema del _infierno de retrollamadas_ (callback hell) más adelante.
+Veremos esta idea en más detalle cuando apliquemos los funtores aplicativos al problema del _infierno de retrollamadas_ (*callback hell*) más adelante.
 
 Los funtores aplicativos son una manera natural de capturar efectos secundarios en paralelo que pueden ser combinados.
 

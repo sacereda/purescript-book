@@ -1,4 +1,4 @@
-# Clases de tipos (type classes)
+# Clases de tipos (*type classes*)
 
 ## Objetivos del capítulo
 
@@ -178,7 +178,7 @@ La clase de tipos `Field` está compuesta de varias _superclases_ generales más
 
 Las superclases se explicarán más tarde en este capítulo, pero la jerarquía completa de tipos numéricos está más allá del ámbito de este capítulo. Animamos al lector interesado a leer la documentación de las superclases de `Field` en `purescript-prelude`. 
 
-### Semigrupos (semigroups) y Monoides (monoids)
+### Semigrupos (*semigroups*) y Monoides (*monoids*)
 
 La clase de tipos `Semigroup` identifica aquellos tipos que soportan una operación `append` para combinar dos valores:
 
@@ -247,7 +247,7 @@ Aquí, elegimos el monoide para cadenas, que concatena cadenas, y la función `s
 
 Pero los arrays no son los únicos tipos plegables. `purescript-foldable-traversable` también define instancias de `Foldable` para tipos como `Maybe` y `Tuple`, y otras bibliotecas como `purescript-lists` definen instancias de `Foldable` para sus propios tipos de datos. `Foldable` captura la noción de _contenedor ordenado_. 
 
-### Funtor (functor) y leyes de clases de tipos (type class laws)
+### Funtor (*functor*) y leyes de clases de tipos (*type class laws*)
 
 El Prelude también define una colección de clases de tipos que permiten un estilo de programación funcional con efectos secundarios en PureScript: `Functor`, `Applicative` y `Monad`. Veremos estas abstracciones más adelante, pero por ahora veamos la definición de la clase de tipos `Functor`, que ya hemos visto en forma de la función `map`:
 
@@ -275,7 +275,7 @@ La función `map` (y su sinónimo `<$>`) permite "elevar" una función a una est
 
 Podemos intuir que la función `map` aplica la función que se le da a cada elemento del contenedor y construye un nuevo contenedor a partir de los resultados, con la misma forma que el original. ¿Pero cómo podemos precisar este concepto?
 
-Se espera que las instancias de la clase de tipos `Functor` obedezcan un conjunto de _leyes_ llamadas las _leyes del funtor_ (functor laws):
+Se espera que las instancias de la clase de tipos `Functor` obedezcan un conjunto de _leyes_ llamadas las _leyes del funtor_ (*functor laws*):
 
 - `map id xs = xs`
 - `map g (map f xs) = map (g <<< f) xs`
@@ -302,7 +302,7 @@ X>
 X>     Define instancias `Show` y `Eq` para `Complex`.
 
 
-## Anotaciones de tipo (type annotations)
+## Anotaciones de tipo (*type annotations*)
 
 Los tipos de las funciones pueden ser restringidos usando clases de tipos. Aquí tenemos un ejemplo: supongamos que queremos escribir una función que comprueba si tres valores son iguales, usando la igualdad definida por una instancia de clase de tipos `Eq`.
 
@@ -340,9 +340,9 @@ forall a. Semiring a => a -> a
 
 Aquí, podríamos haber anotado esta función como `Int -> Int`, o `Number -> Number`, pero PSCi nos muestra que el tipo más general funciona para cualquier `Semiring`, permitiéndonos usar nuestra función tanto con `Int`s como con `Number`s.
 
-## Instancias superpuestas (overlapping instances)
+## Instancias superpuestas (*overlapping instances*)
 
-PureScript tiene otra regla relativa a las instancias de clases de tipos, llamada la _regla de instancias superpuestas_ (overlapping instances rule). Cuando una instancia de clase de tipos se necesita en un punto de llamada a función, PureScript usará la información inferida por el comprobador de tipos para elegir la instancia correcta. En ese momento, debe haber exactamente una instancia apropiada para ese tipo. Si hay varias instancias válidas, el compilador emitirá un aviso. 
+PureScript tiene otra regla relativa a las instancias de clases de tipos, llamada la _regla de instancias superpuestas_ (*overlapping instances rule*). Cuando una instancia de clase de tipos se necesita en un punto de llamada a función, PureScript usará la información inferida por el comprobador de tipos para elegir la instancia correcta. En ese momento, debe haber exactamente una instancia apropiada para ese tipo. Si hay varias instancias válidas, el compilador emitirá un aviso. 
 
 Para mostrar esto, podemos intentar crear dos instancias de clase de tipos en conflicto para un tipo de ejemplo. En el siguiente código, creamos dos instancias superpuestas de `Show` para le tipo `T`:
 
@@ -370,7 +370,7 @@ La regla de instancias superpuestas debe cumplirse para que la selección de ins
 
 Si realmente es cierto que hay dos instancias de clase de tipos válidas para un tipo que satisfacen las leyes apropiadas, una aproximación común es definir newtypes para envolver el tipo existente. Como se permite que los newtypes diferentes tengan diferentes instancias de clases de tipos, para la regla de instancias superpuestas ya no es un problema. Esta aproximación se usa en las bibliotecas estándar de PureScript, por ejemplo en `purescript-monoids`, donde el tipo `Maybe a` tiene múltiples instancias válidas para la clase de tipos `Monoid`.
 
-## Dependencias de instancia (instance dependencies)
+## Dependencias de instancia (*instance dependencies*)
 
 Al igual que la implementación de funciones puede depender de las instancias de clases de tipos usando tipos restringidos, también puede la implementación de instancias de clases de tipos depender de otras instancias de clases de tipos. Esto proporciona una forma poderosa de inferencia de programa, en la que la implementación de un programa se puede inferir usando sus tipos.
 
@@ -417,7 +417,7 @@ X>     instance foldableOneMore :: Foldable f => Foldable (OneMore f) where
 X>       ...
 X>     ```
 
-## Clases de tipos de varios parámetros (multi parameter type classes)
+## Clases de tipos de varios parámetros (*multi parameter type classes*)
 
 No es cierto que una clase de tipos pueda tomar un único tipo como argumento. Es el caso más común, pero de hecho, una clase de tipos se puede parametrizar por _cero o más_ argumentos de tipo.
 
@@ -461,7 +461,7 @@ foldStream f list =
 
 Intenta usar `foldStream` en PSCi para diferentes tipos de `Stream` y diferentes tipos de `Monoid`.
 
-## Dependencias funcionales (Functional Dependencies)
+## Dependencias funcionales (*functional dependencies*)
 
 Las clases de tipos multiparamétricas pueden ser muy útiles, pero pueden llevar fácilmente a tipos confusos e incluso problemas con la inferencia de tipos. Como ejemplo simple, supongamos que tenemos que escribir una función `tail` genérica sobre flujos usando la clase `Stream` dada arriba:
 
@@ -516,9 +516,9 @@ forall stream element. Stream stream element => stream -> Maybe stream
 
 Las dependencias funcionales pueden ser bastante útiles cuando se usan clases de tipo multiparamétricas para diseñar ciertas APIs.
 
-## Clases de tipos nularias (nullary type classes)
+## Clases de tipos nularias (*nullary type classes*)
 
-¡Podemos incluso definir clases de tipos sin argumentos de tipo! Se corresponden a aseveraciones (asserts) en tiempo de compilación sobre nuestras funciones, permitiéndonos seguir la pista a propiedades globales de nuestro código en el sistema de tipos.
+¡Podemos incluso definir clases de tipos sin argumentos de tipo! Se corresponden a aseveraciones (*asserts*) en tiempo de compilación sobre nuestras funciones, permitiéndonos seguir la pista a propiedades globales de nuestro código en el sistema de tipos.
 
 Un ejemplo importante es la clase `Partial` que vimos anteriormente cuando hablábamos de las funciones parciales. Hemos visto ya las funciones parciales `head` y `tail` definidas en `Data.Array.Partial`:
 
@@ -553,7 +553,7 @@ unsafePartial :: forall a. (Partial => a) -> a
 
 Date cuenta de que la restricción `Partial` aparece _entre paréntesis_ a la izquierda de la flecha de función, pero no en el `forall` de fuera. Esto es, `unsafePartial` es una función de valores parciales a valores normales.
 
-## Superclases (superclasses)
+## Superclases (*superclasses*)
 
 Al igual que podemos expresar relaciones entre instancias de clases de tipos haciendo que una instancia dependa de otra, podemos expresar relaciones entre las propias clases de tipos usando las llamadas _superclases_.
 
@@ -705,4 +705,4 @@ X> 1. (Difícil) Prueba las leyes de clase de tipos para las instancias `Hashabl
 
 En este capítulo hemos visto las _clases de tipos_, una forma de abstracción orientada a tipos que permite formas potentes de reutilización de código. Hemos visto una colección de clases de tipos estándar de las bibliotecas estándar de PureScript, y hemos definido nuestra propia biblioteca basada en una clase de tipos para calcular códigos de función resumen.
 
-Este capítulo también ha presentado la noción de leyes de clases de tipos, una técnica para probar propiedades acerca del código que usa clases de tipos como forma de abstracción. Las leyes de clases de tipos son parte de un tema más amplio llamado _razonamiento ecuacional_ (equational reasoning), en el que las propiedades de un lenguaje de programación y su sistema de tipos se usan para permitir razonamiento lógico acerca de sus programas. Esta es una idea importante y es un tema al que vamos a volver durante el resto del libro.
+Este capítulo también ha presentado la noción de leyes de clases de tipos, una técnica para probar propiedades acerca del código que usa clases de tipos como forma de abstracción. Las leyes de clases de tipos son parte de un tema más amplio llamado _razonamiento ecuacional_ (*equational reasoning*), en el que las propiedades de un lenguaje de programación y su sistema de tipos se usan para permitir razonamiento lógico acerca de sus programas. Esta es una idea importante y es un tema al que vamos a volver durante el resto del libro.
