@@ -150,6 +150,10 @@ Empecé a trabajar en el compilador de PureScript como respuesta a mi experienci
 
 Mantengo [un blog](http://blog.functorial.com), y se me puede encontrar en [Twitter](http://twitter.com/paf31).
 
+## Acerca de la traducción
+
+Dado que muchos de los términos usados en el libro son de uso común y sus correspondientes traducciones (buenas o malas) no lo son tanto, he incluido en el texto (donde he considerado útil) el término original en itálica y entre paréntesis. La traducción al castellano está en este [repositorio GitHub](https://github.com/jacereda/purescript-book/tree/spanish).
+
 ## Agradecimientos
 
 Me gustaría dar las gracias a los muchos contribuyentes que ayudaron a que PureScript alcanzara su estado actual. Sin el enorme esfuerzo colectivo que se ha hecho en el compilador, herramientas, bibliotecas, documentación y pruebas, el proyecto habría fracasado sin duda.
