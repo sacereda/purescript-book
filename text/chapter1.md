@@ -152,7 +152,9 @@ Mantengo [un blog](http://blog.functorial.com), y se me puede encontrar en [Twit
 
 ## Acerca de la traducción
 
-Dado que muchos de los términos usados en el libro son de uso común y sus correspondientes traducciones (buenas o malas) no lo son tanto, he incluido en el texto (donde he considerado útil) el término original en itálica y entre paréntesis. La traducción al castellano está en este [repositorio GitHub](https://github.com/jacereda/purescript-book/tree/spanish).
+Este libro es una traducción de [PureScript By Example](https://leanpub.com/purescript) de [Phil Freeman](https://leanpub.com/u/paf31)
+
+Dado que muchos de los términos usados en el libro son de uso común en su forma original inglesa y sus correspondientes traducciones (buenas o malas) no lo son tanto, he incluido en el texto (donde he considerado útil) el término original en itálica y entre paréntesis. La traducción al castellano está en este [repositorio GitHub](https://github.com/jacereda/purescript-book/tree/spanish).
 
 ## Agradecimientos
 
