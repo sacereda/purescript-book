@@ -273,7 +273,7 @@ También puedes usar PSCi para definir funciones:
 20
 ```
 
-No te preocupes si la sintaxis de estos ejemplos no te resulta muy clara - tendrá más sentido según vayas leyendo el libro.
+No te preocupes si la sintaxis de estos ejemplos no te resulta muy clara. Tendrá más sentido según vayas leyendo el libro.
 
 Finalmente, puedes comprobar el tipo de una expresión usando el comando `:type`:
 
@@ -290,7 +290,7 @@ Prueba el modo interactivo ahora. Si te atascas en algún punto, usa el comando 
 X> ## Ejercicios
 X>
 X> 1. (Fácil) Usa la constante `Math.pi` para escribir una función `circleArea` que calcule el área de un círculo dado su radio. Prueba tu función usando PSCi (_Pista_: no olvides importar `pi` modificando la sentencia `import Math`).
-X> 1. (Medio) Uso `bower install` para instalar el paquete `purescript-globals` como una dependencia. Prueba sus funciones en PSCi (_Pista_: puedes usar el comando `:browse` en PSCi para navegar los contenidos de un módulo).
+X> 1. (Medio) Usa `bower install` para instalar el paquete `purescript-globals` como una dependencia. Prueba sus funciones en PSCi (_Pista_: puedes usar el comando `:browse` en PSCi para revisar los contenidos de un módulo).
 
 ## Conclusión
 
