@@ -223,7 +223,7 @@ livesInLA { address: { city: "Los Angeles" } } = true
 livesInLA _ = false
 ```
 
-## Patrones nombrados (*named patters*)
+## Patrones nombrados (*named patterns*)
 
 Los patrones pueden ser _nombrados_ para traer nombres adicionales al contexto cuando se usan patrones anidados. Cualquier patrón puede nombrarse usando el símbolo `@`.
 
