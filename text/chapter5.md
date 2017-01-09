@@ -555,7 +555,7 @@ La función de acumulación `combine` se define en un bloque `where`. `combine` 
 X> ## Ejercicios
 X>
 X> 1. (Medio) Extiende la biblioteca de gráficos vectoriales con una nueva operación `area` que calcula el área de una `Shape`. Para los propósitos de este ejercicio, el área de un texto se asume que es cero.
-X> 1. (Difícil) Extiende el tipo `Shape` con un constructor de datos nuevo `Clipped`, que recorta otra `Picture` con un rectángulo. Extiende la función `shapeBounds` para calcular los límites de una imagen recortada. Date cuenta de que esto convierte `Shape` en un tipe de datos recursivo.
+X> 1. (Difícil) Extiende el tipo `Shape` con un constructor de datos nuevo `Clipped`, que recorta otra `Picture` con un rectángulo. Extiende la función `shapeBounds` para calcular los límites de una imagen recortada. Date cuenta de que esto convierte `Shape` en un tipo de datos recursivo.
 
 ## Conclusión
 
