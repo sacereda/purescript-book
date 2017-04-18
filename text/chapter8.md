@@ -136,7 +136,7 @@ someComputation >>= \value -> whatToDoNext
 
 El cálculo `whatToDoNext` puede depender de `value`.
 
-Si hay múltiples ligaduras involucradas, esta regla se aplica varias veces, comenzando por arriba. Por ejemplo, el ejemplo `userCity` que vimos antes queda como sigue tras quitarle el azucar:
+Si hay múltiples ligaduras involucradas, esta regla se aplica varias veces, comenzando por arriba. Por ejemplo, el ejemplo `userCity` que vimos antes queda como sigue tras quitarle el azúcar:
 
 ```haskell
 userCity :: XML -> Maybe XML
@@ -243,7 +243,7 @@ De forma intuitiva, `foldM` realiza un pliegue sobre una lista en algún context
 
 Por ejemplo, si `m` fuese `Maybe`, se permitiría a nuestro pliegue fallar devolviendo `Nothing` en cualquier fase; cada paso devuelve un valor opcional y el resultado del pliegue es por lo tanto también opcional.
 
-Si `m` fuese el constructor de tipo `Array`, cada paso del pliegue podría devolver cero o más resultados, y el pliegue continuaría con el siguiente paso independientemente para cada resultado. Al final, el conjunto do resultados consistiría en todos los pliegues sobre todos los caminos posibles. ¡Esto se corresponde al recorrido de un grafo!
+Si `m` fuese el constructor de tipo `Array`, cada paso del pliegue podría devolver cero o más resultados, y el pliegue continuaría con el siguiente paso independientemente para cada resultado. Al final, el conjunto de resultados consistiría en todos los pliegues sobre todos los caminos posibles. ¡Esto se corresponde al recorrido de un grafo!
 
 Para escribir `foldM` podemos simplemente descomponer la lista de entrada en casos.
 
@@ -255,7 +255,7 @@ foldM _ a Nil = pure a
 
 Fíjate en que tenemos que usar `pure` para elevar `a` a la mónada `m`.
 
-¿Qué pasa si la listo no está vacía? En ese caso, tenemos un valor de tipo `a`, un valor de tipo `b`, y una función de tipo `a -> b -> m a`. Si aplicamos la función, obtenemos un resultado monádico de tipo `m a`. Podemos ligar el resultado de este cálculo con la flecha hacia atrás `<-`. 
+¿Qué pasa si la lista no está vacía? En ese caso, tenemos un valor de tipo `a`, un valor de tipo `b`, y una función de tipo `a -> b -> m a`. Si aplicamos la función, obtenemos un resultado monádico de tipo `m a`. Podemos ligar el resultado de este cálculo con la flecha hacia atrás `<-`. 
 
 Sólo queda recurrir sobre la cola de la lista. La implementación es simple:
 
@@ -388,7 +388,7 @@ Y en el navegador:
 - Manipulación del DOM
 - Llamadas XMLHttpRequest / AJAX
 - Interactuar con un websocket
-- Escribir/leer de/a almacenamiento local
+- Leer/escribir de/en almacenamiento local
 
 Hemos visto ya varios ejemplos de efectos secundarios "no nativos":
 
@@ -595,7 +595,7 @@ main = do
 
 ## Gestores (*handlers*) y acciones (*actions*)
 
-Las funciones como `print` y `random` se llaman _acciones_. Las acciones tienen el tipo `Eff` a la parte derecha de sus funciones, y su propósito es _intoducir_ nuevos efectos.
+Las funciones como `print` y `random` se llaman _acciones_. Las acciones tienen el tipo `Eff` a la parte derecha de sus funciones, y su propósito es _introducir_ nuevos efectos.
 
 Esto contrasta con los _gestores_, en los que el tipo `Eff` aparece como tipo de un argumento de la función. Mientras que las acciones _suman_ al conjunto de efectos requeridos, un gestor normalmente _resta_ efectos del conjunto.
 
@@ -806,7 +806,7 @@ El fichero HTML está básicamente vacío, excepto por la siguiente línea:
 <script type="text/javascript" src="../dist/Main.js"></script>
 ```
 
-Esta línea incluye el código JavaScript generado por Pulp. La ponemos al final del fichero para asegurarnos de que los elementos relevantes están en la página antes de que tratemos de accederlos. Para reconstruir el fichero `Main.js` se puede usar Pulp con el comando `browserify`. Asegúrate primero de que el directorio `dist` existe y de que has instalado React como una dependencia NPM:
+Esta línea incluye el código JavaScript generado por Pulp. La ponemos al final del fichero para asegurarnos de que los elementos relevantes están en la página antes de que tratemos de acceder a elos. Para reconstruir el fichero `Main.js` se puede usar Pulp con el comando `browserify`. Asegúrate primero de que el directorio `dist` existe y de que has instalado React como una dependencia NPM:
 
 ```text
 $ npm install # Install React
@@ -875,7 +875,7 @@ spec
 
 Hay unas cuantas cosas interesantes en las que fijarse aquí:
 
-- El sinónimo de tipo `Render` se porporciona para simplificar algunas firmas de tipo, y denota la función representadora de una componente.
+- El sinónimo de tipo `Render` se proporciona para simplificar algunas firmas de tipo, y denota la función representadora de una componente.
 - Una acción `Render` toma una referencia a la componente (de tipo `ReactThis`), y devuelve un `ReactElement` en la mónada `Eff`. Un `ReactElement` es una estructura de datos que describe el estado deseado del DOM tras la representación.
 - Cada componente React define algún tipo de estado. El estado puede cambiar en respuesta a eventos como pulsación de botones. En `purescript-react`, el valor inicial del estado se proporciona en la función `spec`.
 - La fila de efectos del tipo `Render` usa algunos efectos interesantes para restringir el acceso al estado de la componente React en ciertas funciones. Por ejemplo, durante la representación, el acceso al objeto "refs" no está permitido (`Disallowed`), y el acceso al estado de la componente es de sólo lectura (`ReadOnly`).
@@ -942,7 +942,7 @@ addressBook = createClass $ spec initialState \ctx -> do
 Fíjate en que:
 
 - El nombre `ctx` se refiere a la referencia a `ReactThis`, y se puede usar para leer y escribir el estado donde sea apropiado.
-- El registro dentro de `AppState` se ajusta usando una ligatura de registro, incluyendo un doble sentido de registro (*record pun*) para el campo _errors_. Nombramos explícitamente varias partes de la estructura de estado por conveniencia.
+- El registro dentro de `AppState` se ajusta usando una ligadura de registro, incluyendo un doble sentido de registro (*record pun*) para el campo _errors_. Nombramos explícitamente varias partes de la estructura de estado por conveniencia.
 
 Recuerda que `Render` debe devolver una estructura `ReactElement`, representando el estado deseado del DOM. La acción `Render` se define en términos de unas funciones auxiliares. Una de dichas funciones auxiliares es `renderValidationErrors`, que convierte la estructura `Errors` en un array de `ReactElement`s.
 
