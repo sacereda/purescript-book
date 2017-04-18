@@ -806,7 +806,7 @@ El fichero HTML está básicamente vacío, excepto por la siguiente línea:
 <script type="text/javascript" src="../dist/Main.js"></script>
 ```
 
-Esta línea incluye el código JavaScript generado por Pulp. La ponemos al final del fichero para asegurarnos de que los elementos relevantes están en la página antes de que tratemos de acceder a elos. Para reconstruir el fichero `Main.js` se puede usar Pulp con el comando `browserify`. Asegúrate primero de que el directorio `dist` existe y de que has instalado React como una dependencia NPM:
+Esta línea incluye el código JavaScript generado por Pulp. La ponemos al final del fichero para asegurarnos de que los elementos relevantes están en la página antes de que tratemos de acceder a ellos. Para reconstruir el fichero `Main.js` se puede usar Pulp con el comando `browserify`. Asegúrate primero de que el directorio `dist` existe y de que has instalado React como una dependencia NPM:
 
 ```text
 $ npm install # Install React
