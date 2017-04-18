@@ -2,7 +2,7 @@
 
 ## Objetivos del capítulo
 
-En este capítulo, vamos a conocer una importante abstracción nueva, el _funtor aplicativo_ (*applicative functor*), descrito por la clase de tipos `Applicative`. No te preocupes si el nombre suena raro. Daremos un motivo para el concepto con un ejemplo práctico: validar datos de formulario. Esta técnica nos permite convertir código que normalmente implica un montón de código de comprobación repetitivo en una descripción declarativa de nuestro formulario.
+En este capítulo, vamos a conocer una importante abstracción nueva, el _funtor aplicativo_ (*applicative functor*), descrito por la clase de tipos `Applicative`. No te preocupes si el nombre suena raro. Daremos un motivo para el concepto con un ejemplo práctico: validar datos de formulario. Esta técnica nos permite convertir código que normalmente implica mucho código de comprobación repetitivo en una descripción declarativa de nuestro formulario.
 
 Veremos también otra clase de tipos, `Traversable`, que describe los _funtores transitables_ (*traversable functors*), y veremos cómo este concepto también aparece de manera muy natural a partir de soluciones a problemas del mundo real.
 
@@ -76,7 +76,7 @@ En este caso, el resultado es `Nothing` porque uno de los argumentos (la ciudad)
 Just (Address { street: "123 Fake St.", city: "Faketown", state: "CA" })
 ```
 
-El nombre de la función `lift3` indica que se puede usar para elevar funciones de 3 argumentos. Hay funciones similares definidas en `Control.Apply` para funciones de otro número de argumentos.
+El nombre de la función `lift3` indica que se puede usar para elevar funciones de 3 argumentos. Hay funciones similares definidas en `Control.Apply` para funciones con un número distinto de argumentos.
 
 ## Elevando funciones arbitrarias
 
