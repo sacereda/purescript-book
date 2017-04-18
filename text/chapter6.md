@@ -10,7 +10,7 @@ Veremos también una colección de clases de tipos estándar del Prelude de Pure
 
 ## Preparación del proyecto
 
-El código fuente de este capítulo está definido en el fichero `src/Data/Hashable.purs`. 
+El código fuente de este capítulo está definido en el fichero `src/Data/Hashable.purs`.
 
 El proyecto tiene las siguientes dependencias Bower:
 
@@ -243,7 +243,7 @@ Probemos `foldMap` en PSCi:
 "12345"
 ```
 
-Aquí, elegimos el monoide para cadenas, que concatena cadenas, y la función `show` que representa un `Int` como un `String`. Entonces, pasando un array de enteros, vemos que los resultados de mostrar cada entero han sido concatenados en una única `String`. 
+Aquí, elegimos el monoide para cadenas, que concatena cadenas, y la función `show` que representa un `Int` como un `String`. Entonces, pasando un array de enteros, vemos que los resultados de mostrar cada entero han sido concatenados en un único `String`. 
 
 Pero los arrays no son los únicos tipos plegables. `purescript-foldable-traversable` también define instancias de `Foldable` para tipos como `Maybe` y `Tuple`, y otras bibliotecas como `purescript-lists` definen instancias de `Foldable` para sus propios tipos de datos. `Foldable` captura la noción de _contenedor ordenado_. 
 
@@ -598,7 +598,7 @@ X>     ```
 X>
 X> 1. (Medio) Define una función parcial que encuentra el máximo de un array no vacío de enteros. Tu función debe tener el tipo `Partial => Array Int -> Int`. Prueba tu función en PSCi usando `unsafePartial`. _Pista_: Usa la función `maximum` de `Data.Foldable`.
 
-## Una clase de tipos para funciones resumen
+## Una clase de tipos para funciones resumen (*Hashes*)
 
 En la última sección de este capítulo vamos a usar las lecciones del resto del capítulo para crear una biblioteca para resumir estructuras de datos.
 
